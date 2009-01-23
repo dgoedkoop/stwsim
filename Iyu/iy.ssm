@@ -1,0 +1,6 @@
+#Naam	Lengte	Gewicht	Vermog.	Trekkr.	Remkr.	Maxsn.	cw	elektr.	bedien.	stuurst.
+F64	16	83	3500	240	70	120	1.0	j	j	j
+F81	20	40	800	120	70	100	1.0	j	j	n
+T51	20	30	0	0	70	100	1.0	n	n	n
+T61	20	32	0	0	70	100	1.0	n	n	j
+CV	14	35	0	0	30	100	1.0	n	n	n

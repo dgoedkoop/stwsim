@@ -1,0 +1,29 @@
+Wanneer mag de overweg open? Als hij niet dicht moet.
+
+Wanneer moet de overweg dicht?
+- Als een rijweg over de overweg is ingesteld, én
+- Als de trein zich binnen de aankondiging bevindt, én
+- Als deze trein deze rijweg kan gaan gebruiken.
+
+Wanneer moet het sein rood blijven
+- Als een rijweg over de overweg is ingesteld, én
+- Als de trein zich binnen de aankondiging (van de overweg) bevindt, én
+- Als deze trein deze rijweg kan gaan gebruiken, én
+- Als de overweg geopend is.
+
+Maar eenmaal op groen is groen!
+
+En hoe weten we
+- Of een trein zich binnen de aankondiging bevindt, én
+- Of deze trein deze rijweg kan gaan gebruiken?
+
+Welnu, precies in deze twee stappen.
+1. We kijken eerst welke treinen zich binnen de aankondiging van de overweg
+   bevinden.
+2. In principe is voor elk van deze treinen een rijweg ingesteld. Pas bij
+   het verlaten van een bloksectie wordt het rijweg-gegeven gewist. We
+   kunnen dus van elke trein kijken welke rijweg erbij hoort.
+   Gaat één van deze rijwegen over de overweg, dan zijn we klaar.
+3. Zo nee, dan kijken we bij elk van deze rijwegen of er nóg een rijweg is
+   ingesteld, die erop aansluit. Zo ja, dan kijken we of díé rijweg over
+   de overweg gaat.

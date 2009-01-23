@@ -1,0 +1,41 @@
+package stwControls;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl50;
+
+contains
+  stwvGleisplan in 'stwvGleisplan.pas',
+  stwvHokjes in 'stwvHokjes.pas',
+  stwvMeetpunt in 'stwvMeetpunt.pas',
+  stwvSeinen in 'stwvSeinen.pas',
+  stwvCore in 'stwvCore.pas',
+  stwvRijwegen in 'stwvRijwegen.pas',
+  stwvSporen in 'stwvSporen.pas',
+  stwvMisc in 'stwvMisc.pas',
+  stwvTreinComm in 'stwvTreinComm.pas';
+
+end.

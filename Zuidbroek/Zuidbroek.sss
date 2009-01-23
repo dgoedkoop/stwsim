@@ -1,0 +1,776 @@
+Zuidbroek
+0.1
+
+######################################################################
+# DUBBELSPORIGE VRIJE BAAN
+######################################################################
+
+# HET SPOOR GRONINGEN -> ZUIDBROEK
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	AE_1	1580	100	n
+r	AE_2	1720	100	n
+r	AE_3_1	680	100	n
+# Stationsaankondiging hier (Kw)
+r	AE_3_2	700	100	n
+# Hier begint het perron (Kw)
+r	AE_3_3	150	100	n
+# Hier eindigt het perron (Kw)
+r	AE_3_4	350	100	n
+# Stationsaankondiging hier (Mth) (en een P-sein)
+r	AE_4_1	640	100	n
+# Hier begint het perron (Mth)
+r	AE_4_2	140	100	n
+# Hier eindigt het perron (Mth)
+r	AE_4_3	780	100	n
+r	AE_5_1	225	100	n
+# Stationsaankondiging hier (Hgz)
+r	AE_5_2	910	100	n
+# Hier begint het perron (Hgz)
+r	AE_5_3	170	100	n
+# Hier eindigt het perron (Hgz)
+r	AE_5_4	20	100	n
+r	AE_6_1	860	100	n
+# Stationsaankondiging hier (Spm)
+r	AE_6_2	660	100	n
+r	AE_7_1	30	100	n
+# Hier begint het perron (Spm)
+r	AE_7_2	130	100	n
+# Hier eindigt het perron (Spm)
+r	AE_7_3	990	100	n
+r	AE_8	1880	100	n
+r	AE_9	1150	100	n
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	AE_1	e	AE_2	b	n	j	-	-
+c	AE_2	e	AE_3_1	b	n	j	-	-
+c	AE_3_1	e	AE_3_2	b	n	n	-	-
+c	AE_3_2	e	AE_3_3	b	n	n	-	-
+c	AE_3_3	e	AE_3_4	b	n	n	-	-
+c	AE_3_4	e	AE_4_1	b	n	j	-	-
+c	AE_4_1	e	AE_4_2	b	n	n	-	-
+c	AE_4_2	e	AE_4_3	b	n	n	-	-
+c	AE_4_3	e	AE_5_1	b	n	j	-	-
+c	AE_5_1	e	AE_5_2	b	n	n	-	-
+c	AE_5_2	e	AE_5_3	b	n	n	-	-
+c	AE_5_3	e	AE_5_4	b	n	n	-	-
+c	AE_5_4	e	AE_6_1	b	n	j	-	-
+c	AE_6_1	e	AE_6_2	b	n	n	-	-
+c	AE_6_2	e	AE_7_1	b	n	j	-	-
+c	AE_7_1	e	AE_7_2	b	n	n	-	-
+c	AE_7_2	e	AE_7_3	b	n	n	-	-
+c	AE_7_3	e	AE_8	b	n	j	-	-
+c	AE_8	e	AE_9	b	n	j	-	-
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	GnZb			1
+
+#Wat	Spoor	Naam	Rijr.
+m	AE_1	AE_1	GnZb
+m	AE_2	AE_2	GnZb
+m	AE_3_1	AE_3	GnZb
+m	AE_4_1	AE_4	GnZb
+m	AE_5_1	AE_5	GnZb
+m	AE_6_1	AE_6	GnZb
+m	AE_7_1	AE_7	GnZb
+m	AE_8	AE_8	GnZb
+m	AE_9	AE_9	GnZb
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	AE_1	e	AE_2	b	P751	a	GnZb	1	-	j	-	n	-	-
+s	AE_2	e	AE_3_1	b	P753	a	GnZb	1	-	j	-	n	-	-
+s	AE_3_1	e	AE_3_2	b	KwPV2	n	-	-	-	n	-	j	-	Kropswolde
+s	AE_3_3	b	AE_3_2	e	KwVP2	n	-	-	-	n	-	n	2	Kropswolde
+s	AE_3_3	e	AE_3_4	b	KwP2	n	-	-	-	n	-	n	2	Kropswolde
+s	AE_3_4	e	AE_4_1	b	P755	a	GnZb	1	-	j	-	j	-	Martenshoek
+s	AE_4_2	b	AE_4_1	e	MthVP2	n	-	-	-	n	-	n	2	Martenshoek
+s	AE_4_2	e	AE_4_3	b	MthP2	n	-	-	-	n	-	n	2	Martenshoek
+s	AE_4_3	e	AE_5_1	b	P757	a	GnZb	1	-	j	-	n	-	-
+s	AE_5_1	e	AE_5_2	b	HgzPV2	n	-	-	-	n	-	j	-	Hoogezand-Sappemeer
+s	AE_5_3	b	AE_5_2	e	HgzVP2	n	-	-	-	n	-	n	2	Hoogezand-Sappemeer
+s	AE_5_3	e	AE_5_4	b	HgzP2	n	-	-	-	n	-	n	2	Hoogezand-Sappemeer
+s	AE_5_4	e	AE_6_1	b	P759	a	GnZb	1	-	j	-	n	-	-
+s	AE_6_1	e	AE_6_2	b	SpmPV2	n	-	-	-	n	-	j	-	Sappemeer-Oost
+s	AE_6_2	e	AE_7_1	b	P763	a	GnZb	1	-	j	-	n	-	-
+s	AE_7_2	b	AE_7_1	e	SpmVP2	n	-	-	-	n	-	n	2	Sappemeer-Oost
+s	AE_7_2	e	AE_7_3	b	SpmP2	n	-	-	-	n	-	n	2	Sappemeer-Oost
+s	AE_7_3	e	AE_8	b	P765	a	GnZb	1	-	j	-	n	-	-
+s	AE_8	e	AE_9	b	P767	a	GnZb	1	-	j	-	n	-	-
+
+# HET SPOOR ZUIDBROEK -> GRONINGEN
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	DE_1	1580	100	n
+r	DE_2	1720	100	n
+r	DE_3_1	1210	100	n
+# Hier eindigt het perron (Kw)
+r	DE_3_2	150	100	n
+# Hier begint het perron (Kw)
+r	DE_3_3	540	100	n
+r	DE_4_1	180	100	n
+# Stationsaankondiging hier (Kw)
+r	DE_4_2	440	100	n
+# Perron eindigt hier (Mth)
+r	DE_4_3	125	100	n
+# Perron begint hier (Mth)
+r	DE_4_4	800	100	n
+# Stationsaankondiging hier (Mth)
+r	DE_5_1	1150	100	n
+# Perron eindigt hier (Hgz)
+r	DE_6_1	170	100	n
+# Perron begint hier (Hgz)
+r	DE_6_2	900	100	n
+# Stationsaankondiging hier (Hgz) (en een P-sein)
+r	DE_7_1	460	100	n
+# Perron eindigt hier (Spm)
+r	DE_7_2	160	100	n
+# Perron begint hier (Spm)
+r	DE_7_3	670	100	n
+# Stationsaankondiging hier (Spm)
+r	DE_7_4	490	100	n
+r	DE_8	1880	100	n
+r	DE_9_1	1050	100	n
+# Zuidbroek Westkering
+r	DE_9_2	100	100	n
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	DE_1	e	DE_2	b	n	j	-	-
+c	DE_2	e	DE_3_1	b	n	j	-	-
+c	DE_3_1	e	DE_3_2	b	n	n	-	-
+c	DE_3_2	e	DE_3_3	b	n	n	-	-
+c	DE_3_3	e	DE_4_1	b	n	j	-	-
+c	DE_4_1	e	DE_4_2	b	n	n	-	-
+c	DE_4_2	e	DE_4_3	b	n	n	-	-
+c	DE_4_3	e	DE_4_4	b	n	n	-	-
+c	DE_4_4	e	DE_5_1	b	n	j	-	-
+c	DE_5_1	e	DE_6_1	b	n	j	-	-
+c	DE_6_1	e	DE_6_2	b	n	n	-	-
+c	DE_6_2	e	DE_7_1	b	n	j	-	-
+c	DE_7_1	e	DE_7_2	b	n	n	-	-
+c	DE_7_2	e	DE_7_3	b	n	n	-	-
+c	DE_7_3	e	DE_7_4	b	n	n	-	-
+c	DE_7_4	e	DE_8	b	n	j	-	-
+c	DE_8	e	DE_9_1	b	n	j	-	-
+c	DE_9_1	e	DE_9_2	b	n	n	-	-
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	ZbGn			2
+
+#Wat	Spoor	Naam	Rijr.
+m	DE_1	DE_1	ZbGn
+m	DE_2	DE_2	ZbGn
+m	DE_3_1	DE_3	ZbGn
+m	DE_4_1	DE_4	ZbGn
+m	DE_5_1	DE_5	ZbGn
+m	DE_6_1	DE_6	ZbGn
+m	DE_7_1	DE_7	ZbGn
+m	DE_8	DE_8	ZbGn
+m	DE_9_1	DE_9	ZbGn
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	DE_9_2	b	DE_9_1	e	ZbR3	n	-	-	-	n	-	n	0	Zuidbroek-Westkering
+s	DE_9_1	b	DE_8	e	P768	a	ZbGn	2	-	j	-	n	-	-
+s	DE_8	e	DE_9_1	b	P768V	n	-	-	-	j	-	n	-	-
+s	DE_8	b	DE_7_4	e	P766	a	ZbGn	2	-	j	-	n	-	-
+s	DE_7_4	b	DE_7_3	e	SpmPV2	n	-	-	-	n	-	j	-	Sappemeer-Oost
+s	DE_7_2	e	DE_7_3	b	SpmVP2	n	-	-	-	n	-	n	1	Sappemeer-Oost
+s	DE_7_2	b	DE_7_1	e	SpmP2	n	-	-	-	n	-	n	1	Sappemeer-Oost
+s	DE_7_1	b	DE_6_2	e	P764	a	ZbGn	2	-	j	-	j	-	Hoogezand-Sappemeer
+s	DE_6_1	e	DE_6_2	b	HgzVP2	n	-	-	-	n	-	n	1	Hoogezand-Sappemeer
+s	DE_6_1	b	DE_5_1	e	P760	a	ZbGn	2	-	j	-	n	1	Hoogezand-Sappemeer
+s	DE_5_1	b	DE_4_4	e	P758	a	ZbGn	2	-	j	-	j	-	Martenshoek
+s	DE_4_3	e	DE_4_4	b	MthVP2	n	-	-	-	n	-	n	1	Martenshoek
+s	DE_4_3	b	DE_4_2	e	MthP2	n	-	-	-	n	-	n	1	Martenshoek
+s	DE_4_2	b	DE_4_1	e	KwPV2	n	-	-	-	n	-	j	-	Kropswolde
+s	DE_4_1	b	DE_3_3	e	P756	a	ZbGn	2	-	j	-	n	-	-
+s	DE_3_2	e	DE_3_3	b	KwVP2	n	-	-	-	n	-	n	1	Kropswolde
+s	DE_3_2	b	DE_3_1	e	KwP2	n	-	-	-	n	-	n	1	Kropswolde
+s	DE_3_1	b	DE_2	e	P754	a	ZbGn	2	-	j	-	n	-	-
+s	DE_2	b	DE_1	e	P752	a	ZbGn	2	-	n	-	n	-	-
+
+#	#Naam			#Vertr	#Spoor	#Met	#Richtg	#Mod	#snelh	#Erla.		#Erlst
+vs	Groningen-Up		j	AE_1	1500	v	r	100	GnZb		1
+vs	Groningen-Down		j	DE_1	1500	v	r	100	ZbGn		1
+vd	AE_1	a
+vd	DE_1	a
+
+######################################################################
+# STATION ZUIDBROEK
+######################################################################
+
+# HIER BEGINT DE WESTELIJKE WISSELSTRAAT
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	501_1_1	100	100	n
+r	501_1_2	130	60	n
+r	501_2_1	5	60	n
+r	501_2_2	100	60	n
+r	501_2_a	20	40	n
+r	502_1_1	100	60	n
+r	502_1_2	175	60	n
+r	502_1_a	20	40	n
+r	502_1_3	60	60	n
+
+#Wat	Spoor	Naam	Rijr.
+m	501_1_1	501_1	-
+m	501_2_1	501_2	-
+m	502_1_1	502_1	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	501_1_1	e	501_1_2	b	n	n	-	-
+c	501_1_2	e	501_2_1	b	n	j	-	-
+c	501_2_1	e	501_2_2	b	n	n	-	-
+c	501_2_1	e	501_2_a	b	j	n	3A	501_2
+c	502_1_1	e	502_1_2	b	n	n	-	-
+c	502_1_2	e	502_1_3	b	n	n	-	-
+c	502_1_3	b	502_1_a	e	j	n	3B	502_1
+c	501_2_a	e	502_1_a	b	n	j	-	-
+
+c	DE_9_2	e	501_1_1	b	n	j	-	-
+c	AE_9	e	502_1_1	b	n	j	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	501_1_2	b	501_1_1	e	ZbS11	n	-	-	100	n	-	n	-	-
+s	502_1_2	b	502_1_1	e	ZbS12	n	-	-	100	n	-	n	-	-
+s	DE_9_2	e	501_1_1	b	2	j	-	-	-	j	-	j	-	Zuidbroek
+s	AE_9	e	502_1_1	b	4	j	-	-	-	j	-	j	-	Zuidbroek
+
+# Dit is de auto-overweg
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	501_3	15	60	n
+r	502_3	15	60	n
+
+#Wat	Spoor	Naam	Rijr.
+m	501_3	501_3	-
+m	502_3	502_3	-
+
+# De overwegen
+o	ZbAuto
+o	ZbVoetg
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	501_2_2	e	501_3	b	n	j	-	-
+c	502_1_3	e	502_3	b	n	j	-	-
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	501_4	150	60	n
+r	502_4_1	15	60	n
+r	502_4_2	135	60	n
+r	502_4_a	75	40	n
+r	503_4	50	60	n
+r	504_4	55	60	n
+
+#Wat	Spoor	Naam	Rijr.
+m	501_4	501_4	-
+m	502_4_1	502_4	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	501_3	e	501_4	b	n	j	-	-
+c	502_3	e	502_4_1	b	n	j	-	-
+c	502_4_1	e	502_4_2	b	n	n	-	-
+c	502_4_1	e	502_4_a	b	j	n	5	502_4
+c	502_4_a	e	503_4	b	n	n	-	-
+c	502_4_a	e	504_4	b	j	n	7	502_4
+
+# NU KOMEN DE PERRONSPOREN
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	501_5_0	10	60	n
+r	502_5_0	10	60	n
+r	501_5_1	160	60	n
+r	501_5_2	375	60	n
+r	502_5_1	160	60	n
+r	502_5_2	375	60	n
+r	503_5_1	15	60	n
+r	503_5_2	160	60	n
+r	503_5_3	315	60	n
+r	504_5	490	60	n
+
+#Wat	Spoor	Naam	Rijr.
+m	501_5_0	501_50	-
+m	502_5_0	502_50	-
+m	501_5_1	501	-
+m	502_5_1	502	-
+m	503_5_2	503	-
+m	504_5	504	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	501_4	e	501_5_0	b	n	j	-	-
+c	502_4_2	e	502_5_0	b	n	j	-	-
+c	501_5_0	e	501_5_1	b	n	j	-	-
+c	502_5_0	e	502_5_1	b	n	j	-	-
+c	503_4	e	503_5_1	b	n	j	-	-
+c	504_4	e	504_5	b	n	j	-	-
+c	501_5_1	e	501_5_2	b	n	n	-	-
+c	502_5_1	e	502_5_2	b	n	n	-	-
+c	503_5_1	e	503_5_2	b	n	n	-	-
+c	503_5_2	e	503_5_3	b	n	n	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	501_5_1	b	501_5_0	e	12	j	-	-	-	j	-	n	1	Zuidbroek
+s	502_5_1	b	502_5_0	e	10	j	-	-	-	j	-	n	2	Zuidbroek
+s	503_5_1	b	503_4	e	8	j	-	-	-	j	-	n	-	-
+s	504_5	b	504_4	e	6	j	-	-	-	j	-	n	4	Zuidbroek
+
+s	503_5_2	b	503_5_1	e	ZbP3v	n	-	-	-	n	-	n	3	Zuidbroek
+
+s	501_5_1	e	501_5_2	b	ZbP1	n	-	-	-	n	-	n	1	Zuidbroek
+s	502_5_1	e	502_5_2	b	ZbP2	n	-	-	-	n	-	n	2	Zuidbroek
+s	503_5_2	e	503_5_3	b	ZbP3	n	-	-	-	n	-	n	3	Zuidbroek
+
+# DIT IS DE OOSTELIJKE WISSELSTRAAT
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	501_6_1	140	60	n
+r	501_6_2	45	60	n
+# /10\ vv
+r	501_6_3	55	100	n
+r	501_6_a	25	40	n
+r	502_6_1	60	60	n
+r	502_6_2	15	60	n
+r	502_6_a	50	40	n
+r	503_6	65	40	n
+r	504_6	67	40	n
+r	502_7_1	15	60	n
+r	502_7_a	25	40	n
+r	502_7_2	65	40	n
+# [6] vv
+r	502_7_3	80	60	n
+r	501_8	100	100	n
+# Inrijsein 32
+
+#Wat	Spoor	Naam	Rijr.
+m	501_6_1	501_6	-
+m	501_8	501_8	-
+m	502_6_1	502_6	-
+m	502_7_1	502_7	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	501_5_2	e	501_6_1	b	n	j	-	-
+c	501_6_1	e	501_6_2	b	n	n	-	-
+c	501_6_2	e	501_6_3	b	n	n	-	-
+c	501_6_2	b	501_6_a	e	j	n	33B	501_6
+c	502_5_2	e	502_6_1	b	n	j	-	-
+c	502_6_1	e	502_6_2	b	n	n	-	-
+c	502_6_2	b	502_6_a	e	j	n	31	502_6
+c	502_6_a	b	503_6	e	n	n	-	-
+c	502_6_a	b	504_6	e	j	n	29	502_6
+c	503_5_3	e	503_6	b	n	j	-	-
+c	504_5	e	504_6	b	n	j	-	-
+c	502_6_2	e	502_7_1	b	n	j	-	-
+c	502_7_1	e	502_7_2	b	n	n	-	-
+c	502_7_2	e	502_7_3	b	n	n	-	-
+c	502_7_1	e	502_7_a	b	j	n	33A	502_7
+c	502_7_a	e	501_6_a	b	n	j	-	-
+c	501_6_3	e	501_8	b	n	j	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	501_5_2	e	501_6_1	b	22	j	-	-	-	j	-	n	-	-
+s	502_5_2	e	502_6_1	b	24	j	-	-	-	j	-	n	-	-
+s	503_5_3	e	503_6	b	26	j	-	-	-	j	-	n	-	-
+s	504_5	e	504_6	b	28	j	-	-	-	j	-	n	4	Zuidbroek
+s	501_6_2	e	501_6_3	b	ZbS1	n	-	-	100	n	-	n	-	-
+s	502_7_2	e	502_7_3	b	ZbS2	n	-	-	60	n	-	n	-	-
+
+# DE VRIJE BAAN NAAR VEENDAM
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	VA_1_1	100	60	n
+# Zb-Oostkering
+r	VA_1_2	505	60	n
+r	VA_2_1	70	60	n
+# [6] ^^ / /10\ vv (?)
+r	VA_2_2	100	100	n
+# voorsein
+r	VA_3_1	390	100	n
+# \6/
+r	VA_3_2a	1100	100	n
+r	VA_3_2b	1100	100	n
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	ZbVdm			0
+
+#Wat	Spoor	Naam	Rijr.
+m	VA_1_1	VA_1	ZbVdm
+m	VA_2_1	VA_2	ZbVdm
+m	VA_3_1	VA_3	ZbVdm
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	502_7_3	e	VA_1_1	b	n	j	-	-
+c	VA_1_1	e	VA_1_2	b	n	n	-	-
+c	VA_1_2	e	VA_2_1	b	n	j	-	-
+c	VA_2_1	e	VA_2_2	b	n	n	-	-
+c	VA_2_2	e	VA_3_1	b	n	j	-	-
+c	VA_3_1	e	VA_3_2a	b	n	n	-	-
+c	VA_3_2a	e	VA_3_2b	b	n	n	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	VA_1_1	b	502_7_3	e	32	j	-	-	-	j	-	j	-	Zuidbroek
+s	VA_1_1	e	VA_1_2	b	ZbR1	n	-	-	-	n	-	n	0	Zuidbroek-Oostkering
+s	VA_2_2	b	VA_2_1	e	ZbS3	n	-	-	60	n	-	n	-	-
+s	VA_3_1	b	VA_2_2	e	34	n	-	-	-	j	-	n	-	-
+s	VA_3_2a	b	VA_3_1	e	ZbVS3	n	-	-	-	n	60	n	-	-
+
+#	#Naam			#Vertr	#Spoor	#Met	#Richtg	#Mod	#snelh	#Erla.		#Erlst
+vs	Veendam			j	VA_3_2b	100	a	r	60	ZbVdm		2
+vd	VA_3_2b	v
+
+# DE VRIJE BAAN NAAR SCHEEMDA
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	DF_1_1	100	100	n
+r	DF_1_2	485	100	n
+# Sein 771
+r	DF_2	475	100	n
+# Sein 772
+r	DF_3_1	885	100	n
+# Voorsein
+r	DF_3_2	1400	100	n
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	ZbSda			0
+
+#Wat	Spoor	Naam	Rijr.
+m	DF_1_1	DF_1	ZbSda
+m	DF_2	DF_2	ZbSda
+m	DF_3_1	DF_3	ZbSda
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	501_8	e	DF_1_1	b	n	j	-	-
+c	DF_1_1	e	DF_1_2	b	n	n	-	-
+c	DF_1_2	e	DF_2	b	n	j	-	-
+c	DF_2	e	DF_3_1	b	n	j	-	-
+c	DF_3_1	e	DF_3_2	b	n	n	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	DF_1_1	b	501_8	e	36	j	-	-	-	n	-	j	-	Zuidbroek
+s	DF_1_2	e	DF_2	b	771	a	ZbSda	1	-	n	-	n	-	-
+s	DF_3_1	b	DF_2	e	772	a	ZbSda	2	-	j	-	n	-	-
+s	DF_3_2	b	DF_3_1	e	772V	n	-	-	-	j	-	n	-	-
+s	DF_1_1	e	DF_1_2	b	ZbR2	n	-	-	-	n	-	n	0	Zuidbroek-Oostkering
+
+######################################################################
+# STATION SCHEEMDA
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	DF_3_3	1700	100	n
+# Voorsein
+r	DF_3_4	970	100	n
+# Sein 54
+r	512_1	475	60	n
+r	512_2	15	60	n
+r	512_3_1	50	60	n
+# Snelheidsverhoging 100 km/u
+r	512_3_2	50	60	n
+r	512_3_3	70	60	n
+r	512_3_a	70	40	n
+
+r	511_4	35	60	n
+r	511_5_2	160	60	n
+r	511_5_3	25	60	n
+r	512_5_1	35	60	n
+r	512_5_2	160	60	n
+r	512_5_3	25	60	n
+
+r	512_6_1	100	60	n
+r	512_6_a	100	60	n
+r	512_6_2	10	100	n
+# Snelheidsverhoging 100 km/u
+r	512_6_3	480	100	n
+# Sein 66
+r	DG_1	1040	100	n
+# Voorsein
+r	DG_2_1	740	100	n
+# Gebiedsgrens.
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	SdaWs			0
+
+#Wat	Spoor	Naam	Rijr.
+m	512_1	512_1	-
+m	512_2	512_2	-
+m	512_3_1	512_3	-
+m	511_4	511_4	-
+m	511_5_2	511	-
+m	512_5_1	512	-
+m	512_6_1	512_6	-
+m	DG_1	DG_1	SdaWs
+m	DG_2_1	DG_2	SdaWs
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	DF_3_2	e	DF_3_3	b	n	n	-	-
+c	DF_3_3	e	DF_3_4	b	n	n	-	-
+c	DF_3_4	e	512_1	b	n	j	-	-
+c	512_1	e	512_2	b	n	j	-	-
+c	512_2	e	512_3_1	b	n	j	-	-
+c	512_3_1	e	512_3_2	b	n	n	-	-
+c	512_3_2	e	512_3_3	b	n	n	-	-
+c	512_3_2	e	512_3_a	b	j	n	55	512_3
+
+c	512_3_3	e	512_5_1	b	n	j	-	-
+c	512_5_1	e	512_5_2	b	n	n	-	-
+c	512_5_2	e	512_5_3	b	n	n	-	-
+c	512_3_a	e	511_4	b	n	j	-	-
+c	511_4	e	511_5_2	b	n	j	-	-
+c	511_5_2	e	511_5_3	b	n	n	-	-
+
+c	511_5_3	e	512_6_a	b	n	j	-	-
+c	512_5_3	e	512_6_1	b	n	j	-	-
+c	512_6_1	e	512_6_2	b	n	n	-	-
+c	512_6_2	b	512_6_a	e	j	n	65	512_6
+c	512_6_2	e	512_6_3	b	n	n	-	-
+c	512_6_3	e	DG_1	b	n	j	-	-
+c	DG_1	e	DG_2_1	b	n	j	-	-
+
+#Wat	Overweg
+o	SdaAuto
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	DF_3_3	e	DF_3_4	b	54V	n	-	-	-	j	-	n	-	-
+s	DF_3_4	e	512_1	b	54	j	-	-	-	j	-	j	-	Scheemda
+s	512_3_2	b	512_3_1	e	SdaS1	n	-	-	100	n	-	n	-	-
+s	511_4	b	512_3_a	e	58	j	-	-	-	n	-	n	-	-
+s	512_5_1	b	512_3_3	e	56	j	-	-	-	n	-	n	-	-
+s	511_5_2	b	511_4	e	SdaP1	n	-	-	-	n	-	n	1	Scheemda
+s	512_5_2	b	512_5_1	e	SdaP2	n	-	-	-	n	-	n	2	Scheemda
+
+s	511_5_2	e	511_5_3	b	SdaP3	n	-	-	-	n	-	n	1	Scheemda
+s	512_5_2	e	512_5_3	b	SdaP4	n	-	-	-	n	-	n	2	Scheemda
+s	511_5_3	e	512_6_a	b	62	j	-	-	-	n	-	n	-	-
+s	512_5_3	e	512_6_1	b	64	j	-	-	-	n	-	n	-	-
+s	512_6_2	e	512_6_3	b	SdaS2	n	-	-	100	n	-	n	-	-
+s	DG_1	b	512_6_3	e	66	j	-	-	-	j	-	j	-	Scheemda
+s	DG_2_1	b	DG_1	e	66V	n	-	-	-	j	-	n	-	-
+
+######################################################################
+# STATION WINSCHOTEN
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	DG_2_2	1040	100	n
+# Voorsein
+r	DG_3_1	65	100	n
+# Bordje 40 km/u
+r	DG_3_2	325	100	n
+r	DG_4_1	350	100	n
+# Snelheidsbordje 100 km/u
+r	DG_4_2	140	60	n
+r	DG_4_3	10	60	n
+# Sein 74
+r	522_1_1	25	60	n
+r	522_1_a	55	40	n
+r	522_1_2	55	60	n
+r	522_2	30	60	n
+r	523_2	30	60	n
+r	522_3_1	30	60	n
+r	522_3_a	35	40	n
+r	522_3_2	35	60	n
+
+r	523_4	660	60	n
+r	522_4_1	140	60	n
+r	522_4_2	160	60	n
+r	522_4_3	260	60	n
+r	521_4_1	140	60	n
+r	521_4_2	160	60	n
+r	521_4_3	260	60	n
+
+r	521_5_1	40	60	n
+r	521_5_a	40	40	n
+r	521_5_2	35	60	n
+r	521_5_b	40	40	n
+r	521_5_3	15	60	n
+r	521_6	35	60	n
+r	521_7_1	50	100	n
+r	521_7_a	45	40	n
+r	521_7_2	130	100	n
+r	526_8	119	40	n
+
+r	DH_1_1	650	100	n
+# Snelheidsaankondiging 40 km/u
+r	DH_1_2	185	100	n
+# Voorsein beide kanten op.
+r	DH_1_3	1010	100	n
+# Sein 779
+r	DH_2	455	100	n
+# Sein 780
+r	DH_3_1	980	100	n
+# Voorsein
+r	DH_3_2	3200	100	n
+# Gebiedsgrens.
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	WsNsch			0
+
+# De overwegen
+o	WsWestkant
+o	WsOostkant
+
+#Wat	Spoor	Naam	Rijr.
+m	DG_3_1	DG_3	SdaWs
+m	DG_4_1	DG_4	SdaWs
+m	522_1_1	522_1	-
+m	522_2	522_2	-
+m	523_2	523_2	-
+m	522_3_1	522_3	-
+m	521_4_1	521	-
+m	522_4_1	522	-
+m	523_4	523	-
+m	521_5_1	521_5	-
+m	521_6	521_6	-
+m	521_7_1	521_7	-
+#m	526_8	526_8	-
+m	DH_1_1	DH_1	WsNsch
+m	DH_2	DH_2	WsNsch
+m	DH_3_1	DH_3	WsNsch
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	DG_2_1	e	DG_2_2	b	n	n	-	-
+c	DG_2_2	e	DG_3_1	b	n	j	-	-
+c	DG_3_1	e	DG_3_2	b	n	n	-	-
+c	DG_3_2	e	DG_4_1	b	n	j	-	-
+c	DG_4_1	e	DG_4_2	b	n	n	-	-
+c	DG_4_2	e	DG_4_3	b	n	n	-	-
+c	DG_4_3	e	522_1_1	b	n	j	-	-
+c	522_1_1	e	522_1_2	b	n	n	-	-
+c	522_1_1	e	522_1_a	b	j	n	75	522_1
+c	522_1_2	e	522_2	b	n	j	-	-
+c	522_1_a	e	523_2	b	n	j	-	-
+c	522_2	e	522_3_1	b	n	j	-	-
+c	522_3_1	e	522_3_2	b	n	n	-	-
+c	522_3_1	e	522_3_a	b	j	n	77	522_3
+c	522_3_a	e	521_4_1	b	n	j	-	-
+c	521_4_1	e	521_4_2	b	n	n	-	-
+c	521_4_2	e	521_4_3	b	n	n	-	-
+c	522_3_2	e	522_4_1	b	n	j	-	-
+c	522_4_1	e	522_4_2	b	n	n	-	-
+c	522_4_2	e	522_4_3	b	n	n	-	-
+c	523_2	e	523_4	b	n	j	-	-
+
+c	523_4	e	521_5_b	b	n	j	-	-
+c	522_4_3	e	521_5_a	b	n	j	-	-
+c	521_4_3	e	521_5_1	b	n	j	-	-
+c	521_5_1	e	521_5_2	b	n	n	-	-
+c	521_5_2	b	521_5_a	e	j	n	93	521_5
+c	521_5_2	e	521_5_3	b	n	n	-	-
+c	521_5_3	b	521_5_b	e	j	n	97	521_5
+
+c	521_5_3	e	521_6	b	n	j	-	-
+c	521_6	e	521_7_1	b	n	j	-	-
+c	521_7_1	e	521_7_2	b	n	n	-	-
+c	521_7_1	e	521_7_a	b	j	n	99	521_7
+c	521_7_a	e	526_8	b	n	j	-	-
+
+c	521_7_2	e	DH_1_1	b	n	j	-	-
+c	DH_1_1	e	DH_1_2	b	n	n	-	-
+c	DH_1_2	e	DH_1_3	b	n	n	-	-
+c	DH_1_3	e	DH_2	b	n	j	-	-
+c	DH_2	e	DH_3_1	b	n	j	-	-
+c	DH_3_1	e	DH_3_2	b	n	n	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	DG_2_2	e	DG_3_1	b	74V	n	-	-	-	j	-	n	-	-
+s	DG_3_1	e	DG_3_2	b	WsVS3	n	-	-	-	n	40	n	-	-
+s	DG_4_2	b	DG_4_1	e	WsS2	n	-	-	100	n	-	n	-	-
+s	DG_4_2	e	DG_4_3	b	WsS3	n	-	-	40	n	-	n	-	-
+s	DG_4_3	e	522_1_1	b	74	j	-	-	-	j	-	j	-	Winschoten
+s	523_4	b	523_2	e	76	j	-	-	-	n	-	n	3	Winschoten
+s	522_4_1	b	522_3_2	e	78	j	-	-	-	n	-	n	-	-
+s	521_4_1	b	522_3_a	e	80	j	-	-	-	n	-	n	-	-
+s	522_4_2	b	522_4_1	e	WsP2	n	-	-	-	n	-	n	2	Winschoten
+s	521_4_2	b	521_4_1	e	WsP1	n	-	-	-	n	-	n	1	Winschoten
+s	522_4_2	e	522_4_3	b	WsP4	n	-	-	-	n	-	n	2	Winschoten
+s	521_4_2	e	521_4_3	b	WsP3	n	-	-	-	n	-	n	1	Winschoten
+s	521_4_3	e	521_5_1	b	92	j	-	-	-	n	-	n	-	-
+s	522_4_3	e	521_5_a	b	94	j	-	-	-	n	-	n	-	-
+s	523_4	e	521_5_b	b	96	j	-	-	-	n	-	n	3	Winschoten
+s	521_6	e	521_7_1	b	WsS4	n	-	-	100	n	-	n	-	-
+s	521_7_1	b	521_6	e	WsS5	n	-	-	40	n	-	n	-	-
+s	526_8	b	521_7_a	e	100	j	-	-	-	n	-	n	-	-
+s	526_8	e	526_8	e	WsP5	n	-	-	0	n	-	n	0	Winschoten-526
+s	DH_1_1	b	521_7_2	e	98	j	-	-	-	j	-	j	-	Winschoten
+s	DH_1_2	b	DH_1_1	e	WsVS5	n	-	-	-	n	40	n	-	-
+s	DH_1_2	e	DH_1_3	b	779V	n	-	-	-	j	-	n	-	-
+s	DH_1_3	b	DH_1_2	e	98V	n	-	-	-	j	-	n	-	-
+s	DH_1_3	e	DH_2	b	779	a	WsNsch	1	-	n	-	n	-	-
+s	DH_3_1	b	DH_2	e	780	a	WsNsch	2	-	n	-	n	-	-
+s	DH_3_2	b	DH_3_1	e	780V	n	-	-	-	j	-	n	-	-
+
+######################################################################
+# STATION NIEUWESCHANS
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	DH_3_3	2900	100	n
+# Voorsein
+r	DH_3_4	1225	100	n
+# Sein 114
+r	531_1_1	830	100	n
+r	531_1_2	20	60	n
+r	531_1_3	60	60	n
+r	531_1_a	40	60	n
+# De perronsporen
+r	531_2	190	60	n
+r	532_2	190	60	n
+
+r	531_3_1	65	60	n
+r	531_3_a	65	40	n
+r	531_3_2	20	60	n
+r	531_4	20	60	n
+r	531_5	480	100	n
+# Sein 130
+r	DJ_1	920	100	n
+# Voorsein
+r	DJ_2_1	750	100	n
+r	DJ_2_2	750	100	n
+
+#Wat	Rijrichtingsveldnaam	Standaardrichting
+e	NschLer			0
+
+# De overwegen
+o	NschAuto
+
+#Wat	Spoor	Naam	Rijr.
+m	531_1_1	531_1	-
+m	531_2	531	-
+m	532_2	532	-
+m	531_3_1	531_3	-
+m	531_4	531_4	-
+m	531_5	531_5	-
+m	DJ_1	DJ_1	NschLer
+m	DJ_2_1	DJ_2	NschLer
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	DH_3_2	e	DH_3_3	b	n	n	-	-
+c	DH_3_3	e	DH_3_4	b	n	n	-	-
+c	DH_3_4	e	531_1_1	b	n	j	-	-
+c	531_1_1	e	531_1_2	b	n	n	-	-
+c	531_1_2	e	531_1_3	b	n	n	-	-
+c	531_1_2	e	531_1_a	b	j	n	115	531_1
+c	531_1_3	e	531_2	b	n	j	-	-
+c	531_1_a	e	532_2	b	n	j	-	-
+c	531_2	e	531_3_1	b	n	j	-	-
+c	532_2	e	531_3_a	b	n	j	-	-
+c	531_3_1	e	531_3_2	b	n	n	-	-
+c	531_3_2	b	531_3_a	e	j	n	125	531_3
+c	531_3_2	e	531_4	b	n	j	-	-
+c	531_4	e	531_5	b	n	j	-	-
+c	531_5	e	DJ_1	b	n	j	-	-
+c	DJ_1	e	DJ_2_1	b	n	j	-	-
+c	DJ_2_1	e	DJ_2_2	b	n	n	-	-
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	DH_3_3	e	DH_3_4	b	114V	n	-	-	-	j	-	n	-	-
+s	DH_3_4	e	531_1_1	b	114	j	-	-	-	j	-	j	-	Nieuweschans
+s	531_1_2	b	531_1_1	e	NschS1	n	-	-	100	n	-	n	-	-
+s	531_2	b	531_1_3	e	120	j	-	-	-	n	-	n	1	Nieuweschans
+s	532_2	b	531_1_a	e	118	j	-	-	-	n	-	n	2	Nieuweschans
+s	531_2	e	531_3_1	b	124	j	-	-	-	n	-	n	1	Nieuweschans
+s	532_2	e	531_3_a	b	126	j	-	-	-	n	-	n	2	Nieuweschans
+s	531_3_2	e	531_4	b	NschS2	n	-	-	100	n	-	n	-	-
+s	DJ_1	b	531_5	e	130	j	-	-	-	j	-	j	-	Nieuweschans
+s	DJ_2_1	b	DJ_1	e	130V	n	-	-	-	j	-	n	-	-
+
+#	#Naam			#Vertr	#Spoor	#Met	#Richtg	#Mod	#snelh	#Erla.		#Erlst
+vs	Leer			j	DJ_2_2	10	a	r	50	NschLer		2
+vd	DJ_2_2	v

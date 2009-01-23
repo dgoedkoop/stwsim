@@ -1,0 +1,11 @@
+#Naam	Lengte	Gewicht	Vermog.	Trekkr.	Remkr.	Maxsn.	cw	elektr.	bedien.	stuurst.
+1200	18	108	2220	195	100	130	1.0	j	j	j
+Class58	19	130	2460	267	130	130	1.0	n	j	j
+Class66	20	130	2268	409	130	120	1.0	n	j	j
+6400	14	80	1180	305	100	120	1.0	n	j	j
+G1200	14	85	1570	291	100	100	1.0	n	j	j
+G2000	17	85	2500	283	100	120	1.0	n	j	j
+BR232	21	125	2500	338	130	140	1.0	n	j	j
+3TEU	20	60	0	0	60	140	1.0	n	n	n
+DBMvol	14	120	0	0	130	120	1.0	n	n	n
+DBMleeg	14	30	0	0	130	120	1.0	n	n	n

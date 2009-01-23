@@ -1,0 +1,54 @@
+EISEN:
+
+Instellen van een rijweg:
+1. Flankbeveiliging door koppelen van twee (of meer) wissels. Gekoppelde wissels
+	kunnen alleen samen van stand veranderd worden. Is een van beide onderdeel
+	van een rijweg of in een bezet blok, dan kan de andere wissel ook niet
+	ingesteld worden.
+2. Het sein kan niet op groen worden gezet (en ook niet op geel-knipper) als
+	niet alle wissels goed liggen, inclusief de gekoppelde wissels.
+3. Het sein kan niet op groen worden gezet (en ook niet op geel-knipper) als de
+	bijbehorende rijrichting niet kan worden geclaimd.
+4. Het sein kan niet op groen worden gezet (maar wel op geel-knipper) als
+	niet alle meetpunten vrij zijn die bij de rijweg behoren.
+
+Herroepen van een rijweg:
+1. Een rijweg blijft enige tijd (120 seconden) vergrendeld als de machinist
+	het bijbehorende voorsein voorbij gereden kan zijn. Concreet:
+	a. We zetten het sein op ROOD.
+	b. We controleren of het sein op ROOD staat
+	c. We wachten op het doorkomen van de spoorbezetmeldingen
+	d. Als de weg tussen voorsein en hoofdsein (approach-locking-meetpunten) vrij
+	   is herroepen we de rijweg, anders blijft deze nog enige tijd vergrendeld.
+
+BEDIENING:
+
+Wat geschiedt bij het instellen van een rijweg?
+1. Gekeken wordt, of we alle wissels in de juiste stand kunnen zetten. Kan dit
+	niet, dan volgt een foutmelding.
+2. Gekeken wordt, of geen van de vereiste meetpunten conflicteert met een al
+	ingestelde rijweg. Is dit wel zo, dan volgt een foutmelding.
+3. Van de opgeslagen rijweg wordt een actieve rijweg gemaakt.
+4. De meetpunten worden geclaimd. Ogenblikkelijk of anders later.
+	(De gebieden van een meetpunt waar geen trein langs zal komen worden als
+	'inactief' gemarkeerd)
+5. Zijn alle meetpunten geclaimd, dan wordt het sein op groen gezet.
+6. Telkens wanneer een bezet meetpunt weer vrij wordt gemeld, dan is het geen
+	onderdeel meer van een rijweg. De claim wordt weggehaald.
+	(Markeringen als 'inactief' behorende bij het meetpunt worden weggehaald)
+7.	Blijkt daarbij dat het om het laatste meetpunt van een rijweg gaat, dan wordt
+	de actieve rijweg gewist.
+
+Wat leren we hieruit?
+- Een rijweg bestaat uit twee delen. Een functioneel deel en een deel voor de
+  weergave.
+  - Functioneel deel:
+	 - Welke wissels moeten in welke stand staan (exclusief flankbeveiliging)
+	 - Welke rijrichting is vereist
+	 - Welke meetpunten moeten vrij zijn om het sein op groen te zetten
+	 - Welke meetpunten moeten vrij zijn om het sein zonder approach-locking te
+		kunnen herroepen?
+  - Weergave-deel:
+	 - Welke hokjes worden niet ingekleurd wanneer de rijweg is ingesteld?
+- Bij ieder meetpunt kunnen we markeren dat het geclaimd is door een rijweg, en
+  zo ja door welke.

@@ -1,0 +1,720 @@
+Iyenvar
+0.1
+######################################################################
+# STATION IYENVAR
+######################################################################
+
+# PERRONSPOREN
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	1	300	100	j
+r	2	300	100	j
+r	3	300	100	j
+r	1w	50	100	j
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	1	b	1w	b	n	j	-	-
+
+#Wat	Spoor	Naam	Rijr.
+m	1	1	-
+m	2	2	-
+m	3	3	-
+
+# OOSTELIJKE WISSELSTRAAT
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	B21w	35	100	j
+r	B21t	10	100	j
+r	B21e	155	100	j
+r	B21n	40	40	j
+r	B21z	38	40	j
+r	B11w	110	100	j
+r	B11t	10	100	j
+r	B11e	80	100	j
+r	B11n	38	40	j
+r	B11z	38	40	j
+r	C1w	190	100	j
+r	C1e	10	100	j
+r	C1n	38	40	j
+
+#Wat	Spoor	Naam	Rijr.
+m	B21t	B21	-
+m	B11t	B11	-
+m	C1e	C1	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B21w	e	B21t	b	n	n	-	-
+c	B21t	e	B21e	b	n	n	-	-
+c	B21t	b	B21n	e	j	n	W3	B21
+c	B21t	e	B21z	b	j	n	W1a	B21
+
+c	B11w	e	B11t	b	n	n	-	-
+c	B11t	e	B11e	b	n	n	-	-
+c	B11t	b	B11n	e	j	n	W1b	B11
+c	B11t	e	B11z	b	j	n	W2a	B11
+
+c	C1w	e	C1e	b	n	n	-	-
+c	C1e	b	C1n	e	j	n	W2b	C1
+
+c	B21z	e	B11n	b	n	j	-	-
+c	B11z	e	C1n	b	n	j	-	-
+
+# PERRONSPOREN EN WISSELSTRAAT MET ELKAAR VERBINDEN
+
+c	1	e	C1w	b	n	j	-	-
+c	2	e	B11w	b	n	j	-	-
+c	3	e	B21w	b	n	j	-	-
+
+######################################################################
+# DE AFTAKKING NAAR BIYUNAM EN FO
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	C2	450	100	j
+r	C3w	1000	100	j
+r	C3t	3350	100	j
+r	C3e	1000	100	j
+r	C4w	30	100	j
+r	C4e	20	100	j
+r	C4n	20	40	j
+r	C5w	1000	100	j
+r	C5t	6150	100	j
+r	C5e	700	100	j
+r	C6	300	100	j
+r	C7	800	100	j
+r	C15w	1000	100	j
+r	C15t	3050	100	j
+r	C15e	700	100	j
+r	C16	300	100	j
+
+#Wat	Rijrichtingsveldnaam
+e	FoBiGem
+e	Biy
+e	Fo
+
+#Wat	Spoor	Naam	Rijr.
+m	C2	C2	FoBiGem
+m	C3t	C3	FoBiGem
+m	C4w	C4	-
+m	C5t	C5	Fo
+m	C6	C6	Fo
+m	C15t	C15	Biy
+m	C16	C16	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	C2	e	C3w	b	n	j	-	-
+c	C3w	e	C3t	b	n	n	-	-
+c	C3t	e	C3e	b	n	n	-	-
+c	C3e	e	C4w	b	n	j	-	-
+c	C4w	e	C4e	b	n	n	-	-
+c	C4e	e	C5w	b	n	j	-	-
+c	C5w	e	C5t	b	n	n	-	-
+c	C5t	e	C5e	b	n	n	-	-
+c	C5e	e	C6	b	n	j	-	-
+c	C6	e	C7	b	n	j	-	-
+
+c	C4w	e	C4n	b	j	n	W101	C4
+c	C4n	e	C15w	b	n	j	-	-
+c	C15w	e	C15t	b	n	n	-	-
+c	C15t	e	C15e	b	n	n	-	-
+c	C15e	e	C16	b	n	j	-	-
+
+# DEZE AFTAKKING VASTMAKEN BIJ STATION IYENVAR
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	C1e	e	C2	b	n	j	-	-
+
+######################################################################
+# HET TRAJECT RICHTING FARZONUR
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	A21	750	100	j
+r	A22e	700	100	j
+r	A22i	300	100	j
+r	A22w	600	100	j
+r	A11	750	100	j
+r	A12e	700	100	j
+r	A12i	300	100	j
+r	A12w	600	100	j
+r	A23e	750	100	j
+r	A23f	300	100	j
+r	A23w	40	100	j
+r	A13e	750	100	j
+r	A13f	300	100	j
+r	A13w	40	100	j
+r	A24	550	100	j
+r	A14	550	100	j
+r	A5e	45	100	j
+r	A5w	45	100	j
+r	A5t	10	100	j
+r	A5n	45	40	j
+r	A5z	45	40	j
+r	A6	300	100	j
+r	A7	100	100	j
+r	A8e	250	100	j
+r	A8f	300	100	j
+r	A9	650	100	j
+
+#Wat	Rijrichtingsveldnaam
+e	FarIyUp
+e	FarIyDown
+e	FarIy
+
+#Wat	Spoor	Naam	Rijr.
+m	A21	A21	FarIyDown
+m	A11	A11	FarIyUp
+m	A22i	A22	FarIyDown
+m	A12i	A12	FarIyUp
+m	A23f	A23	FarIyDown
+m	A13f	A13	FarIyUp
+m	A24	A24	FarIyDown
+m	A14	A14	FarIyUp
+m	A5t	A5	-
+m	A6	A6	FarIy
+m	A7	A7	FarIy
+m	A8f	A8	FarIy
+m	A9	A9	FarIy
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	A21	e	A22e	b	n	j	-	-
+c	A22e	e	A22i	b	n	n	-	-
+c	A22i	e	A22w	b	n	n	-	-
+c	A11	e	A12e	b	n	j	-	-
+c	A12e	e	A12i	b	n	n	-	-
+c	A12i	e	A12w	b	n	n	-	-
+
+c	A22w	e	A23e	b	n	j	-	-
+c	A12w	e	A13e	b	n	j	-	-
+
+c	A23e	e	A23f	b	n	n	-	-
+c	A23f	e	A23w	b	n	n	-	-
+c	A13e	e	A13f	b	n	n	-	-
+c	A13f	e	A13w	b	n	n	-	-
+
+c	A23w	e	A24	b	n	j	-	-
+c	A13w	e	A14	b	n	j	-	-
+c	A24	e	A5n	b	n	j	-	-
+c	A14	e	A5e	b	n	j	-	-
+
+c	A5e	e	A5t	b	n	n	-	-
+c	A5t	e	A5w	b	n	n	-	-
+c	A5t	b	A5n	e	j	n	W11	A5
+c	A5t	e	A5z	b	j	n	W12	A5
+
+c	A5w	e	A6	b	n	j	-	-
+c	A6	e	A7	b	n	j	-	-
+c	A7	e	A8e	b	n	j	-	-
+c	A8e	e	A8f	b	n	n	-	-
+c	A8f	e	A9	b	n	j	-	-
+
+# EN VASTMAKEN AAN STATION IYENVAR
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	3	b	A21	b	n	j	-	-
+c	2	b	A11	b	n	j	-	-
+
+######################################################################
+# STATION NASEN
+######################################################################
+
+# PERRONSPOREN
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	B16	300	100	j
+r	B26	300	100	j
+r	B36	300	100	j
+
+#Wat	Spoor	Naam	Rijr.
+m	B16	B16	-
+m	B26	B26	-
+m	B36	B36	-
+
+# WESTELIJKE (fysiek oostelijke) WISSELSTRAAT
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	B25w	100	100	j
+r	B25t	10	100	j
+r	B25e	40	100	j
+r	B25n	45	40	j
+r	B25z	38	40	j
+r	B15w	30	100	j
+r	B15e	120	100	j
+r	B15n	38	40	j
+
+#Wat	Spoor	Naam	Rijr.
+m	B15e	B15	-
+m	B25t	B25	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B15w	e	B15e	b	n	n	-	-
+c	B15w	e	B15n	b	j	n	W21a	B15
+c	B25w	e	B25t	b	n	n	-	-
+c	B25t	e	B25e	b	n	n	-	-
+c	B25t	b	B25z	e	j	n	W21b	B25
+c	B25t	e	B25n	b	j	n	W31	B25
+c	B15n	e	B25z	b	n	j	-	-
+
+# Vastmaken aan station Nasen
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B15e	e	B16	b	n	j	-	-
+c	B25e	e	B26	b	n	j	-	-
+c	B25n	e	B36	b	n	j	-	-
+
+# OOSTELIJKE (fysiek westelijke) WISSELSTRAAT
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	B27w	40	100	j
+r	B27t	10	100	j
+r	B27e	100	100	j
+r	B27n	45	40	j
+r	B27z	38	40	j
+r	B17w	120	100	j
+r	B17e	30	100	j
+r	B17n	38	40	j
+
+#Wat	Spoor	Naam	Rijr.
+m	B17w	B17	-
+m	B27t	B27	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B17w	e	B17e	b	n	n	-	-
+c	B17e	b	B17n	e	j	n	W22a	B17
+c	B27w	e	B27t	b	n	n	-	-
+c	B27t	e	B27e	b	n	n	-	-
+c	B27t	b	B27n	e	j	n	W32	B27
+c	B27t	e	B27z	b	j	n	W22b	B27
+c	B27z	e	B17n	b	n	j	-	-
+
+# Vastmaken aan station Nasen
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B17w	b	B16	e	n	j	-	-
+c	B27w	b	B26	e	n	j	-	-
+c	B27n	b	B36	e	n	j	-	-
+
+######################################################################
+# VRIJE BAAN IYENVAR - NASEN
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	B12	450	100	j
+r	B22	450	100	j
+r	B13w	550	100	j
+r	B13t	450	100	j
+r	B13e	550	100	j
+r	B23w	550	100	j
+r	B23t	450	100	j
+r	B23e	550	100	j
+r	B14	550	100	j
+r	B24	550	100	j
+
+#Wat	Rijrichtingsveldnaam
+e	IyNaUp
+e	IyNaDown
+
+#Wat	Spoor	Naam	Rijr.
+m	B12	B12	IyNaUp
+m	B22	B22	IyNaDown
+m	B13t	B13	IyNaUp
+m	B23t	B23	IyNaDown
+m	B14	B14	IyNaUp
+m	B24	B24	IyNaDown
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B12	e	B13w	b	n	j	-	-
+c	B13w	e	B13t	b	n	n	-	-
+c	B13t	e	B13e	b	n	n	-	-
+c	B13e	e	B14	b	n	j	-	-
+c	B22	e	B23w	b	n	j	-	-
+c	B23w	e	B23t	b	n	n	-	-
+c	B23t	e	B23e	b	n	n	-	-
+c	B23e	e	B24	b	n	j	-	-
+
+# Vastmaken aan station Iyenvar
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B22	b	B21e	e	n	j	-	-
+c	B12	b	B11e	e	n	j	-	-
+
+# Vastmaken aan station Nasen
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B14	e	B15w	b	n	j	-	-
+c	B24	e	B25w	b	n	j	-	-
+
+######################################################################
+# VRIJE BAAN NASEN - DURS
+######################################################################
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	B18	550	100	j
+r	B19	3400	100	j
+r	B30	4000	100	j
+r	B31w	1300	100	j
+r	B31d	300	100	j
+r	B31e	2400	100	j
+
+r	B28	550	100	j
+r	B29	3400	100	j
+r	B40	4000	100	j
+r	B41w	1300	100	j
+r	B41d	300	100	j
+r	B41e	2400	100	j
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B18	e	B19	b	n	j	-	-
+c	B19	e	B30	b	n	j	-	-
+c	B30	e	B31w	b	n	j	-	-
+c	B31w	e	B31d	b	n	n	-	-
+c	B31d	e	B31e	b	n	n	-	-
+
+c	B28	e	B29	b	n	j	-	-
+c	B29	e	B40	b	n	j	-	-
+c	B40	e	B41w	b	n	j	-	-
+c	B41w	e	B41d	b	n	n	-	-
+c	B41d	e	B41e	b	n	n	-	-
+
+#Wat	Rijrichtingsveldnaam
+e	DursUp
+e	DursDown
+
+#Wat	Spoor	Naam	Rijr.
+m	B18	B18	DursUp
+m	B19	B19	DursUp
+m	B30	B30	DursUp
+m	B31d	B31	DursUp
+
+m	B28	B28	DursDown
+m	B29	B29	DursDown
+m	B40	B40	DursDown
+m	B41d	B41	DursDown
+
+# En vastmaken aan station Nasen
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	B17e	e	B18	b	n	j	-	-
+c	B27e	e	B28	b	n	j	-	-
+
+######################################################################
+# SEINPALEN
+######################################################################
+
+# Bij FAN
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	A9	b	A8f	e	FanV1	n	-	-	-	j	-	n	-	-
+s	A8f	b	A8e	e	FanH1	n	-	-	-	n	-	n	j	Farzonur-Noord
+s	A8f	e	A9	b	FanH2	n	-	-	-	n	-	n	j	Farzonur-Noord
+s	A8e	e	A8f	b	FarIV1	n	-	-	-	j	-	n	-	-
+
+# Bij FAI
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl		Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	A5w	e	A6	b	FanHV2	n	-		-	100	n	-	j	-	Farzonur-Noord
+s	A6	b	A5w	e	FaiI1	j	-		-	-	n	-	n	-	-
+s	A5e	b	A14	e	FaiV1	n	-		-	-	n	-	j	-	Farzonur-Industrie
+s	A5n	b	A24	e	FaiV2	n	-		-	100	n	-	j	-	Farzonur-Industrie
+s	A14	b	A13w	e	FaiBV1	n	-		-	-	j	-	n	-	-
+s	A24	b	A23w	e	FaiBV2	n	-		-	-	j	-	n	-	-
+s	A23w	e	A24	b	FaiU3	j	-		-	-	n	-	n	-	-
+s	A13w	e	A14	b	FaiU4	j	-		-	-	n	-	n	-	-
+s	A13f	b	A13e	e	FaiP1	n	-		-	-	n	-	n	j	Farzonur-Industrie
+s	A23f	b	A23e	e	FaiP2	n	-		-	-	n	-	n	j	Farzonur-Industrie
+s	A13f	e	A13w	b	FaiP3	n	-		-	-	n	-	n	j	Farzonur-Industrie
+s	A23f	e	A23w	b	FaiP4	n	-		-	-	n	-	n	j	Farzonur-Industrie
+s	A22w	e	A23e	b	FaiDD1	a	FarIyDown	2	-	j	-	j	-	Farzonur-Industrie
+s	A12w	e	A13e	b	FaiUD1	a	FarIyUp		2	-	j	-	j	-	Farzonur-Industrie
+s	A23e	b	A22w	e	FaiDU1	a	FarIyDown	1	-	n	-	j	-	Iyenvar-Zuid
+s	A13e	b	A12w	e	FaiUU1	a	FarIyUp		1	-	n	-	j	-	Iyenvar-Zuid
+
+# Bij IYZ
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	A12w	b	A12i	e	IyIV1	n	-	-	-	j	-	n	-	-
+s	A22w	b	A22i	e	IyIV2	n	-	-	-	j	-	n	-	-
+s	A12i	e	A12w	b	IyzPud	n	-	-	-	n	-	n	j	Iyenvar-Zuid
+s	A22i	e	A22w	b	IyzPdd	n	-	-	-	n	-	n	j	Iyenvar-Zuid
+
+s	A22e	e	A22i	b	FaiIV3	n	-	-	-	j	-	n	-	-
+s	A12e	e	A12i	b	FaiIV4	n	-	-	-	j	-	n	-	-
+s	A22i	b	A22e	e	IyzPdu	n	-	-	-	n	-	n	j	Iyenvar-Zuid
+s	A12i	b	A12e	e	IyzPuu	n	-	-	-	n	-	n	j	Iyenvar-Zuid
+
+# Bij IYENVAR
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	A21	e	A22e	b	IyzV3	n	-	-	-	n	-	j	-	Iyenvar-Zuid
+s	A11	e	A12e	b	IyzV4	n	-	-	-	n	-	j	-	Iyenvar-Zuid
+
+s	A12e	b	A11	e	IyI1	j	-	-	-	j	-	j	-	Iyenvar
+s	A22e	b	A21	e	IyI2	j	-	-	-	j	-	j	-	Iyenvar
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	3	b	A21	b	IyU3	j	-	-	-	n	-	n	j	Iyenvar
+s	2	b	A11	b	IyU4	j	-	-	-	n	-	n	j	Iyenvar
+s	1	b	1w	b	IyU6	n	-	-	0	n	-	n	j	Iyenvar
+
+s	1	e	C1w	b	IyU5	j	-	-	-	n	-	n	j	Iyenvar
+s	2	e	B11w	b	IyU1	j	-	-	-	n	-	n	j	Iyenvar
+s	3	e	B21w	b	IyU2	j	-	-	-	n	-	n	j	Iyenvar
+
+s	B23w	b	B22	e	IyI3	j	-	-	-	j	-	j	-	Iyenvar
+s	B13w	b	B12	e	IyI4	j	-	-	-	j	-	j	-	Iyenvar
+s	C3w	b	C2	e	IyI5	j	-	-	-	j	-	j	-	Iyenvar
+
+s	B11w	b	2	e	IyS1	n	-	-	100	n	-	n	-	-
+s	B21w	b	3	e	IyS2	n	-	-	100	n	-	n	-	-
+s	B21e	e	B22	b	IyS3	n	-	-	100	n	-	n	-	-
+s	B11e	e	B12	b	IyS4	n	-	-	100	n	-	n	-	-
+s	C1e	e	C2	b	IyI5	n	-	-	100	n	-	n	-	-
+
+# Voorseinen langs de vrije baan Iyenvar-Nasen
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	B23e	b	B23t	e	IyIV3	n	-	-	-	j	-	n	-	-
+s	B13e	b	B13t	e	IyIV4	n	-	-	-	j	-	n	-	-
+s	B23w	e	B23t	b	NaIV2	n	-	-	-	j	-	n	-	-
+s	B13w	e	B13t	b	NaIV1	n	-	-	-	j	-	n	-	-
+
+# Bij NASEN
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	B13e	e	B14	b	NaI1	j	-	-	-	j	-	j	-	Nasen
+s	B23e	e	B24	b	NaI2	j	-	-	-	j	-	j	-	Nasen
+
+s	B36	b	B25n	e	NaU5	j	-	-	-	n	-	n	-	-
+s	B26	b	B25e	e	NaU3	j	-	-	-	n	-	n	j	Nasen
+s	B16	b	B15e	e	NaU4	j	-	-	-	n	-	n	j	Nasen
+
+s	B16	e	B17w	b	NaU1	j	-	-	-	j	-	n	j	Nasen
+s	B26	e	B27w	b	NaU2	j	-	-	-	j	-	n	j	Nasen
+s	B36	e	B27n	b	NaU6	j	-	-	-	j	-	n	-	-
+
+s	B19	b	B18	e	NaI4	j	-	-	-	j	-	j	-	Nasen
+s	B29	b	B28	e	NaI3	j	-	-	-	j	-	j	-	Nasen
+
+s	B15w	b	B14	e	NaS1	n	-	-	100	n	-	n	-	-
+s	B25w	b	B24	e	NaS2	n	-	-	100	n	-	n	-	-
+s	B27e	e	B28	b	NaS3	n	-	-	100	n	-	n	-	-
+s	B17e	e	B18	b	NaS4	n	-	-	100	n	-	n	-	-
+
+# Op de vrije baan naar Durs
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl		Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	B18	e	B19	b	NaDuUU1	n	-		-	-	j	-	n	-	-
+s	B28	e	B29	b	NaDuDU1	n	-		-	-	j	-	n	-	-
+
+s	B19	e	B30	b	NaDuUU2	a	DursUp		1	-	j	-	n	-	-
+s	B29	e	B40	b	NaDuDU2	a	DursDown	1	-	j	-	n	-	-
+s	B30	b	B19	e	NaDuUD2	a	DursUp		2	-	j	-	n	-	-
+s	B40	b	B29	e	NaDuDD2	a	DursDown	2	-	j	-	n	-	-
+
+s	B30	e	B31w	b	NaDuUU3	a	DursUp		1	-	j	-	j	-	Durs
+s	B40	e	B41w	b	NaDuDU3	a	DursDown	1	-	j	-	j	-	Durs
+s	B31w	b	B30	e	NaDuUD3	a	DursUp		2	-	j	-	n	-	-
+s	B41w	b	B40	e	NaDuDD3	a	DursDown	2	-	j	-	n	-	-
+
+# Halte Durs
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	B31d	b	B31w	e	DuUD	n	-	-	-	n	-	n	j	Durs
+s	B41d	b	B41w	e	DuDD	n	-	-	-	n	-	n	j	Durs
+s	B31d	e	B31e	b	DuUU	n	-	-	-	n	-	n	j	Durs
+s	B41d	e	B41e	b	DuDU	n	-	-	-	n	-	n	j	Durs
+
+# Het traject naar FO en BIYUNAM														
+
+# De seinen bij de aftakking naar Biyunam														
+														
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Stations
+s	C3t	b	C3w	e	IyIV5	n	-	-	-	j	-	n	-	-
+s	C3t	e	C3e	b	ABV1	n	-	-	-	j	-	n	-	-
+s	C3e	e	C4w	b	AB1	j	-	-	-	n	-	n	-	-
+s	C5t	b	C5w	e	ABV2	n	-	-	-	j	-	n	-	-
+s	C5w	b	C4e	e	AB2	j	-	-	-	n	-	n	-	-
+s	C15t	b	C15w	e	ABV3	n	-	-	-	j	-	n	-	-
+s	C15w	b	C4n	e	AB3	j	-	-	-	n	-	n	-	-
+														
+s	C4w	b	C3e	e	ABS1	n	-	-	100	n	-	n	-	-
+s	C4e	e	C5w	b	ABS2	n	-	-	100	n	-	n	-	-
+s	C4n	e	C15w	b	ABS3	n	-	-	100	n	-	n	-	-
+														
+# Seinen bij BIYUNAM														
+														
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Stations
+s	C15t	e	C15e	b	BiPV1	n	-	-	-	n	0	j	-	Biyunam
+s	C16	e	C16	e	BiP1	n	-	-	0	n	-	n	j	Biyunam
+s	C16	b	C15e	e	BiP2	n	-	-	-	n	-	n	j	Biyunam
+														
+# Seinen bij FO														
+														
+s	C5t	e	C5e	b	FowPV1	n	-	-	-	n	-	j	-	Fo-West
+s	C6	e	C7	b	FowP1	n	-	-	-	n	-	n	j	Fo-West
+s	C6	b	C5e	e	FowP2	n	-	-	-	n	-	n	j	Fo-West
+
+######################################################################
+# STATION FARZONUR
+######################################################################
+
+# PERRONSPOREN
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	F1	300	40	j
+r	F2	300	40	j
+r	F3	300	40	j
+r	F4	300	40	j
+
+#Wat	Spoor	Naam	Rijr.
+m	F1	F1	-
+m	F2	F2	-
+m	F3	F3	-
+m	F4	F4	-
+
+# WISSELSTRAAT
+
+#Wat	Spoornr	Lengte	Snelh	Elektr
+r	FA12t	10	40	j
+r	FA34t	10	40	j
+r	FB34t	10	40	j
+
+r	FA1w	50	40	j
+r	FA2w	45	40	j
+r	FA2e	45	40	j
+r	FB2w	45	40	j
+r	FB2e	55	40	j
+r	FA1e	45	40	j
+r	FB1w	45	40	j
+r	FK1	5	40	j
+r	FK2	5	40	j
+r	FK3	5	40	j
+r	FK4	5	40	j
+
+r	FA3w	45	40	j
+r	FA4w	50	40	j
+r	FA4e	45	40	j
+r	FA3e	45	40	j
+r	FB3w	45	40	j
+r	FB4w	45	40	j
+r	FB3e	45	40	j
+r	FB4e	50	40	j
+
+#Wat	Spoor	Naam	Rijr.
+m	FA2w	FA12	-
+m	FA3w	FA34	-
+m	FK1	FK	-
+m	FB2e	FB12	-
+m	FB3e	FB34	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	FA12t	b	FA2w	e	n	n	-	-
+c	FA12t	b	FA1w	e	j	n	W43	FA12
+c	FA12t	e	FA2e	b	n	n	-	-
+c	FA12t	e	FA1e	b	j	n	W42a	FA12
+
+c	FA34t	b	FA3w	e	n	n	-	-
+c	FA34t	b	FA4w	e	j	n	W44	FA34
+c	FA34t	e	FA3e	b	n	n	-	-
+c	FA34t	e	FA4e	b	j	n	W41b	FA34
+
+c	FB2e	b	FB2w	e	n	n	-	-
+c	FB2e	b	FB1w	e	j	n	W41a	FB12
+
+c	FB34t	b	FB3w	e	n	n	-	-
+c	FB34t	b	FB4w	e	j	n	W42b	FB34
+c	FB34t	e	FB3e	b	n	n	-	-
+c	FB34t	e	FB4e	b	j	n	W45	FB34
+
+x	FK1	e	FK4	b	FK3	e	FK2	b
+
+c	FA1e	e	FK1	b	n	j	-	-
+c	FA4e	e	FK3	b	n	j	-	-
+c	FB1w	b	FK2	e	n	j	-	-
+c	FB4w	b	FK4	e	n	j	-	-
+c	FA2e	e	FB2w	b	n	j	-	-
+c	FA3e	e	FB3w	b	n	j	-	-
+
+# C EN D-SPOREN
+
+r	FC1	300	40	j
+r	FC2	250	40	j
+r	FC3	300	40	j
+r	FC4	300	40	j
+
+r	FD1	45	40	j
+r	FD2w	40	40	j
+r	FD2e	10	40	j
+
+#Wat	Spoor	Naam	Rijr.
+m	FC1	FC1	-
+m	FC2	FC2	FarIy
+m	FD2w	FD2	FarIy
+m	FC3	FC3	-
+m	FC4	FC4	-
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	FC1	e	FD1	b	n	j	-	-
+c	FC2	e	FD2w	b	n	j	-	-
+c	FD2e	b	FD2w	e	n	n	-	-
+c	FD2e	b	FD1	e	j	n	W47	FD2
+
+# EN NOU ALLES AAN ELKAAR VAST MAKEN!
+
+#Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
+c	F1	e	FA1w	b	n	j	-	-
+c	F2	e	FA2w	b	n	j	-	-
+c	F3	e	FA3w	b	n	j	-	-
+c	F4	e	FA4w	b	n	j	-	-
+
+c	FB2e	e	FC2	b	n	j	-	-
+c	FB3e	e	FC3	b	n	j	-	-
+c	FB4e	e	FC4	b	n	j	-	-
+
+# EN AAN HET OVERIGE SPOORNET VAST
+
+c	FD2e	e	A9	e	n	j	-	-
+
+######################################################################
+# SEINPALEN BIJ FARZONUR
+######################################################################
+
+#Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	F1	b	F1	b	FarS1	n	-	-	0	n	-	n	j	Farzonur
+s	F2	b	F2	b	FarS2	n	-	-	0	n	-	n	j	Farzonur
+s	F3	b	F3	b	FarS3	n	-	-	0	n	-	n	j	Farzonur
+s	F4	b	F4	b	FarS4	n	-	-	0	n	-	n	j	Farzonur
+														
+s	F1	e	FA1w	b	FarU1	j	-	-	-	n	-	n	-	-
+s	F2	e	FA2w	b	FarU2	j	-	-	-	n	-	n	-	-
+s	F3	e	FA3w	b	FarU3	j	-	-	-	n	-	n	-	-
+s	F4	e	FA4w	b	FarU4	j	-	-	-	n	-	n	-	-
+														
+s	FC1	e	FD1	b	FarU5	j	-	-	-	n	-	n	-	-
+														
+s	A9	e	FD2e	e	FarI1	j	-	-	-	n	0	n	-	-
+s	FD2e	e	A9	e	FarV1	n	-	-	100	n	-	j	-	Farzonur-Noord
+														
+s	FC3	b	FB3e	e	FarI3	j	-	-	-	n	0	n	-	-
+s	FC4	b	FB4e	e	FarI4	j	-	-	-	n	0	n	-	-
+														
+s	FC1	b	FC1	b	FarS5	n	-	-	0	n	-	n	j	Farzonur-Losplaats
+s	FC3	e	FC3	e	FarS7	n	-	-	0	n	-	n	j	Farzonur-Opstel
+s	FC4	e	FC4	e	FarS8	n	-	-	0	n	-	n	j	Farzonur-Opstel
+
+######################################################################
+# VERSCHIJNEN EN VERDWIJNEN
+######################################################################
+
+#	#Naam			#Vertr	#Spoor	#Met	#Richtg	#Mod	#snelh	#Erla.		#Erlst
+vs	Iyenvar-3		n	3	1	a	s	0	-		0
+vs	Biyunam			n	C16	1	a	s	0	-		0
+vs	Fo-West			j	C6	1	a	s	0	Fo		2
+vs	Farzonur-2		n	F2	299	v	s	0	-		-
+vs	Farzonur-Opstel-3	n	FC3	1	a	s	0	-		-
+vs	Durs-Down		j	B40	1	a	r	100	DursDown	2
+vd	B31d	v
+vd	B41d	v
+vd	C7	v
+
+o	a

@@ -1,0 +1,368 @@
+TREINDIENSTLEIDER-SIMULATOR. (c) 2007, Daan Goedkoop.
+
+CHANGELOG:
+11 augustus:
+- Een trein kan berekenen op welke sporen hij staat
+- Een meetpunt kan bepalen of een trein binnen bereik is of niet.
+- Een trein kan wachten totdat de vertrektijd bereikt is.
+- Een autovoorsein kan zijn seinbeeld aanpassen aan het hoofdsein
+- Een autosein kan zijn seinbeeld aanpassen naar het meetpunt, en naar de
+  vooruitliggende rails.
+- Een trein kan wegrijden, de seinen lezen en bij een station stoppen
+- Een trein kan naar een andere trein toe rijden en vlak voor deze stoppen.
+
+12 augustus:
+- Een trein kan in het procesplan kijken of we bij dit station echt moeten
+  stoppen
+- Een trein kan aan de erop volgende trein vastkoppelen
+- Een trein kan omkeren
+- Een trein kan een rijplan inlezen.
+- Een trein kan een deel van zich loskoppelen en dat deel een nieuw rijplan
+  geven, of een sternummer.
+- Een trein die niet bestuurd kan worden zal automatisch maximaal remmen.
+- We kunnen een wagon- en lokomotiefset inladen.
+- Een trein werkt zijn vertragings-info bij. Zowel bij vertrek als bij aankomst.
+- Bij het halteren en kopmaken minimumtijden ingevoerd. (1+1 minuut resp. 5+1)
+- Een nieuwe trein die niet weet wat 'ie moet krijgt een sternummer.
+- We kunnen nieuwe treinen creëren met het verschijnplan
+
+13 augustus:
+- We kunnen flankbotsingen herkennen.
+- Treinnummer-herkenning uit het PpMeetpunt gesloopt. Is een taak van de
+  echte trdl-software. Die moet aan de hand van wel/niet-bezet de treinnummers
+  van blok naar blok verschuiven.
+- Wissels kunnen worden omgezet. Er is een kans van 1/1000 dat een wissel niet
+  goed werkt, dan duurt het maximaal 5 minuten voordat hij eindelijk is
+  omgezet.
+
+14 augustus:
+- Laatste loodjes van het fysieke deel. Sporen kunnen worden geladen.
+- Testen & Bugfixes.
+- Weergavegedeelte verder voorbereid, inclusief weergave, procesplan, TNV, ...
+- Een elektrische trein kan alleen rijden op geëlektrificieerde rails.
+- Bij een botsing niet afsluiten, maar de treinen voor eeuwig stilzetten.
+
+15 augustus:
+- Verdere bugfixes. Al het bovenstaande werkt juist.
+- Treinnummervolging geïmplementeerd.
+
+18 augustus:
+- TNV verbeterd: werkt nu ook als tussen twee meetpunten geen sein staat.
+  Treinnummers worden altijd totaan het laatste meetpunt voor het volgende sein
+  doorgeschoven.
+- Losgekoppelde treindelen kunnen ook omgekeerd worden. Zo kan het voorste deel
+  onder het oude nummer verderrijden en het achterste deel onder een nieuw
+  nummer terugrijden, en omgekeerd.
+
+19 augustus:
+- Bij verschijnen kan geen label maar een plaatsnaam worden aangegeven.
+  Beginnend bij deze plaats worden de rijplanregels ingeladen.
+
+20 augustus:
+- Verschijnplan aangepast. Toegevoegd:
+  - Code aan het begin van de regel. 'vs' is verschijnregel, 'vd' is verdwijnen.
+  - Bij 'vs' aan het einde van de regel twee nieuwe parameters.
+	 treinweg_naam: string en treinweg_wachten: integer;
+  - Bij 'vd' wordt enkel een railnaam opgegeven. Heeft de *achterkant* van een
+	 trein deze rail bereikt, dan wordt deze trein gewist.
+- Bugfix: plaats achterkant trein berekenen gaat nu ook goed als de trein op
+  meerdere rails tegelijk staat
+- Bij een stationnement kunnen speciale acties in meerdere regels onder elkaar
+  staan, om bijvoorbeeld gecompliceerde splitsingen te kunnen uitvoeren, of voor
+  de TRDL om een stilstaande trein te kunnen keren / splitsen e.d.
+- Nog een paar bugfixes
+- Berichten wanneer een trein voor rood staat, of op een niet-geëlektrificeerd
+  spoor stil komt te staan.
+
+22 augustus:
+- Berichtsysteem een beetje verbeterd
+- Mogelijkheden geschapen om treinen beter opdrachten te kunnen geven, treinen
+  voorzichtig door rood te kunnen laten rijden, en treinen die door rood zijn
+  gereden voorzichtig weer verder te laten rijden.
+
+23 augustus:
+- Hoofdvenster geprogrammeerd
+- Meer berichten ingebouwd
+
+24 augustus 2007:
+- Alle resterende berichten ingebouwd
+- Bugfix in de rijd-code - treinen stoppen nu weer bij stations zonder 30
+  seconden lang <10 km/u te rijden.
+
+30 juni 2008:
+- Halteringstijden wat aangepast en nu ook seconde-precies
+
+1 juli:
+- Rijrichtingsvelden toegevoegd.
+
+2 juli - 9 juli:
+- Fix: Timermechaniek aangepast zodat het snel laten lopen van de simulatie ook
+  echt snel gaat.
+- Fix: Voorsein zoekt automatisch bijbehorend hoofdsein. De oude methode werkte
+  niet als tussen voorsein en hoofdsein een wissel lag.
+
+10 juli:
+- Fix: Trein kan nu ook optrekken als de aanzetkracht relatief klein is.
+- Fix: Crash verholpen als een trein over een punt rijdt waar twee beginpunten
+  of twee eindpunten van rails aan elkaar zitten
+- Fix: Treinen rijden nu correct verder na op een station te zijn gestopt
+- Fix: Treinen rijden nu correct verder na door rood te zijn gereden
+
+11 juli:
+- Bij verschenen treinen wordt het treinnummer meteen geregistreerd en
+  verschijnt vanzelf in beeld.
+- Bij automatische seinen kan nu een rijrichting worden opgegeven. Het sein
+  wordt dan niet op groen gezet als niet de betreffende rijrichting is
+  ingesteld. Zo wordt bij enkelspoorbeveiliging voorkomen dat twee treinen naar
+  elkaar kunnen worden geleid, en bovendien ...
+- Fix: ... werkt daardoor TNV nu ook goed op trajecten met
+  enkelspoorbeveiliging.
+- Fix: Treinen rijden nu correct verder na het eerste hoofdsein of bord dat
+  een snelheid oplegt.
+- Fix: De seconden van de minimale wachttijd bij stations worden nu correct
+  ingelezen.
+- Fix: Crash verholpen als een trein over een punt rijdt waar twee beginpunten
+  of twee eindpunten van rails aan elkaar zitten (zelfde probleem nog eens op
+  een andere plaats)
+
+12 juli:
+- Fix: Erlaubnis-systeem aangepast. Het vrijgeven moet nu expliciet gebeuren en
+  kan alleen worden gedaan door degene die de Erlaubnis daadwerkelijk denkt te
+  bezitten.
+- Fix: Verschijnen met vertraging werkt nu correct.
+- Fix: Geen vreemde foutmelding meer wanneer een trein een leeg (of
+  niet-bestaand) rijplan heeft.
+- Fix: Bij het verschijnen van een trein moet niet alleen het meetpunt vrij
+  zijn, maar ook de weg tot het volgende sein. Bovendien moeten we - als dat
+  sein een dusdanig seinbeeld geeft - de snelheid zo kiezen dat we niet te snel
+  of - als het sein stop toont - helemaal niet dat sein passeren.
+
+13 juli:
+- Fix: Dat met het verschijnen van de treinen werkt nu correct.
+
+15 juli:
+- Fix: Detectiepunten op kruisingen werken nu correct.
+
+17 juli:
+- Bediende seinen worden niet meer door de server op rood gezet - dat moet nu
+  door de client gebeuren
+- Fix: Autoseinen zijn nu niet meer afhankelijk van een vast meetpunt, maar
+  meten totaan het volgende hoofdsein.
+- Fix: Als vlak achter een rood sein een snelheidsopleggend bord staat, en een
+  trein gaat met hoge snelheid door rood, dan zal de machinist ook echt afremmen
+  en niet na het bord weer optrekken.
+
+18 juli:
+- Perrons kunnen nu ook een perronnummer hebben.
+- Bij een non-stop doorkomst van een station werkt een trein z'n vertragingsinfo
+  nu ook bij.
+- In het infrastuctuurbestand kunnen nu de verschijn- en verdwijnpunten worden
+  opgegeven. In de dienstregeling kan hieraan worden gerefereerd. Dat maakt het
+  maken van dienstregelingen gemakkelijker.
+
+19/20 juli:
+- Nieuw binair bestandsformaat voor de dienstregeling.
+- Dienstregeling-editor ingebouwd.
+
+22 juli:
+- Rijplanpunt annuleren ('ra') werkt nu ook zonder parameter, dat annuleert dan
+  het huidige rijplanpunt.
+
+23 juli:
+- Bij het invoeren van een nieuw rijplanpunt kan nu ook het perron worden
+  opgegeven.
+- Verbetering bij de behandeling van het actieve planpunt tijdens het stilstaan
+  bij een station, zodat opdrachten als "rijplanpunt annuleren" en "nieuw
+  rijplanpunt bovenaan toevoegen" logischer werken.
+
+27 juli:
+- Overwegen ingebouwd.
+- Fix: Snelheidsbordjes en voorseinen afgezonderd. Immers moet een
+  snelheidsbeperkend bordje onthouden worden bij een groen voorsein.
+
+30 juli:
+- Doorspoelen-knop ingebouwd.
+
+31 juli:
+- Fix: Berekenen van sporen tot volgend hoofdsein verbeterd.
+- Fix: Volgend hoofdsein zoeken verbeterd.
+- Fix: Bij niet-gevonden hoofdsein (bijvoorbeeld bij rijden naar spoor buiten
+  beeld) geeft een autovoorsein 'geel'.
+
+2 augustus:
+- Fix: geen crash meer als een trein in een niet-bestaand treinnummer wordt
+  omgenummerd.
+
+3 augustus:
+- Fix: non-stop werkt nu ook goed. Treinen remden bij het eerste station af tot
+  40 km/u af. En als de trein dan niet stopte, bleef hij maar met 40 km/u
+  doorsukkelen. Dat is nu opgelost.
+
+4 augustus:
+- Fix: trein een nieuwe dienstregeling geven per mmsg-bericht werkt nu ook goed.
+  De nieuwe dienstregeling werd wel geladen, maar het treinnummer niet
+  aangepast. Dat is nu opgelost.
+- Fix: afgekoppelde trein laadt nu zijn dienstregeling geheel correct.
+
+6 augustus:
+- Fix: Bij rijden op zicht moet de machinist niet optrekken bij bordjes die een
+  verhoging van de maximumsnelheid aangeven.
+- Fix: Bij omnummeren van een trein wordt de wachttijd weer goed berekend.
+- Prestatiebeoordeling is er nu.
+
+11 augustus:
+- Rijrichtingen kunnen nu ook een standaardwaarde meekrijgen. Zo wordt, naast
+  enkelspoorbeveiliging, ook dubbelspoorbeveiliging met beveiligd links rijden
+  mogelijk.
+- Bij enkelspoorbeveiliging met bloksecties (bijvoorbeeld dubbel-enkelspoor)
+  worden, als zonder ingestelde rijrichting een bezet blok wordt geconstateerd,
+  alle seinen die naar dit blok toe wijzen op rood gezet, maar de seinen
+  ervandaan blijven groen. Net als in het echt.
+- Bediende seinen kijken nu ook of de weg naar het volgende sein vrij is. Zo
+  kunnen rijwegen naar de vrije baan realistischer gemaakt worden, omdat de
+  meetpunten op de vrije baan, totaan het eerste P-sein, zo niet meer bij de
+  rijweg hoeven te horen. Net als in het echt.
+- Fix: Rolweerstand was een factor 10 te hoog. Zo kwamen goederentreinen
+  nauwelijks in beweging.
+- Fix: Tijd loopt na 24:00 correct verder.
+
+12 augustus:
+- Fix: Wissels worden nu netjes opengereden, zodat treinen niet pats-boem
+  ineens op een ander spoor staan als ze het proberen.
+- Storingen van seinen en meetpunten ingebouwd.
+- Een defect sein wordt gerapporteerd.
+
+13 augustus:
+- Fix: Eerst Erlaubnisse versturen, dan pas de meetpunten. Dat is nodig voor bij
+  het verschijnen van treinen. Immers wordt eerst de rijrichting ingesteld, pas
+  dan kan een trein op het betreffende spoor verschijnen!
+- De statusmelding van een trein is nu veel uitgebreider.
+
+14 augustus:
+- Treinen zelf kunnen nu bij vertrek ook defect raken.
+- Fix: In de dienstregeling-editor en in de statusmelding wordt het treinnummer
+  van een afgesplitste trein nu ook correct weergegeven.
+- Fix: berekening van elekrisch of niet verbeterd. Een elektrische loc zonder
+  bovenleiding kan nu gesleept worden door een dieselloc. En een trein zonder
+  loc die zonder bovenleiding staat geeft nu geen ik-heb-geen-stroom-melding
+  meer.
+
+16 augustus:
+- Fix: splitsen van treinen werkt nu correct.
+
+19 november:
+- Fix: omzetten van wissels met flankbeveiliging werkt weer correct.
+- Fix: openrijden van wissels werkt nu correct.
+- Fix: bij het openen van een savegame worden rijwegen die al gedeeltelijk
+  bereden zijn nu ook correct ingeladen.
+
+0.1.0.1 (19 januari 2009):
+- Fix: materieelbestanden kunnen weer worden ingeladen.
+
+0.1.0.2 (20 januari 2009):
+- Fix: verschijn-items zonder plaats worden netjes genegeerd, dus geen crash
+  meer.
+
+0.1.0.3 (21 januari 2009):
+- Fix: geen crash meer als een trein een nieuwe dienstregeling wordt gegeven
+  terwijl de trein rijdt.
+- Bij het geven van een nieuwe dienstregeling kan ook een van-station worden
+  opgegeven.
+- Berichtjes aan machinist voor het even wachten op groen aangepast.
+
+BERICHTEN AAN DE MACHINIST:
+
+- Rijd langzaam door het eerstvolgende rode sein
+- Laad een nieuw rijplan: trein XXX vanaf station YYY
+- Station X uit rijplan schrappen
+- Station X aan rijplan toevoegen, inclusief vertrek/aankomsttijden
+  Bovenaan / na station Y
+  Aldaar keren / koppelen / ontkoppelen
+- Status opvragen
+- Broadcast-bericht (welke treinen zijn aanwezig?)
+  Nuttig voor als een sternummer gegenereerd wordt, zo kun je achterhalen welk
+  nummer de trein zelf denkt te hebben.
+
+ACHTERGRONDINFORMATIE
+
+Voor een realistisch bedrijf en ook een makkelijkere implementatie is de
+achterliggende code in twee 'werelden' opgedeeld.
+
+DE ECHTE WERELD
+
+Dit zijn de fysiek aanwezige zaken - voor deze simulator die zaken die een
+functioneel belang dienen. Dit zijn:
+
+Vaste infrastructuur:
+- Sporen (zonder locatie, maar met vorige en volgende sporen/wissels)
+- Wissels
+- Seinen / borden
+- Isolatiepunten
+- Meetpunten
+- Perroneindpuntlocaties
+Mobiele voorwerpen
+- Treinen (bestaande uit locomotieven en wagons)
+- Rijplan
+
+Het rijplan bestaat in hoofdzaak uit perroneindpuntlocaties met aankomst- en
+vertrektijden (en of de trein er überhaupt moet stoppen).
+Bovendien extra-instructies. Deze kunnen zijn, in volgorde waarin ze worden
+uitgevoerd:
+1. Koppelen met de trein die voor ons staat
+2. Omkeren ('Kopmaken')
+3. Wagons loskoppelen
+4. Nieuw rijplan laden
+Deze extrafuncties vinden plaats na aankomst, en kunnen ook alléén uitgevoerd
+worden wanneer de trein stilstaat. 
+Na een omdraaiinstructie staat een trein niet meer langs een gedefinieerd
+perron. Toch kan een vertrektijd worden genoemd.
+
+Voorbeeld:
+
+Trein S1.122
+Spoor		A 		V		H	Extra
+...
+FanSp1	14:50	14:52	J	-
+FarSp1 	14:55	-		J	keren; wijzig in trein S1.123
+
+Trein S1.123
+			A		V		H	Extra
+FarSp1	-		15:05	N	-
+...
+
+DE SEINHUISWERELD
+
+Dit is de gestileerde wereld van het seinhuis. Het enige contact met de
+echte wereld zijn de meetpunten, de seinen en de wissels.
+
+De basis voor de seinhuiswereld is het sporenplan. Deze bestaat uit hokjes.
+In ieder hokje kan iets ingetekend worden. Bijvoorbeeld:
+- Landschap
+  - Leeg
+  - Perron
+- Een stuk spoor.
+  - Ligging. links->rechts, boven->beneden, boven->links, ...
+  - Bezet-meetpunt
+  Kan gemarkeerd worden als:
+  - Vrij
+  - Onderdeel van een rijweg
+  - Bezet
+  Kan gemarkeerd worden als:
+  - Actief
+  - Inactief
+- Een wissel, bestaande uit twee stukken spoor.
+- Een seinpaal
+
+Rijwegen: zie los bestand Rijweg.txt
+
+Verder is er nog het procesplan. Deze bevat gegevens welke treinen wanneer
+komen en welke rijwegen daarvoor wanneer moeten worden ingesteld. Gegevens:
+
+- Trein (funct.)
+- Rijweg instellen indien de trein spoor/hokje X passeert (funct. zonder weergave)
+- Geplande tijd waarop dit gebeurt - en niet eerder bij auto-rijweg (funct.)
+- Geplande tijd waarop de trein bij het einde van de rijweg aankomt (info)
+- Rijweg zelf, te bepalen uit van/naar/extra info.
+
+Voorbeeld:
+S1.123	14:53	14:55	FarE1 -> FarSp1A
