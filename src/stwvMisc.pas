@@ -2,7 +2,10 @@ unit stwvMisc;
 
 interface
 
-uses Windows, MMSystem;
+uses Messages, Windows, MMSystem;
+
+const
+	WM_CMD_RESPONSE = WM_USER + 1;
 
 type
 	TVoorOfAchter = (vaVoor, vaAchter);

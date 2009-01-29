@@ -9,8 +9,12 @@ uses stwvCore, stwvSporen, stwvRijwegen;
 // De functie levert ook 'true' als de wissel al goed ligt en er reeds
 // een rijweg over ligt.
 // Met 'Flankbeveiliging' wordt de hele wisselgroep gecontroleerd.
-function WisselStandKan(Wissel: PvWissel; Rechtdoor: boolean; Flankbeveiliging: boolean): boolean;
-function WisselKanOmgezet(Wissel: PvWissel; Flankbeveiliging: boolean): boolean;
+function WisselStandKan(Wissel: PvWissel; Stand: TWisselstand): boolean;
+function WisselKanOmgezet(Wissel: PvWissel): boolean;
+
+// Deze functie controleert of het wissel goed ligt, inclusief alle andere
+// wissels in de groep.
+function WisselsLiggenGoed(Wissel: PvWissel; Stand: TWisselstand): boolean;
 
 // Deze functie kijkt of een rijweg ingesteld kan worden.
 // De rijweg hoeft niet vrij te zijn, maar de wissels moeten wel goed
@@ -38,53 +42,103 @@ var
 	richtingok,
 	rozok:	boolean;
 
+function WisselStandKan2(Wissel: PvWissel; Stand: TWisselstand): boolean;
+var
+	tmpBezet: boolean;
+begin
+	result := false;
+
+	if not (Stand in [wsRechtdoor, wsAftakkend]) then exit;
+
+	// Als de wensstand goed is, is alles in orde.
+	if Wissel^.WensStand = Stand then
+		result := true;
+
+	// Aangenomen de wensstand klopt eventueel niet. Wanneer mogen we het
+	// wissel dan omzetten?
+	// - Meetpunten vrij
+	// - Niet onderdeel van een rijweg
+	// - Niet bedienverhinderd
+
+	// Wissel kan goed worden gezet
+	if assigned(Wissel^.Meetpunt) then
+		tmpBezet := Wissel^.Meetpunt^.bezet
+	else
+		tmpBezet := false;
+	if (not assigned(Wissel^.RijwegOnderdeel)) and
+		(not Wissel^.Groep.Bedienverh) and
+		(not tmpBezet) then
+		result := true;
+end;
+
 function WisselStandKan;
 var
 	tmpWissel: PvWissel;
+	tmpRechtdoor: boolean;
 begin
-	if Flankbeveiliging then begin
-		result := true;
-		tmpWissel := Wissel^.Groep^.EersteWissel;
-		while assigned(tmpWissel) do begin
-			result := result and
-				WisselStandKan(tmpWissel,
-				(rechtdoor xor Wissel^.BasisstandRecht xor tmpWissel^.BasisstandRecht)
-				, false);
-			tmpWissel := tmpWissel^.Volgende;
-		end;
-	end else begin
-
+	if not (Stand in [wsRechtdoor, wsAftakkend]) then begin
 		result := false;
+		exit;
+	end;
 
-		// Wissel staat al goed
-		if
-		(((Wissel^.Stand = wsAftakkend) and not rechtdoor) or
-		((Wissel^.Stand = wsRechtdoor) and rechtdoor))
-		 and ((Wissel^.Wensstand = Wissel^.Stand) or (Wissel^.Wensstand = wsEgal))
-		 and (not Wissel^.rijwegverh) then
-			result := true;
+	result := true;
+	tmpWissel := Wissel^.Groep^.EersteWissel;
+	tmpRechtdoor := Stand = wsRechtdoor;
+	while assigned(tmpWissel) do begin
+		if (tmpRechtdoor xor Wissel^.BasisstandRecht xor tmpWissel^.BasisstandRecht) then
+			result := result and WisselStandKan2(tmpWissel, wsRechtdoor)
+		else
+			result := result and WisselStandKan2(tmpWissel, wsAftakkend);
+		tmpWissel := tmpWissel^.Volgende;
+	end;
+end;
 
-		// Wissel wordt momenteel goed gezet
-		if
-		(((Wissel^.WensStand = wsAftakkend) and not rechtdoor) or
-		((Wissel^.WensStand = wsRechtdoor) and rechtdoor))
-		 and (Wissel^.Stand = wsOnbekend)
-		 and (not Wissel^.rijwegverh) then
-			result := true;
-			
-		// Wissel kan goed worden gezet
-		if
-		assigned(Wissel^.Meetpunt) and not(assigned(Wissel^.RijwegOnderdeel) or
-		 Wissel^.Groep^.bedienverh or Wissel^.rijwegverh or Wissel^.Meetpunt^.bezet
-		 or Wissel^.Groep^.OnbekendAanwezig)
-		then
-			result := true;
+function WisselsLiggenGoed2(Wissel: PvWissel; Stand: TWisselstand): boolean;
+begin
+	result := false;
+
+	if not (Stand in [wsRechtdoor, wsAftakkend]) then exit;
+
+	result := (Wissel^.Stand = Stand) and (Wissel^.Wensstand = Stand);
+end;
+
+function WisselsLiggenGoed;
+var
+	tmpWissel: PvWissel;
+	tmpRechtdoor: boolean;
+begin
+	if not (Stand in [wsRechtdoor, wsAftakkend]) then begin
+		result := false;
+		exit;
+	end;
+
+	result := true;
+	tmpWissel := Wissel^.Groep^.EersteWissel;
+	tmpRechtdoor := Stand = wsRechtdoor;
+	while assigned(tmpWissel) do begin
+		if (tmpRechtdoor xor Wissel^.BasisstandRecht xor tmpWissel^.BasisstandRecht) then
+			result := result and WisselsLiggenGoed2(tmpWissel, wsRechtdoor)
+		else
+			result := result and WisselsLiggenGoed2(tmpWissel, wsAftakkend);
+		tmpWissel := tmpWissel^.Volgende;
 	end;
 end;
 
 function WisselKanOmgezet;
 begin
-	result := WisselStandKan(Wissel, Wissel^.Stand <> wsRechtdoor, Flankbeveiliging) and not (Wissel^.Groep^.OnbekendAanwezig);
+	case Wissel^.Wensstand of
+	wsRechtdoor: result := WisselStandKan(Wissel, wsAftakkend);
+	wsAftakkend: result := WisselStandKan(Wissel, wsRechtdoor);
+	wsEgal:
+		case Wissel^.Stand of
+		wsRechtdoor: result := WisselStandKan(Wissel, wsAftakkend);
+		wsAftakkend: result := WisselStandKan(Wissel, wsRechtdoor);
+		else
+			result := false;
+		end;
+	else
+		result := false;
+	end;
 end;
 
 function RijwegKan;
@@ -95,7 +149,11 @@ begin
 	wisselok := true;
 	Stand := Rijweg.Wisselstanden;
 	while assigned(Stand) do begin
-		wisselok := wisselok and WisselStandKan(Stand^.Wissel, Stand^.Rechtdoor, true);
+		if Stand^.Rechtdoor then
+			wisselok := wisselok and WisselStandKan(Stand^.Wissel, wsRechtdoor)
+		else
+			wisselok := wisselok and WisselStandKan(Stand^.Wissel, wsAftakkend);
+		wisselok := wisselok and not Stand^.Wissel^.rijwegverh;
 		Stand := Stand^.Volgende;
 	end;
 

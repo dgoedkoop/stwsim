@@ -2,23 +2,15 @@ unit stwsimEditMain;
 
 interface
 
+{$DEFINE EDITOR}
+
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ComCtrls, stwvGleisplan, StdCtrls, Buttons, ExtCtrls, Spin,
   stwvCore, stwvMeetpunt, stwvSeinen, stwvSporen, Menus, stwvHokjes, Mask,
-  ActnList, stwvRijwegen, stwsimEditHelpers, stwvMisc;
+  ActnList, stwvRijwegen, stwsimEditHelpers, stwvMisc, stwvRijwegLogica;
 
 type
-	PTablist = ^TTablist;
-	TTablist = record
-		Gleisplan:	TvGleisplan;
-		Scrollbox:	TScrollBox;
-		Details:		boolean;
-		Titel:		string;
-		ID:			integer;
-		Volgende: PTablist;
-	end;
-
 	firstlast = (flFirst, flLast);
 
 	TUpdateChg = record
@@ -90,7 +82,7 @@ type
     Label11: TLabel;
 	 SpeedButton18: TSpeedButton;
 	 Label12: TLabel;
-    Label13: TLabel;
+	 Label13: TLabel;
 	 Label14: TLabel;
     SpeedButton19: TSpeedButton;
     SpeedButton20: TSpeedButton;
@@ -122,7 +114,7 @@ type
 	 rtBut: TButton;
     rdBut: TButton;
     drawNiks: TSpeedButton;
-    SpeedButton26: TSpeedButton;
+	 SpeedButton26: TSpeedButton;
     SpeedButton27: TSpeedButton;
     SpeedButton28: TSpeedButton;
     SpeedButton29: TSpeedButton;
@@ -153,7 +145,7 @@ type
 	 Label7: TLabel;
     SpeedButton13: TSpeedButton;
     SpeedButton14: TSpeedButton;
-    tsLast: TCheckBox;
+	 tsLast: TCheckBox;
     rijwegeditbox: TGroupBox;
     Label18: TLabel;
     Label19: TLabel;
@@ -184,7 +176,7 @@ type
     Label29: TLabel;
     prlSpoorLijst: TListBox;
     AddPrlSpoorBut: TSpeedButton;
-    RmPrlSpoorBut: TSpeedButton;
+	 RmPrlSpoorBut: TSpeedButton;
     Label31: TLabel;
 	 DwangEdit: TEdit;
     prlRijwegNiks: TSpeedButton;
@@ -215,7 +207,7 @@ type
     ovdbut: TButton;
     ovtbut: TButton;
     ovEdit: TEdit;
-    ovmaDBut: TButton;
+	 ovmaDBut: TButton;
     ovmaTBut: TButton;
     ovmaList: TListBox;
     Label33: TLabel;
@@ -246,7 +238,7 @@ type
     InfraOpenBut: TButton;
     infraStatus: TLabel;
     Opslaan: TAction;
-    Opslaan1: TMenuItem;
+	 Opslaan1: TMenuItem;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -277,7 +269,7 @@ type
 	 procedure SpeedButton9Click(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
 	 procedure SpeedButton16Click(Sender: TObject);
-    procedure SpeedButton15Click(Sender: TObject);
+	 procedure SpeedButton15Click(Sender: TObject);
     procedure SpeedButton17Click(Sender: TObject);
 	 procedure mTnBoxChange(Sender: TObject);
 	 procedure SpeedButton18Click(Sender: TObject);
@@ -308,7 +300,7 @@ type
     procedure SpeedButton31Click(Sender: TObject);
     procedure SpeedButton34Click(Sender: TObject);
     procedure SpeedButton36Click(Sender: TObject);
-    procedure SpeedButton37Click(Sender: TObject);
+	 procedure SpeedButton37Click(Sender: TObject);
     procedure etButClick(Sender: TObject);
     procedure edButClick(Sender: TObject);
     procedure eElBoxChange(Sender: TObject);
@@ -338,8 +330,8 @@ type
     procedure movdbutClick(Sender: TObject);
     procedure ovmaTButClick(Sender: TObject);
     procedure ovmaDButClick(Sender: TObject);
-    procedure SpeedButton43Click(Sender: TObject);
-    procedure SpeedButton42Click(Sender: TObject);
+	 procedure SpeedButton43Click(Sender: TObject);
+	 procedure SpeedButton42Click(Sender: TObject);
     procedure detailsOnClick(Sender: TObject);
     procedure detailsOffClick(Sender: TObject);
     procedure tnvvanwisClick(Sender: TObject);
@@ -352,17 +344,18 @@ type
     procedure InfraOpenButClick(Sender: TObject);
     procedure OpslaanExecute(Sender: TObject);
 	private
-		FirstTab:	PTablist;
-		VisibleTab: PTabList;
-		Core:			TvCore;
-		UpdateChg:	TUpdateChg;
-		Modified: 	boolean;
+		FirstTab:		PTablist;
+		VisibleTab: 	PTabList;
+		Core:				TvCore;
+		RijwegLogica: 	TRijwegLogica;
+		UpdateChg:		TUpdateChg;
+		Modified: 		boolean;
 		FTreinnrWeergeven: boolean;
-		p_mode:		integer;
+		p_mode:			integer;
 		p_gix,
-		p_giy:		integer;
+		p_giy:			integer;
 		gselx,
-		gsely: 		integer;
+		gsely: 			integer;
 		selMeetpunt:	PvMeetpunt;
 		selTnMeetpunt:	PvMeetpunt;
 		selErlaubnis:	PvErlaubnis;
@@ -661,17 +654,6 @@ begin
 
 		if assigned(Rijweg) and assigned(VisibleTab^.Gleisplan) then begin
 			// En deze rijweg weergeven.
-			InactiefHokje := Rijweg.InactieveHokjes;
-			while assigned(InactiefHokje) do begin
-				if InactiefHokje.schermID = VisibleTab^.ID then begin
-					Hokje := VisibleTab^.Gleisplan.GetHokje(InactiefHokje.x, InactiefHokje.y);
-					case Hokje.Soort of
-						1: PvHokjeSpoor(Hokje.grdata).InactiefWegensRijweg := true;
-						5: PvHokjeWissel(Hokje.grdata).InactiefWegensRijweg := true;
-					end;
-				end;
-				InactiefHokje := InactiefHokje.Volgende;
-			end;
 			KruisingHokje := Rijweg.KruisingHokjes;
 			while assigned(KruisingHokje) do begin
 				if KruisingHokje.schermID = VisibleTab^.ID then begin
@@ -685,13 +667,6 @@ begin
 				end;
 				KruisingHokje := KruisingHokje.Volgende;
 			end;
-			rMeetpunt := Rijweg.Meetpunten;
-			while assigned(rMeetpunt) do begin
-				Meetpunt := rMeetpunt^.Meetpunt;
-				Meetpunt^.RijwegOnderdeel := Rijweg;
-				VisibleTab^.Gleisplan.PaintMeetpunt(Meetpunt);
-				rMeetpunt := rMeetpunt^.volgende;
-			end;
 			rWissel := Rijweg.Wisselstanden;
 			while assigned(rWissel) do begin
 				Wissel := rWissel^.Wissel;
@@ -702,6 +677,14 @@ begin
 					Wissel^.Stand := wsAftakkend;
 				VisibleTab^.Gleisplan.PaintWissel(Wissel);
 				rWissel := rWissel^.volgende;
+			end;
+			rMeetpunt := Rijweg.Meetpunten;
+			while assigned(rMeetpunt) do begin
+				Meetpunt := rMeetpunt^.Meetpunt;
+				Meetpunt^.RijwegOnderdeel := Rijweg;
+				RijwegLogica.DoeHokjes(Meetpunt, true);
+				VisibleTab^.Gleisplan.PaintMeetpunt(Meetpunt);
+				rMeetpunt := rMeetpunt^.volgende;
 			end;
 			if assigned(Rijweg^.Sein) then begin
 				Rijweg^.Sein^.Stand := 'g';
@@ -757,13 +740,6 @@ begin
 				else
 					RijwegBestaatUit.Items.Add(Wissel^.WisselID+' in aftakkende stand');
 				rWissel := rWissel^.volgende;
-			end;
-			RijwegBestaatUit.Items.Add('UITGESLOTEN HOKJES:');
-			InactiefHokje := Rijweg.InactieveHokjes;
-			while assigned(InactiefHokje) do begin
-				RijwegBestaatUit.Items.Add('['+inttostr(InactiefHokje.x)+','+
-					inttostr(InactiefHokje.y)+'] op scherm '+SchermTitel(InactiefHokje.schermID));
-				InactiefHokje := InactiefHokje.Volgende;
 			end;
 			RijwegBestaatUit.Items.Add('KRUISING-INFORMATIE:');
 			KruisingHokje := Rijweg.KruisingHokjes;
@@ -891,6 +867,7 @@ begin
 		Tab^.Volgende := FirstTab;
 		FirstTab := Tab;
 	end;
+	RijwegLogica.Tabs := FirstTab;
 end;
 
 function TstwseMain.GetScherm;
@@ -995,12 +972,9 @@ procedure TstwseMain.FormCreate(Sender: TObject);
 begin
 	Infrastructuur := TStringList.Create;
 	EditPC.ActivePage := algTab;
-	Core.vAlleWisselGroepen := nil;
-	Core.vAlleMeetpunten := nil;
-	Core.vAlleSeinen := nil;
-	Core.vAlleOverwegen := nil;
-	Core.vAlleRijwegen := nil;
-	Core.vAllePrlRijwegen := nil;
+	vCore_Create(@Core);
+	RijwegLogica := TRijwegLogica.Create;
+	RijwegLogica.Core := @Core;
 	FTreinnrWeergeven := true;
 	UpdateChg.Infra := true;
 	UpdateChg.Meetpunten := false;
@@ -1244,13 +1218,13 @@ begin
 	modified := true;
 	Gleisplan := @Sender;
 	if (p_mode <= 49) then begin
-		// TEECKENEN !!!
+		// TEKENEN
 		case p_mode of
-		0: begin
+		0: begin	// Wis hokje
 				Gleisplan^.Empty(gselx,gsely);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		1: begin
+		1: begin	// Plaats simpel spoor met treindetectie
 				if not elCheck.Checked then
 					ep := 1
 				else
@@ -1258,7 +1232,7 @@ begin
 				Gleisplan^.PutSpoor(gselx,gsely,p_gix,p_giy+ep,selMeetpunt);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		11: begin
+		11: begin	// Plaats simpel spoor zonder treindetectie
 				if not elCheck.Checked then
 					ep := 1
 				else
@@ -1266,7 +1240,7 @@ begin
 				Gleisplan^.PutSpoor(gselx,gsely,p_gix,p_giy+ep,nil);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		31: begin
+		31: begin	// Plaats spoor met seindriehoekje
 				if not assigned(selSein) then begin
 					Application.MessageBox('Er is geen sein geselecteerd.','Foutmelding',MB_ICONEXCLAMATION);
 					exit;
@@ -1279,23 +1253,23 @@ begin
 				Gleisplan^.PutSeinDriehoekje(gselx, gsely, selSein);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		3: begin
+		3: begin		// Plaats simpel sein
 				Gleisplan^.PutSein(gselx,gsely,p_gix,p_giy, selSein);
 				Gleisplan^.PutSein(gselx+1,gsely,p_gix+1,p_giy, selSein);
 				Gleisplan^.PaintHokje(gselx, gsely);
 				Gleisplan^.PaintHokje(gselx+1, gsely);
 			end;
-		4: begin
+		4: begin		// Plaats decoratie, 1 hokje
 				Gleisplan^.PutLandschap(gselx,gsely,p_gix,p_giy);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		41: begin
+		41: begin	// Plaats decoratie, 2 hokjes
 				Gleisplan^.PutLandschap(gselx,gsely,p_gix,p_giy);
 				Gleisplan^.PutLandschap(gselx+1,gsely,p_gix+1,p_giy);
 				Gleisplan^.PaintHokje(gselx, gsely);
 				Gleisplan^.PaintHokje(gselx+1, gsely);
 			end;
-		42: begin
+		42: begin	// Plaats tekst
 				if txSpoornummer.Checked then
 					Gleisplan^.PutText(gselx, gsely, txTxt.text, txKleur.ItemIndex, txTxt.text,
 						txSeinWisselNr.Checked)
@@ -1305,7 +1279,7 @@ begin
 				for i := 1 to length(txTxt.text) do
 					Gleisplan^.PaintHokje(gselx+i-1,gsely);
 			end;
-		5: begin
+		5: begin		// Plaats wissel
 				if not assigned(selWissel) then begin
 					Application.MessageBox('Er is geen wissel geselecteerd.','Foutmelding',MB_ICONEXCLAMATION);
 					exit;
@@ -1317,7 +1291,7 @@ begin
 				Gleisplan^.PutWissel(gselx,gsely,p_gix,p_giy+ep, selWissel^.Meetpunt, selWissel);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		6: begin
+		6: begin		// Plaats rijrichting-driehoekje
 				if not assigned(selErlaubnis) then begin
 					Application.MessageBox('Er is geen rijrichtingsveld geselecteerd.','Foutmelding',MB_ICONEXCLAMATION);
 					exit;
@@ -1328,7 +1302,7 @@ begin
 				Gleisplan^.PutErlaubnis(gselx,gsely,p_gix,p_giy, selErlaubnis, richting);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
-		10: begin
+		10: begin	// Plaats TNV-venster
 				Gleisplan^.PutTreinnummer(gselx, gsely, selTnMeetpunt, lenEdit.Value);
 				for i := 1 to lenEdit.Value do
 					Gleisplan^.PaintHokje(gselx+i-1,gsely);
@@ -1337,7 +1311,7 @@ begin
 		// Nog eventjes eventuele troep weghalen.
 		Rijweg := Core.vAlleRijwegen;
 		while assigned(rijweg) do begin
-			if (RijwegVerwijderInactiefHokje(Rijweg, visibleTab^.ID, gselx, gsely)
+			if (RijwegVerwijderInactiefHokje(RijwegLogica, visibleTab, gselx, gsely)
 			or RijwegVerwijderKruisingHokje(Rijweg, visibleTab^.ID, gselx, gsely))
 			and (Rijweg = selRijweg) then begin
 				UpdateChg.Rijweg := true;
@@ -1350,7 +1324,7 @@ begin
 		if not assigned(selRijweg) then exit;
 		case p_mode of
 			// RIJWEGEN !!!
-			51: begin
+			51: begin	// Instellen van-spoor -> sein
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				klikpunt := MaakKlikpunt(hokje);
 				if klikpunt <> '' then begin
@@ -1366,7 +1340,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			52: begin
+			52: begin	// Instellen naar-spoor
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				klikpunt := MaakKlikpunt(hokje);
 				if klikpunt <> '' then begin
@@ -1379,7 +1353,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			53: begin
+			53: begin	// Instellen van-sein
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 3 then
 					if assigned(PvHokjeSein(Hokje.grdata)^.Sein) then begin
@@ -1393,7 +1367,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			55: begin
+			55: begin	// Toevoegen / verwijderen van meetpunten en wissels
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				case Hokje.Soort of
 					1: begin
@@ -1436,15 +1410,15 @@ begin
 					end;
 				end;
 			end;
-			56: begin
+			56: begin	// Instellen van inactieve hokjes
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				case Hokje.Soort of
 					1: begin
 						if assigned(PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.RijwegOnderdeel) then begin
 							if not PvHokjeSpoor(Hokje.grdata)^.InactiefWegensRijweg then
-								RijwegVoegInactiefHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeSpoor(Hokje.grdata)^.Meetpunt)
+								RijwegVoegInactiefHokjeToe(RijwegLogica, visibleTab, gselx, gsely)
 							else
-								RijwegVerwijderInactiefHokje(selRijweg, visibleTab^.ID, gselx, gsely);
+								RijwegVerwijderInactiefHokje(RijwegLogica, visibleTab, gselx, gsely);
 							UpdateChg.Rijweg := true;
 							UpdateChg.Rijwegen := true;
 							UpdateControls;
@@ -1454,9 +1428,9 @@ begin
 					5: begin
 						if assigned(PvHokjeWissel(Hokje.grdata)^.Meetpunt^.RijwegOnderdeel) then begin
 							if not PvHokjeWissel(Hokje.grdata)^.InactiefWegensRijweg then
-								RijwegVoegInactiefHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeWissel(Hokje.grdata)^.Meetpunt)
+								RijwegVoegInactiefHokjeToe(RijwegLogica, visibleTab, gselx, gsely)
 							else
-								RijwegVerwijderInactiefHokje(selRijweg, visibleTab^.ID, gselx, gsely);
+								RijwegVerwijderInactiefHokje(RijwegLogica, visibleTab, gselx, gsely);
 							UpdateChg.Rijweg := true;
 							UpdateChg.Rijwegen := true;
 							UpdateControls;
@@ -1467,7 +1441,7 @@ begin
 						Application.Messagebox('Dit kan niet.','Fout',MB_ICONERROR);
 				end;
 			end;
-			57: begin
+			57: begin	// Instellen van kruisinghokjes
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 1 then begin
 					if assigned(PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.RijwegOnderdeel) and
@@ -1491,7 +1465,7 @@ begin
 					Application.Messagebox('Dit kan niet.','Fout',MB_ICONERROR);
 				end;
 			end;
-			58: begin
+			58: begin	// Toevoegen / verwijderen van approach locking secties
 				if assigned(selRijweg^.Sein) then begin
 					Hokje := Gleisplan^.GetHokje(gselx, gsely);
 					if Hokje.Soort = 1 then begin
@@ -1515,7 +1489,7 @@ begin
 				end else
 					Application.Messagebox('De rijweg heeft nog geen sein!','Fout',MB_ICONERROR);
 			end;
-			59: begin
+			59: begin	// Instellen van de rijrichting
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 6 then
 					if assigned(PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis) then begin
@@ -1530,7 +1504,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			60: begin
+			60: begin	// Instellen van-TNV-venster -> sein
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if assigned(Hokje.Dyndata) then begin
 					if assigned(selRijweg^.Sein) then begin
@@ -1544,7 +1518,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			61: begin
+			61: begin	// Instellen naar-TNV-venster
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if assigned(Hokje.Dyndata) then begin
 					selRijweg^.NaarTNVMeetpunt := Hokje.Dyndata^.Meetpunt;
@@ -1555,7 +1529,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			62: begin
+			62: begin	// Instellen naar-sein
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 3 then
 					if assigned(PvHokjeSein(Hokje.grdata)^.Sein) then begin
@@ -1569,7 +1543,7 @@ begin
 				rijwegNiks.Down := true;
 				p_mode := -1;
 			end;
-			63: begin
+			63: begin	// Instellen ARI-triggerpunt -> sein
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 1 then begin
 					Meetpunt := PvHokjeSpoor(Hokje.grdata)^.Meetpunt;
@@ -1912,6 +1886,8 @@ begin
 			end;
 		until schermID = 0;
 	end;
+
+	RijwegLogica.ZetRijwegInSubroutesOm;
 
 	UpdateChg.Infra := true;
 	UpdateChg.Meetpunten := true;

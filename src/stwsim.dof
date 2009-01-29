@@ -2,7 +2,7 @@
 A=1
 B=0
 C=1
-D=0
+D=1
 E=0
 F=0
 G=1
@@ -53,11 +53,11 @@ RunParams=
 HostApplication=
 [Version Info]
 IncludeVerInfo=1
-AutoIncBuild=0
+AutoIncBuild=1
 MajorVer=0
-MinorVer=1
+MinorVer=2
 Release=0
-Build=3
+Build=12
 Debug=0
 PreRelease=0
 Special=0
@@ -68,7 +68,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=Daan Goedkoop
 FileDescription=StwSim Hoofdprogramma
-FileVersion=0.1.0.3
+FileVersion=0.2.0.12
 InternalName=StwSim
 LegalCopyright=© 2007, 2008, Daan Goedkoop
 LegalTrademarks=

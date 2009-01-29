@@ -21,7 +21,6 @@ type
 		ZichtbaarLijst:	PpRaillijst;	// Wordt éénmalig bijgewerkt.
 		// Defecten
 		defect:		boolean;
-		defecttot:	integer;
 
 		// OVERIG
 		veranderd:	boolean;

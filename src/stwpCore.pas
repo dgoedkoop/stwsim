@@ -4,16 +4,17 @@ interface
 
 uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 	stwpTreinen, stwpSternummer, stwpVerschijnLijst, serverSendMsg,
-	stwpTijd, stwpRijplan, stwpOverwegen, stwvMisc;
+	stwpTijd, stwpRijplan, stwpOverwegen, stwvMisc, stwpDatatypes,
+	stwpTelefoongesprek, stwpMonteur;
 
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.1';
+	SaveIOMagic			= 'STWSIMSAVE.2';
 
 	tps					= 10;
 
-	cr						= 0.0015;		// Rolweerstandscoefficient
+	cr						= 0.0015;	// Rolweerstandscoefficient
 	frontaal				= 3*3;		// Frontaal oppvervlak
 	dichtheid			= 1.293;		// Luchtdichtheid
 
@@ -29,12 +30,15 @@ const
 	berichtsturenwachten	=	1;		// Bericht sturen na zoveel minuten voor rood.
 	doorroodrozsnelheid  = 40;
 
-	wisseldefectkans 					= 1/300;
-	wisseldefectmintijd				= 3;
-	wisseldefectmaxtijd				= 20;
+	wisseldefectkans 					= 1/200;
+	wisselechtdefectkans				= 1/3;	// in de overige gevallen helpt omzetten
+	wisseldefectonderwegmintijd	= 10;
+	wisseldefectonderwegmaxtijd	= 20;
+	wisseldefectreparatiemintijd	= 3;
+	wisseldefectreparatiemaxtijd	= 10;
+	storingsdienstnaam				= 'Storingsdienst';
+
 	meetpuntdefectbijtreinkans		= 1/2000;
-	meetpuntdefectbijtreinmintijd	= 10;
-	meetpuntdefectbijtreinmaxtijd	= 20;
 	seindefectkans						= 1/600;
 	seindefectmintijd					= 10;
 	seindefectmaxtijd					= 20;
@@ -80,6 +84,7 @@ type
 		pAlleVerschijnpunten:PpVerschijnPunt;
 		pAlleVerdwijnpunten:	PpVerdwijnPunt;
 		pAlleOverwegen:		PpOverweg;
+		pAlleGesprekken:		PpTelefoongesprek;
 		// Interne gegevens: Materieel
 		pMaterieel:				PpMaterieelFile;
 		// Interne gegevens: Dienstregeling
@@ -89,18 +94,26 @@ type
 		Stoptijd:				integer;
 		// Dynamische gegevens: Treinen
 		pAlleTreinen:			PpTrein;
+		//
+		pMonteur:				PpMonteur;
 
 		ScoreInfo:				TScoreInfo;
 
 		Tijd_t:					integer;	// Huidig stapje binnen de seconde.
 
 	private
-		function IsHoofdsein(Sein: PpSein): boolean;
-		function IsHierHoofdsein(tmpConn: PpRailConn): boolean;
 
 	public
 		constructor Create;
 		// Wat nuttige algemene interne functies
+		function NieuwTelefoongesprek(Sender: TSender; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek; overload;
+		function NieuwTelefoongesprek(Trein: PpTrein; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek; overload;
+		function NieuwTelefoongesprek(Monteur: PpMonteur; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek; overload;
+		function ZoekTelefoongesprek(Sender: TSender): PpTelefoongesprek; overload;
+		function ZoekTelefoongesprek(Trein: PpTrein): PpTelefoongesprek; overload;
+		function ZoekTelefoongesprek(Monteur: PpMonteur): PpTelefoongesprek; overload;
+		procedure RuimAfgelopenTelefoongesprekkenOp;
+
 		function ZoekMeetpunt(naam: string): PpMeetpunt;
 		function ZoekErlaubnis(naam: string): PpErlaubnis;
 		function ZoekRail(naam: string): PpRail;
@@ -130,7 +143,6 @@ type
 		function CalcSeinbeeld(Sein: PpSein): TSeinbeeld;
 
 		// Wat functies voor eenmalig intern gebruik
-		procedure RijTrein(Trein: PpTrein);
 		procedure DoeSein(Sein: PpSein);
 		procedure DoeWissel(Wissel: PpWissel);
 		procedure DoeErlaubnis(Erlaubnis: PpErlaubnis);
@@ -142,7 +154,7 @@ type
 		procedure LoadRailString(s: string);
 		function WagonsLaden(filenaam: string): boolean;
 		procedure WagonsWissen;
-		function ZetWissel(Wissel: PpWissel; aftakkend: boolean): boolean;
+		function ZetWissel(Wissel: PpWissel; stand: TWisselstand): boolean;
 		procedure DoeSeinen;
 		procedure ZendSeinen;
 		procedure DoeMeetpunten;
@@ -170,10 +182,14 @@ begin
 	pAlleVerschijnpunten	:= nil;
 	pAlleVerdwijnpunten	:= nil;
 	pAlleOverwegen			:= nil;
+	pAlleGesprekken		:= nil;
 	pMaterieel				:= nil;
 	pAlleDiensten			:= nil;
 	VerschijnLijst			:= nil;
 	pAlleTreinen			:= nil;
+
+	new(pMonteur);
+	pMonteur^ := TpMonteur.Create;
 
 	ScoreInfo.AankomstOpTijd := 0;
 	ScoreInfo.AankomstBinnenDrie := 0;
@@ -183,6 +199,76 @@ begin
 
 	Tijd_t := 0;
 end;
+
+function TpCore.NieuwTelefoongesprek(Sender: TSender; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek;
+var
+	Telefoongesprek: PpTelefoongesprek;
+begin
+	new(Telefoongesprek);
+	Telefoongesprek^ := TpTelefoongesprek.Create(Sender, Soort, Meteen);
+	Telefoongesprek^.Volgende := pAlleGesprekken;
+	pAlleGesprekken := Telefoongesprek;
+	result := Telefoongesprek;
+end;
+
+function TpCore.NieuwTelefoongesprek(Trein: PpTrein; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek;
+begin
+	result := Self.NieuwTelefoongesprek(TSender(Trein), Soort, Meteen);
+end;
+
+function TpCore.NieuwTelefoongesprek(Monteur: PpMonteur; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek;
+begin
+	result := Self.NieuwTelefoongesprek(TSender(Monteur), Soort, Meteen);
+end;
+
+function TpCore.ZoekTelefoongesprek(Sender: TSender): PpTelefoongesprek;
+var
+	Gesprek: PpTelefoongesprek;
+begin
+	result := nil;
+	Gesprek := pAlleGesprekken;
+	while assigned(Gesprek) do begin
+		if Gesprek^.Owner = Sender then begin
+			result := Gesprek;
+			exit;
+		end;
+		Gesprek := Gesprek^.Volgende;
+	end;
+end;
+
+function TpCore.ZoekTelefoongesprek(Trein: PpTrein): PpTelefoongesprek;
+begin
+	result := ZoekTelefoongesprek(TSender(Trein));
+end;
+
+function TpCore.ZoekTelefoongesprek(Monteur: PpMonteur): PpTelefoongesprek;
+begin
+	result := ZoekTelefoongesprek(TSender(Monteur));
+end;
+
+procedure TpCore.RuimAfgelopenTelefoongesprekkenOp;
+var
+	vGesprek, Gesprek, nGesprek: PpTelefoongesprek;
+begin
+	vGesprek := nil;
+	Gesprek := pAlleGesprekken;
+	while assigned(Gesprek) do begin
+		if Gesprek.Status = tgsE then begin
+			nGesprek := Gesprek^.Volgende;
+			if assigned(vGesprek) then
+				vGesprek^.Volgende := Gesprek^.Volgende
+			else
+				pAlleGesprekken := Gesprek^.Volgende;
+			Gesprek^.Free;
+			dispose(Gesprek);
+			Gesprek := nGesprek;
+		end else begin
+			vGesprek := Gesprek;
+			Gesprek := Gesprek^.Volgende;
+		end;
+	end;
+end;
+
 
 function TpCore.CalcSeinbeeld;
 begin
@@ -215,10 +301,9 @@ end;
 procedure TpCore.DoeMeetpuntDefect;
 begin
 	if assigned(Meetpunt) then
+		Meetpunt^.defect := false;
 		if GaatDefect(meetpuntdefectbijtreinkans) then begin
 			Meetpunt^.defect := true;
-			Meetpunt^.defecttot := GetTijd + MkTijd(0,meetpuntdefectbijtreinmintijd,0)+
-				round(random * (meetpuntdefectbijtreinmaxtijd-meetpuntdefectbijtreinmintijd)*60);
 		end;
 end;
 
@@ -381,20 +466,6 @@ begin
 	end;
 end;
 
-
-function TpCore.IsHoofdsein;
-begin
-	result := (sein <> nil) AND
-		(Sein^.Bediend or
-		 Sein^.Autosein or
-		 (Sein^.H_Maxsnelheid = 0));
-end;
-
-function TpCore.IsHierHoofdsein;
-begin
-	result := IsHoofdsein(PpSein(tmpConn^.sein));
-end;
-
 function TpCore.ZoekVolgendeConn;
 begin
 	if not achteruit then
@@ -426,15 +497,16 @@ begin
 
 		// Pak de volgende rail.
 		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
-		if RailOpLijst(tmpRail, result) then
-			exit;
-		// Nieuwe rail, die moet dan in de lijst.
-		new(tmpLijst2);
-		tmpLijst2^.Rail := tmpRail;
-		tmpLijst2^.volgende := result;
-		result := tmpLijst2;
+		if assigned(tmpRail) then begin
+			if RailOpLijst(tmpRail, result) then
+				exit;
+			// Nieuwe rail, die moet dan in de lijst.
+			new(tmpLijst2);
+			tmpLijst2^.Rail := tmpRail;
+			tmpLijst2^.volgende := result;
+			result := tmpLijst2;
+		end;
 	until not assigned(tmpRail);
-	halt;
 end;
 
 function TpCore.ZoekSporenTotVolgendHoofdseinR;
@@ -510,9 +582,9 @@ begin
 		vRail := tmpRail;
 		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
 		if (tmpRail = vRail) or (tmpRail = Rail) then exit;
-		GevAfstand := GevAfstand + tmpRail.Lengte;
+		if assigned(tmpRail) then
+			GevAfstand := GevAfstand + tmpRail.Lengte;
 	until not assigned(tmpRail);
-	halt;
 end;
 
 procedure TpCore.ZoekVolgendHoofdsein;
@@ -548,7 +620,6 @@ begin
 		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
 		if tmpRail = vRail then exit;
 	until not assigned(tmpRail);
-	halt;
 end;
 
 procedure TpCore.ZoekVolgendeTrein;
@@ -620,7 +691,6 @@ begin
 		else
 			tmpPos := 0;
 	until not assigned(tmpRail);
-	halt;
 end;
 
 procedure TpCore.WisTrein;
@@ -667,619 +737,6 @@ begin
 		inc(ScoreInfo.PerronCorrect)
 	else
 		inc(ScoreInfo.PerronFout);
-end;
-
-procedure TpCore.RijTrein;
-var
-	at, vt, mt:		integer;
-
-	kracht:	integer;	// De trekkracht (>0) of remkracht (<0) die we momenteel
-							// uitoefenen.
-	remkrachtwens: integer;	// Hoe hard remmen voor wensmaxremvertraging?
-	maxremvertraging: double;
-	mssnelheid: double;	// snelheid in m/s
-	rolwrijving: double;	// rolwrijving in N
-	luchtwrijving: double;
-	totaalwrijving: double;
-	wenssnelheid: integer;
-	toename: double;
-
-	HSeinSnelheid: integer;
-
-	kijkafstand:	double;
-	tmpRail:			PpRail;
-	tmpAchteruit:	boolean;
-	tmpPos:			double;
-	GevSein:			PpSein;
-	GevTrein:		PpTrein;
-	GevKoppelTrein:PpTrein;
-	GevTreinAfstand:	double;
-	GevSeinAfstand:	double;
-	GevOmgekeerd:	boolean;
-	intAfstand:		double;
-	basisAfstand:	double;
-	remopdracht:	boolean;
-
-	tmpConn:			PpRailConn;
-	oudeRail:		PpRail;
-	tmpSein:			PpSein;
-
-	koppelfunctie: boolean;
-	tmpWagon:		PpWagonConn;
-	tmpTrein:		PpTrein;
-	laatsteWagon: 	PpWagonConn;
-	wagonshouden:	integer;
-	GevRail:			PpRail;
-	GevPos:			double;
-	i: 				integer;
-
-	tmpTreinL :		PpTrein;
-	Raillijst:		PpRailLijst;
-	tmpRaill:		PpRailLijst;
-
-	nieuwevertraging:	integer;
-
-	wasdefect		: 	boolean;
-
-	waaromstilstaan:	integer;	// 0=? 1=sein, 2=trein, 3=geen stroom
-begin
-	// Kijken wat we moeten doen!
-	if Trein.modus = 1 then begin	// WACHTEN OP VERTREKTIJD
-		if assigned(Trein^.StationModusPlanpunt) then begin	// welke niet leeg is
-			// Moeten we nog speciale dingen doen?
-			if not Trein^.StationModusPlanpunt^.spc_gedaan then begin
-				// We moeten wachten zolang als e.e.a. duurt.
-				// Ook als we gaan koppelen is dit juist, want de laatste trein
-				// die aankomt (en aan de al gereedstaande trein vastkoppelt)
-				// blijft bestaan inclusief moetwacht-tijd.
-				if Trein^.StationModusPlanpunt^.minwachttijd > -1 then
-					Trein^.Moetwachten(round(Trein^.StationModusPlanpunt^.minwachttijd * (1+(random/2))));
-				Trein^.S_Adviessnelheid := -1;
-
-				// Kijk of we voor een trein staan en moeten gaan koppelen.
-				koppelfunctie := false;
-				if Trein^.StationModusPlanpunt^.samenvoegen then begin
-					ZoekVolgendeTrein(Trein, maxkoppelkijkafstand, GevKoppelTrein, GevTreinAfstand, GevOmgekeerd);
-					if (GevKoppelTrein <> nil) and (GevTreinAfstand <= maxkoppelkijkafstand) then
-						koppelfunctie := true;
-				end;
-
-				// 1. KOPPELEN
-				if Koppelfunctie then begin
-					// Wij gaan koppelen! Wat gebeurt hier precies?
-					// a) >>>WIJ>>> >>>HUN>>> -> >>>>>>WIJ>>>>>>
-					// b) >>>WIJ>>> <<<HUN<<< -> >>>>>>WIJ>>>>>>
-
-					// Geval b) vormen wij in geval a) om.
-					if GevOmgekeerd then GevKoppelTrein^.DraaiOm;
-
-					// Zo, nu hebben we gegarandeerd een geval a). Mooi.
-					// Wij nemen de positie van de andere trein aan.
-					Trein^.pos_rail := GevKoppelTrein^.pos_rail;
-					Trein^.pos_dist := GevKoppelTrein^.pos_dist;
-					Trein^.achteruit := GevKoppelTrein^.achteruit;
-					// En de wagons van de andere trein plakken we voor de onze.
-					tmpWagon := GevKoppelTrein^.EersteWagon;
-					laatsteWagon := nil;
-					while assigned(tmpWagon) do begin
-						laatsteWagon := tmpWagon;
-						tmpWagon := tmpWagon^.Volgende;
-					end;
-					// Als de voorste trein überhaupt wagons heeft. Anders hoeven
-					// we niks te doen.
-					if assigned(laatsteWagon) then begin
-						laatsteWagon^.Volgende := Trein^.EersteWagon;
-						Trein^.EersteWagon^.Vorige := laatsteWagon;
-						Trein^.EersteWagon := GevKoppelTrein^.EersteWagon;
-					end;
-					// Gegevens bijwerken
-					Trein^.Update;
-					// En wis de trein die nu niet meer bestaat.
-					GevKoppelTrein^.EersteWagon := nil;
-					GevKoppelTrein^.wissen := true;
-				end;
-
-				// 2. OMDRAAIEN.
-				if Trein^.StationModusPlanpunt^.keren then
-					Trein^.DraaiOm;
-
-				// 3. LOSKOPPELEN (en voor losgekoppeld deel rijplan laden)
-				if Trein^.StationModusPlanpunt^.loskoppelen <> 0 then begin
-					Trein^.Update;
-					wagonshouden := Trein^.StationModusPlanpunt^.loskoppelen;
-					if wagonshouden < 0 then
-						wagonshouden := Trein^.aantalwagons + wagonshouden;
-					wagonshouden := Trein^.aantalwagons - wagonshouden;
-					if (wagonshouden > 0) and (wagonshouden < trein^.AantalWagons) then begin
-						tmpWagon := Trein^.EersteWagon;
-						for i := 1 to wagonshouden do begin
-							tmpWagon := tmpWagon^.Volgende;
-						end;
-						// De knip komt nu vóór tmpWagon.
-						tmpWagon^.Vorige^.Volgende := nil;
-						tmpWagon^.Vorige := nil;
-						// TmpWagon is nu dus de eerste wagon van de nieuwe trein.
-						// Dus nieuwe trein maken en wagons instellen.
-						new(tmpTrein);
-						tmpTrein^ := TpTrein.Create;
-						tmpTrein^.Vorige := nil;
-						tmpTrein^.Volgende := pAlleTreinen;
-						pAlleTreinen^.Vorige := tmpTrein;
-						pAlleTreinen := tmpTrein;
-						tmpTrein^.EersteWagon := TmpWagon;
-						// Positie van de trein juist instellen.
-						Trein^.ZoekEinde(GevRail, GevOmgekeerd, GevPos);
-						tmpTrein^.pos_rail := GevRail;
-						tmpTrein^.pos_dist := GevPos;
-						tmpTrein^.achteruit := not GevOmgekeerd;
-						// Rijplan laden.
-						tmpTrein^.modus := 1;
-						tmpTrein^.Treinnummer := Trein^.StationModusPlanpunt^.loskoppelen_w;
-						tmpTrein^.Planpunten := CopyDienstFrom(tmpTrein^.Treinnummer, '');
-						tmpTrein^.StationModusPlanpunt := tmpTrein^.GetVolgendRijplanpunt;
-						// Afgekoppelde trein eventueel omkeren.
-						if Trein^.StationModusPlanpunt^.loskoppelen_keren then
-							tmpTrein^.DraaiOm;
-						// En af te wachten tijd instellen
-						tmpTrein^.kannietwegvoor := Trein^.kannietwegvoor;
-					end;
-				end;
-
-				// 4. EN LAATSTE: ONSZELF OMNUMMEREN (en nieuw rijplan laden)
-				if Trein^.StationModusPlanpunt^.nieuwetrein then begin
-					Trein^.Treinnummer := Trein^.StationModusPlanpunt^.nieuwetrein_w;
-					Trein^.WisPlanpunten;
-					Trein^.Planpunten := CopyDienstFrom(Trein^.Treinnummer, '');
-					dispose(Trein^.StationModusPlanpunt);
-					Trein^.StationModusPlanpunt := Trein^.GetVolgendRijplanpunt;
-				end else
-					Trein^.StationModusPlanpunt^.spc_gedaan := true;
-			end;
-			// Als de vertrektijd bereikt is gaan we rijden.
-			if assigned(Trein^.StationModusPlanpunt) and (Trein^.StationModusPlanpunt^.Vertrek <> -1) then
-				vt := Trein^.StationModusPlanpunt^.Vertrek
-			else
-				vt := -1;
-			mt := Trein^.kannietwegvoor;
-			if Trein^.defect and (GetTijd > Trein^.defecttot) then begin
-				Trein^.defect := false;
-				SendMsg.SendMsgVanTrein(Trein, treindefectopgelostbericht);
-				wasdefect := true;
-			end else
-				wasdefect := false;
-			if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) then begin
-				if (not wasdefect) and GaatDefect(treindefectkans) then begin
-					Trein^.defect := true;
-					Trein^.defecttot := GetTijd + MkTijd(0,treindefectmintijd,0) +
-						round(random * (treindefectmaxtijd-treindefectmintijd)*60);
-					if assigned(Trein^.StationModusPlanpunt) and
-						(Trein^.StationModusPlanpunt^.Perron <> '') and
-						(Trein^.StationModusPlanpunt^.Perron <> '0') then
-						SendMsg.SendMsgVanTrein(Trein, treindefectberichtstart+
-						treindefectberichten[round(random*6)+1])
-					else
-						// Als we niet bij een perron staan is 'hij doet het niet'
-						// het enige zinvolle excuus.
-						SendMsg.SendMsgVanTrein(Trein, treindefectberichtstart+
-						treindefectberichten[1]);
-				end else begin
-					Trein^.modus := 2;
-					Trein^.Vertraging := (GetTijd - vt) div 60;
-					Trein^.kannietwegvoor := -1;
-					dispose(Trein^.StationModusPlanpunt);
-					Trein^.StationModusPlanpunt := nil;
-				end;
-			end;
-		end;
-	end;
-	if Trein.modus = 2 then begin	// RIJDEN!!!
-		// Dit is de hoofdmoot!
-
-		// Eerst eventjes nutteloze rijplanregels weggooien.
-		// Regels zonder aankomsttijd zijn nutteloos omdat we dan nooit verder
-		// komen met het procesplan.
-		while assigned(Trein^.Planpunten) do
-			if (Trein^.Planpunten^.Aankomst = -1) and (Trein^.Planpunten^.stoppen) then
-				dispose(Trein^.GetVolgendRijplanpunt)
-			else
-				break;
-
-		// Plan van aanpak:
-		// We zoeken het meest restrictieve dat we moeten doen.
-		// We beginnen dus met het minst restrictieve dat we kunnen doen: gassen!
-		// Vervolgens gaan we dit met allerhande criteria bijschaven.
-		kracht := Trein^.trekkracht;
-
-		// Momentele status berekenen
-		mssnelheid := Trein^.snelheid / 3.6;
-		rolwrijving := Trein^.gewicht * 9.8 * cr;
-		luchtwrijving := 0.5 * Trein^.cw * frontaal * dichtheid * mssnelheid
-			* mssnelheid;
-		totaalwrijving := rolwrijving + luchtwrijving;
-
-		// Berekenen hoeveel remkracht we nodig hebben om een vertraging van
-		// WensMaxRemvertraging te krijgen.
-		remkrachtwens := trunc((WensMaxRemVertraging*Trein^.gewicht) - totaalwrijving);
-		if remkrachtwens < 0 then remkrachtwens := 0;
-		maxremvertraging := Trein^.remkracht / Trein^.gewicht;
-
-		// CRITERIUM 1 - Het vermogen van de lokomotieven.
-		if kracht*mssnelheid > Trein^.vermogen then
-			kracht := round(Trein^.vermogen / mssnelheid);
-
-		// CRITERIUM 2 - Maximumsnelheden enzo
-		wenssnelheid := Trein^.maxsnelheid;
-		if (Trein^.V_Adviessnelheid <> -1) and
-			(Trein^.V_Adviessnelheid < wenssnelheid) then
-			wenssnelheid := Trein^.V_Adviessnelheid;
-		if (Trein^.B_Adviessnelheid <> -1) and
-			(Trein^.B_Adviessnelheid < wenssnelheid) then
-			wenssnelheid := Trein^.B_Adviessnelheid;
-		if (Trein^.S_Adviessnelheid <> -1) and
-			(Trein^.S_Adviessnelheid < wenssnelheid) then
-			wenssnelheid := Trein^.S_Adviessnelheid;
-		if Trein^.Snelheid > Trein^.maxsnelheid + 5 then
-			// We rijden echt te hard, dus vol remmen.
-			kracht := -Trein^.remkracht
-		else
-			if Trein^.Snelheid > wenssnelheid + 2 then
-				// We rijden harder dan we willen. Voorzichtig remmen.
-				kracht := -remkrachtwens
-			else
-				if Trein^.Snelheid >= wenssnelheid  then
-					// We rijden op de juiste snelheid. Lekker doortuffen dus.
-					kracht := round(-totaalwrijving);
-
-		// CRITERIUM 3 - Wat zien we voor ons?
-		// Een station? Een rood of andersoortig snelheidsverlagend sein?
-		// Een trein voor ons?
-		KijkAfstand := TreinVooruitblik;
-		tmpRail := Trein^.pos_rail;
-		tmpAchteruit := Trein^.achteruit;
-		tmpPos := Trein^.pos_dist;
-		basisAfstand := 0;
-		repeat
-			// Zoek zoek, zoek het sein!
-			ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
-				GevSein, GevSeinAfstand);
-			if assigned(GevSein) then begin
-				remopdracht := false;
-				HSeinSnelheid := GevSein^.H_Maxsnelheid;
-				if (GevSein^.Autosein or GevSein^.Bediend) and (HSeinSnelheid = 0) and
-					Trein^.doorroodopdracht then
-					HSeinSnelheid := doorroodrozsnelheid;
-				// Is het een station? Dan kijken we naar de naam, of het geldig is.
-				if GevSein^.Perronpunt and assigned(Trein^.Planpunten) then
-					if (Trein^.Planpunten^.Station = GevSein^.Stationsnaam) then
-						if Trein^.Planpunten^.stoppen then
-							HSeinSnelheid := 0;
-				// Is het een snelheidsopleggend sein? Dan is het geldig.
-				if ((HSeinSnelheid < Trein^.snelheid) and (HSeinSnelheid <> -1))
-					or	(HSeinSnelheid = 0) then
-					remopdracht := true;
-				// Berekenen of we voor dit sein alvast moeten gaan afremmen
-				if remopdracht then begin
-					intAfstand := ((mssnelheid / WensMaxRemvertraging) *
-					(mssnelheid + (HSeinSnelheid / 3.6)) / 2);
-					if basisAfstand + GevSeinAfstand < IntAfstand + 10 then
-						if kracht > -remkrachtwens then begin
-							kracht := -remkrachtwens;	// Remmen met gewenste snelheid.
-						end;
-				end;
-				KijkAfstand := KijkAfstand - GevSeinAfstand;
-				basisAfstand := basisAfstand + GevSeinAfstand;
-			end;
-		until not assigned(GevSein);
-
-		// CRITERIUM 4 - Een trein voor onze neus.
-		ZoekVolgendeTrein(Trein, TreinVooruitblik, GevTrein, GevTreinAfstand, GevOmgekeerd);
-		if GevTrein <> nil then begin
-			intAfstand := ((mssnelheid / WensMaxRemvertraging) * mssnelheid / 2);
-			// Zitten we op dusdanige afstand dat we moeten remmen?
-			if GevTreinAfstand < IntAfstand + koppelafstanddoel then
-				if kracht > -remkrachtwens then
-					kracht := -remkrachtwens;	// Remmen met gewenste snelheid.
-			// Zitten we op dusdanige afstand dat noodremming noodzakelijk is?
-			intAfstand := round((mssnelheid / MaxRemvertraging) * mssnelheid / 2);
-			if GevTreinAfstand < IntAfstand + koppelafstanddoel then
-				kracht := -Trein^.remkracht;	// Remmen met max. remkracht
-			// Of is alle hoop verloren? Botsing!!!
-			if GevTreinAfstand < IntAfstand then begin
-				Trein^.modus := 0;
-				GevTrein^.modus := 0;
-			end;
-		end;
-
-		// CRITERIUM 5 - Kan de trein wel rijden?
-		if Trein^.EersteWagon = nil then
-			kracht := -trein^.remkracht
-		else
-			if (not Trein^.EersteWagon^.wagon^.bedienbaar) or
-				(not Trein^.EersteWagon^.wagon^.twbedienbaar and Trein^.EersteWagon.omgekeerd) then
-				kracht := -trein^.remkracht;
-
-		// EN ACTIE!
-
-      // Trein versnellen/vertragen
-		toename := (kracht - totaalwrijving) / Trein^.gewicht;
-		mssnelheid := mssnelheid + toename / tps;
-      if mssnelheid < 0 then	// Als we heel hard remmen gaan we niet achteruit rijden!
-      	mssnelheid := 0;
-		Trein^.snelheid := mssnelheid * 3.6;
-		if Trein^.snelheid < 0.03 then Trein^.snelheid := 0;
-
-		// Trein verplaatsen
-		tmpConn := nil;
-		if Trein^.achteruit then
-			Trein^.pos_dist := Trein^.pos_dist - (mssnelheid / tps)
-		else
-			Trein^.pos_dist := Trein^.pos_dist + (mssnelheid / tps);
-
-		// Afstand sinds vorige snelheidswijziging bijwerken
-		Trein^.afstandsindsvorige := Trein^.afstandsindsvorige + (mssnelheid / tps);
-
-		while (Trein^.pos_dist < 0) or (Trein^.pos_dist > Trein^.pos_rail^.Lengte) do begin
-			OudeRail := Trein^.pos_rail;
-			if Trein^.pos_dist < 0 then begin
-				// positie normaliseren
-				Trein^.pos_dist := -Trein^.pos_dist;
-				// nieuwe rail en positie bepalen
-				tmpConn := Trein^.pos_rail^.Vorige;
-				WisselOpenrijden(tmpConn);
-				VolgendeRail(tmpConn, Trein^.pos_rail, Trein^.achteruit);
-				if Trein^.achteruit then
-					Trein^.pos_dist := Trein^.pos_rail^.Lengte - Trein^.pos_dist
-				else
-					Trein^.pos_dist := Trein^.pos_dist
-			end else
-				// Dit moet in de ELSE-clausule staan! Want hieronder komen nog wat
-				// checks, en die moet *iedere* rails controleren. En door dit in de
-				// ELSE te zetten voorkomen we dat ineens twee keer een nieuwe rails
-				// gepakt wordt.
-				if Trein^.pos_dist > trein^.pos_rail^.lengte then begin
-					// positie normaliseren
-					Trein^.pos_dist := trein.pos_dist - trein^.pos_rail^.lengte;
-					// nieuwe rail en positie bepalen
-					tmpConn := Trein^.pos_rail^.Volgende;
-					WisselOpenrijden(tmpConn);
-					VolgendeRail(tmpConn, trein^.pos_rail, Trein^.achteruit);
-					if Trein^.achteruit then
-						Trein^.pos_dist := Trein^.pos_rail^.Lengte - Trein^.pos_dist
-					else
-						Trein^.pos_dist := Trein^.pos_dist
-				end;
-
-			// Dit is van toepassing bij doodlopende stukken spoor: die verwijzen
-			// terug naar zichzelf.
-			if Trein^.pos_rail = oudeRail then begin
-				// Botsing!
-				Trein^.Modus := 0;
-				Trein^.Achteruit := not Trein^.Achteruit;
-				exit;
-			end;
-
-			// Flankbotsingen herkennen.
-			tmpTreinL := pAlleTreinen;
-			while assigned(tmpTreinL) do begin
-				if tmpTreinL <> Trein then begin
-					RailLijst := tmpTreinl^.BezetteRails;
-					tmpRaill := RailLijst;
-					while assigned(tmpRaill) do begin
-						if assigned(tmpRaill^.Volgende) and (TmpRaill <> RailLijst) then
-							// Rail uit het midden van de trein-bezetting, dus de
-							// rail wordt van begin tot eind ingenomen!
-							if TmpRaill^.Rail = Trein^.pos_rail then begin
-								// Botsing!
-								Trein^.Modus := 0;
-								tmpTreinL^.Modus := 0;
-							end;
-						if assigned(tmpRaill^.Volgende) and (TmpRaill = RailLijst) then
-							// Eerste rail uit de trein-bezetting, dus rail wordt vanaf
-							// een bepaald punt tot begin/eind ingenomen.
-							if (TmpRaill^.Rail = Trein^.pos_rail) and
-								(tmpTreinL^.achteruit = Trein^.achteruit) then begin
-								// Botsing!
-								Trein^.Modus := 0;
-								tmpTreinL^.Modus := 0;
-							end;
-						if not assigned(tmpRaill^.Volgende) and (TmpRaill <> RailLijst) then
-							// Laatste rail uit de trein-bezetting. Iets lastiger.
-							if (TmpRaill^.Rail = Trein^.pos_rail) then begin
-								TmpTreinL^.ZoekEinde(GevRail, GevOmgekeerd, GevPos);
-								if GevOmgekeerd = Trein^.achteruit then begin
-									// Botsing!
-									Trein^.Modus := 0;
-									tmpTreinL^.Modus := 0;
-								end;
-							end;
-						tmpRaill := tmpRaill^.Volgende;
-					end;
-				end;
-				tmpTreinL := tmpTreinL^.Volgende;
-			end;
-
-			// Zijn wij misschien over een sein gereden?
-			if tmpConn^.sein <> nil then begin
-				tmpSein := PpSein(tmpConn^.Sein);
-				// Snelheidsopleggend sein?
-				if tmpSein^.H_Maxsnelheid <> -1 then begin
-					if (tmpSein^.Bediend or tmpSein^.Autosein) then begin
-						// Hoofdsein
-						Trein^.NieuweMaxsnelheid(tmpSein^.H_Maxsnelheid);
-						if (tmpSein^.H_Maxsnelheid = 0) then begin
-							Trein^.ROZ := true;
-							if Trein^.doorroodopdracht then
-								Trein^.huidigemaxsnelheid := doorroodrozsnelheid
-							else begin
-								Trein^.doorroodgereden := true;
-								SendMsg.SendMsgVanTrein(Trein,
-								'Ik ben door rood gereden!');
-							end;
-						end else begin
-							Trein^.doorroodgereden := false;
-							if tmpSein^.Bediend and (tmpSein^.Bediend_Stand=2) then
-								Trein^.ROZ := true
-							else
-								Trein^.ROZ := false;
-						end;
-						// Zodra we langs een of ander hoofdsein zijn gereden,
-						// deze variabelen weer op false zetten!
-						Trein^.doorroodopdracht := false;
-						Trein^.doorroodverderrijden := false;
-					end else
-						// Snelheidsbordje.
-						if not Trein^.ROZ then
-							Trein^.NieuweMaxsnelheid(tmpSein^.H_Maxsnelheid);
-					// Er zijn twee mogelijkheden. Ofwel het is een echt hoofdsein.
-					// Dan geldt een voorsein-adviessnelheid niet meer.
-					// Als het geen echt hoofdsein is dan is het een snelheidsbordje.
-					// Dan geldt een bordje-aankondiging-adviessnelheid niet meer.
-					if IsHoofdsein(tmpSein) then
-						Trein^.V_Adviessnelheid := -1
-					else
-						Trein^.B_Adviessnelheid := -1;
-				end;
-				// Kijk of het een voorsein is.
-				Trein^.ZieVoorsein(tmpSein);
-				// Station? Als we er niet stoppen dan moeten we het volgende
-				// rijplanpunt laden - tenslotte gebeurt dat anders op het moment
-				// dat we vertrekken.
-				if TmpSein^.Perronpunt and assigned(Trein^.Planpunten) then
-					if (Trein^.Planpunten^.Station = tmpSein^.Stationsnaam) then
-						if not Trein^.Planpunten^.stoppen then begin
-							// Vertragingsinfo bijwerken
-							Trein^.Vertraging := (GetTijd -
-								Trein^.Planpunten^.Aankomst) div 60;
-							// Naar volgende planpunt springen
-							dispose(Trein^.GetVolgendRijplanpunt);
-						end;
-				// Stationsaankondiging?
-				if tmpSein^.Haltevoorsein and assigned(Trein^.Planpunten) then
-					if (Trein^.Planpunten^.Station = tmpSein^.Stationsnaam) and
-						Trein^.Planpunten^.stoppen then
-						Trein^.S_Adviessnelheid := RemwegSnelheid;
-			end;
-
-			// Als we een nieuw meetpunt binnenrijden dan gaat dat eventueel
-			// defect.
-			DoeMeetpuntDefect(Trein^.pos_rail^.meetpunt);
-		end;
-
-		// Zo. De trein heeft z'n nieuwe snelheid, nieuwe positie, nieuwe gegevens
-		// enzovoort.
-
-		// Nu moeten we nog de mogelijke modusovergangen afhandelen. Daarvan is er
-		// maar één mogelijk, en dat is wanneer we stilstaan langs een perron.
-		// Hoe weten we of dat het geval is? Snelheid=0 en verder is het volgende
-		// sein een stationsbordje dat voor ons geschikt is.
-		if (Trein^.snelheid = 0) and assigned(Trein^.Planpunten) then begin
-			if Trein^.Planpunten^.stoppen then begin
-				// Kijk of we bij een perronpunt staan.
-				KijkAfstand := stationkijkafstand;
-				tmpRail := Trein^.pos_rail;
-				tmpAchteruit := Trein^.achteruit;
-				tmpPos := Trein^.pos_dist;
-				ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
-					GevSein, GevSeinAfstand);
-				if assigned(GevSein) then
-					if GevSein^.Perronpunt and
-						(Trein^.Planpunten^.Station = GevSein^.Stationsnaam) then begin
-						Trein^.Modus := 1;	// We staan stil bij het station.
-						// Vertragingsinformatie bijwerken
-						nieuwevertraging := (GetTijd - Trein^.Planpunten^.Aankomst) div 60;
-						ScoreAankomstVertraging(Trein, nieuwevertraging);
-						Trein^.Vertraging := nieuwevertraging;
-						// Correct perrongebruik registreren
-						if (Trein^.Planpunten^.Perron = '') or
-							(Trein^.Planpunten^.Perron = GevSein^.Perronnummer) then
-							ScorePerrongebruik(Trein, true)
-						else
-							ScorePerrongebruik(Trein, false);
-						// En het rijplanpunt inladen.
-						Trein^.StationModusPlanpunt := Trein^.GetVolgendRijplanpunt;
-					end;
-
-				// Kijk of we voor een trein staan en moeten gaan koppelen.
-				ZoekVolgendeTrein(Trein, maxkoppelkijkafstand, GevKoppelTrein, GevTreinAfstand, GevOmgekeerd);
-				if GevKoppelTrein <> nil then
-					if (GevTreinAfstand <= maxkoppelkijkafstand) and
-						Trein^.Planpunten^.samenvoegen then begin
-						Trein^.Modus := 1;
-						// Vertragingsinformatie bijwerken
-						nieuwevertraging := (GetTijd - Trein^.Planpunten^.Aankomst) div 60;
-						ScoreAankomstVertraging(Trein, nieuwevertraging);
-						Trein^.Vertraging := nieuwevertraging;
-						// En het rijplanpunt inladen.
-						Trein^.StationModusPlanpunt := Trein^.GetVolgendRijplanpunt;
-					end;
-
-			end; // rijplan.stoppen=true
-
-			// We staan stil, maar niet omdat we bij een station staan of niks
-			// willen doen. Dan moeten we eventueel de TRDL inlichten.
-			if Trein^.modus = 2 then begin
-				// Een rood sein voor onze neus?
-				KijkAfstand := TreinVooruitblik;
-				tmpRail := Trein^.pos_rail;
-				tmpAchteruit := Trein^.achteruit;
-				tmpPos := Trein^.pos_dist;
-				basisAfstand := 0;
-				repeat
-					ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
-						GevSein, GevSeinAfstand);
-					if assigned(GevSein) then begin
-						if (GevSein^.H_Maxsnelheid = 0) and
-							(GevSein^.Autosein or GevSein^.Bediend) then
-							break;
-						KijkAfstand := KijkAfstand - GevSeinAfstand;
-						basisAfstand := basisAfstand + GevSeinAfstand;
-					end;
-				until not assigned(GevSein);
-				// Of misschien een trein?
-				ZoekVolgendeTrein(Trein, TreinVooruitblik, GevTrein, GevTreinAfstand, GevOmgekeerd);
-				// Kijken wat het nu precies is.
-				if assigned(GevSein) then
-					if assigned(GevTrein) then
-						if GevSeinAfstand < GevTreinAfstand then
-							waaromstilstaan := 1
-						else
-							waaromstilstaan := 2
-					else
-						waaromstilstaan := 1
-				else
-					if assigned(GevTrein) then
-						waaromstilstaan := 2
-					else
-						waaromstilstaan := 0;
-				if not Trein^.el_ok then
-					waaromstilstaan := 3;
-				// Nu hebben we de reden. Kijk of we een bericht moeten sturen.
-				if waaromstilstaan <> 0 then begin
-					if Trein^.berichtwachttijd = -1 then begin
-						Trein^.berichtwachttijd := GetTijd+MkTijd(0,berichtsturenwachten,0);
-					end else if Trein^.berichtwachttijd <> -2 then begin
-						if GetTijd >= Trein^.berichtwachttijd then begin
-							case waaromstilstaan of
-							1:
-								SendMsg.SendMsgVanTrein(Trein,
-								'Ik sta al even voor rood sein '+GevSein^.naam+'. Vergeet u mij niet?');
-							2: SendMsg.SendMsgVanTrein(Trein,
-								'Er staat al even een trein voor mij. Vergeet u die niet?');
-							3: SendMsg.SendMsgVanTrein(Trein,
-								'Ik sta hier met een elektrische trein zonder stroom!');
-							end;
-							// Na eenmaal gestuurd te hebben hoeven we het niet
-							// telkens opnieuw te versturen.
-							Trein^.berichtwachttijd := -2;
-						end;
-					end;
-				end;
-			end;
-		end else begin
-			// Als we rijden het bericht-wacht-systeem resetten.
-			Trein^.berichtwachttijd := -1;
-		end;
-	end; // Modus = 2
 end;
 
 procedure TpCore.DoeSein;
@@ -1479,13 +936,14 @@ end;
 
 procedure TpCore.DoeWissel;
 begin
-	if Wissel^.stand_aftakkend <> Wissel^.nw_aftakkend then begin
-		if Wissel^.defect and (GetTijd> Wissel^.defecttot) then
-			Wissel^.defect := false;
-		if (GetTijd >= Wissel^.nw_tijd) and not Wissel^.defect then begin
-			Wissel^.stand_aftakkend := Wissel^.nw_aftakkend;
+	case Wissel^.defect of
+	wdHeel:
+		if (Wissel^.stand <> Wissel^.nw_stand) and (GetTijd >= Wissel^.nw_tijd) then begin
+			Wissel^.stand := Wissel^.nw_stand;
 			Wissel^.veranderd := true;
 		end;
+	wdEenmalig:;	// niks, want de wissel doet pas weer wat als ie wordt omgezet
+	wdDefect:;		// niks, want moet gerepareerd worden.
 	end;
 end;
 
@@ -1635,8 +1093,11 @@ begin
 
 			tmpTrein^.pos_dist := Plaats^.afstand;
 			tmpTrein^.achteruit := Plaats^.achteruit;
-			tmpTrein^.Modus := Plaats^.modus;
-			if (tmpTrein^.Modus = 1) then
+			case Plaats^.modus of
+			1: tmpTrein^.Modus := tmStilstaan;
+			2: tmpTrein^.Modus := tmRijden;
+			end;
+			if (tmpTrein^.Modus = tmStilstaan) then
 				tmpTrein^.StationModusPlanpunt := tmpTrein^.GetVolgendRijplanpunt;
 
 			// Snelheid instellen. Niet te snel.
@@ -1876,9 +1337,10 @@ begin
 						end;
 						if tmpAft then begin
 							new(tmpWissel);
-							tmpWissel^.stand_aftakkend := false;
-							tmpWissel^.nw_aftakkend := false;
-							tmpWissel^.defect := false;
+							tmpWissel^.stand := wsRechtdoor;
+							tmpWissel^.nw_stand := wsRechtdoor;
+							tmpWissel^.defect := wdHeel;
+							tmpWissel^.Monteur := nil;
 							tmpWissel^.vanwie := nil;
 							tmpWissel^.veranderd := true;
 						end;
@@ -2416,7 +1878,6 @@ begin
 		stringwrite(f, Meetpunt^.Naam);
 		stringwrite(f, Meetpunt^.Treinnaam);
 		boolwrite  (f, Meetpunt^.Defect);
-		intwrite   (f, Meetpunt^.DefectTot);
 		Meetpunt := Meetpunt^.Volgende;
 	end;
 
@@ -2447,11 +1908,11 @@ begin
 	Wissel := pAlleWissels;
 	for i := 1 to WisselCount do begin
 		stringwrite(f, Wissel^.w_naam);
-		boolwrite  (f, Wissel^.stand_aftakkend);
-		boolwrite  (f, Wissel^.nw_aftakkend);
+		bytewrite  (f, Ord(Wissel^.stand));
+		bytewrite  (f, Ord(Wissel^.nw_stand));
 		intwrite   (f, Wissel^.nw_tijd);
-		boolwrite  (f, Wissel^.defect);
-		intwrite   (f, Wissel^.defecttot);
+		bytewrite  (f, Ord(Wissel^.defect));
+		boolwrite  (f, assigned(Wissel^.Monteur));
 		Wissel := Wissel^.Volgende;
 	end;
 
@@ -2463,6 +1924,11 @@ begin
 		intwrite   (f, Overweg^.VolgendeStatusTijd);
 		Overweg := Overweg^.Volgende;
 	end;
+
+	bytewrite	(f, Ord(pMonteur.Status));
+	intwrite		(f, pMonteur.VolgendeStatusTijd);
+	bytewrite	(f, Ord(pMonteur.Opdracht.Wat));
+	stringwrite	(f, pMonteur.Opdracht.ID);
 
 	intwrite(f, ScoreInfo.AankomstOpTijd);
 	intwrite(f, ScoreInfo.AankomstBinnenDrie);
@@ -2493,30 +1959,28 @@ var
 	Wissel:			PpWissel;
 	Overweg:			PpOverweg;
 	i: integer;
+	ordnr:			byte;
+	monteur:			boolean;
 begin
 	intread(f, MeetpuntCount);
 	for i := 1 to MeetpuntCount do begin
-		stringread(f, MeetpuntNaam);
-		Meetpunt := ZoekMeetpunt(MeetpuntNaam);
+		stringread(f, MeetpuntNaam);	Meetpunt := ZoekMeetpunt(MeetpuntNaam);
 		stringread(f, Meetpunt^.Treinnaam);
 		boolread  (f, Meetpunt^.Defect);
-		intread   (f, Meetpunt^.DefectTot);
 	end;
 
 	intread(f, ErlaubnisCount);
 	for i := 1 to ErlaubnisCount do begin
-		stringread(f, ErlaubnisNaam);
-		Erlaubnis := ZoekErlaubnis(ErlaubnisNaam);
+		stringread(f, ErlaubnisNaam);	Erlaubnis := ZoekErlaubnis(ErlaubnisNaam);
 		byteread  (f, Erlaubnis^.richting);
 		boolread  (f, Erlaubnis^.vergrendeld);
 		boolread  (f, Erlaubnis^.voorvergendeld);
-		Erlaubnis^.Veranderd := true; 
+		Erlaubnis^.Veranderd := true;
 	end;
 
 	intread(f, SeinenCount);
 	for i := 1 to SeinenCount do begin
-		stringread(f, SeinNaam);
-		Sein := ZoekSein(SeinNaam);
+		stringread(f, SeinNaam);		Sein := ZoekSein(SeinNaam);
 		intread   (f, Sein^.Bediend_Stand);
 		intread	 (f, Sein^.H_Maxsnelheid); // Voor terug-op-rood-berekening
 		boolread  (f, Sein^.groendefect);
@@ -2527,22 +1991,25 @@ begin
 
 	intread(f, WisselCount);
 	for i := 1 to WisselCount do begin
-		stringread(f, WisselNaam);
-		Wissel := ZoekWissel(WisselNaam);
-		boolread  (f, Wissel^.stand_aftakkend);
-		boolread  (f, Wissel^.nw_aftakkend);
+		stringread(f, WisselNaam);		Wissel := ZoekWissel(WisselNaam);
+		byteread  (f, ordnr);			Wissel^.Stand := TWisselStand(ordnr);
+		byteread  (f, ordnr);			Wissel^.nw_stand := TWisselStand(ordnr);
 		intread   (f, Wissel^.nw_tijd);
-		boolread  (f, Wissel^.defect);
-		intread   (f, Wissel^.defecttot);
+		byteread	 (f, ordnr);			Wissel^.defect := TpWisselDefect(ordnr);
+		boolread	 (f, monteur);			if monteur then Wissel^.Monteur := pMonteur;
 	end;
 
 	intread(f, OverwegenCount);
 	for i := 1 to OverwegenCount do begin
-		stringread(f, OverwegNaam);
-		Overweg := ZoekOverweg(OverwegNaam);
+		stringread(f, OverwegNaam);	Overweg := ZoekOverweg(OverwegNaam);
 		byteread  (f, Overweg^.Status);
 		intread   (f, Overweg^.VolgendeStatusTijd);
 	end;
+
+	byteread		(f, ordnr);	pMonteur.Status := TpMonteurStatus(ordnr);
+	intread		(f, pMonteur.VolgendeStatusTijd);
+	byteread		(f, ordnr);	pMonteur.Opdracht.Wat := TpMonteurRepareerWat(ordnr);
+	stringread	(f, pMonteur.Opdracht.ID);
 
 	intread(f, ScoreInfo.AankomstOpTijd);
 	intread(f, ScoreInfo.AankomstBinnenDrie);
@@ -2606,21 +2073,38 @@ function TpCore.ZetWissel;
 var
 	zettijd: integer; // secondes
 	Meetpunt: PpMeetpunt;
+	Gesprek: PpTelefoongesprek;
 begin
 	Meetpunt := Wissel^.Meetpunt;
-	if Meetpunt^.Bezet or Wissel^.defect then begin
+	if Meetpunt^.Bezet then begin
 		result := false;
 		exit;
 	end else
 		result := true;
-	Wissel^.defect := GaatDefect(wisseldefectkans);
-	if Wissel^.defect then
-		Wissel^.defecttot := GetTijd + MkTijd(0,wisseldefectmintijd,0)+
-		round(random * (wisseldefectmaxtijd-wisseldefectmintijd)*60);
 	zettijd := round(random * 3)+3;
 	Wissel^.nw_tijd := GetTijd + ZetTijd;
-	Wissel^.nw_aftakkend := aftakkend;
+	Wissel^.nw_stand := stand;
+	Wissel^.stand := wsOnbekend;
 	Wissel^.veranderd := true;
+	// Als er een monteur bezig is dan gaat het fout.
+	if assigned(Wissel^.Monteur) then begin
+		Wissel^.defect := wdDefect;
+		Gesprek := NieuwTelefoongesprek(PpMonteur(Wissel^.Monteur), tgtBellen, true);
+		Gesprek^.tekstX := 'Auw, dat waren mijn vingers!';
+		Gesprek^.tekstXsoort := pmsVraagOK;
+		Gesprek^.OphangenErg := true;
+		PpMonteur(Wissel^.Monteur)^.Status := msWachten;
+		exit;
+	end;
+	// Een 'eenmalig' defecte wissel werkt in principe weer.
+	if Wissel^.defect = wdEenmalig then
+		Wissel^.defect := wdHeel;
+	// Een wissel die werkt kan stuk gaan.
+	if GaatDefect(wisseldefectkans) then
+		if GaatDefect(wisselechtdefectkans) then
+			Wissel^.defect := wdDefect
+		else
+			Wissel^.defect := wdEenmalig;
 end;
 
 procedure TpCore.DoeMeetpunten;
@@ -2630,9 +2114,6 @@ begin
 	Meetpunt := pAlleMeetpunten;
 	while assigned(Meetpunt) do begin
 		Meetpunt^.Update(pAlleTreinen);
-		// Defecten verhelpen
-		if Meetpunt^.defect and (GetTijd > Meetpunt^.defecttot) then
-			Meetpunt^.defect := false;
 		Meetpunt := Meetpunt^.Volgende;
 	end;
 end;
@@ -2677,7 +2158,7 @@ begin
 	result := false;
 	Trein := pAlleTreinen;
 	while assigned(Trein) do begin
-		if Trein^.modus = 2 then begin
+		if Trein^.modus = tmRijden then begin
 			result := true;
 			exit;
 		end;
@@ -2686,37 +2167,15 @@ begin
 end;
 
 // We moeten hier doen:
-// - Treinen rijden
 // - Automatische hoofd- en voorseinen schakelen
 // - Externe connecties afhandelen
 procedure TpCore.DoeStapje;
 var
-	Trein:		PpTrein;
-	tmpTrein:	PpTrein;
 	Wissel: 		PpWissel;
 	Erlaubnis: 	PpErlaubnis;
 	Overweg:		PpOverweg;
 begin
 	DoeVerschijnen;
-
-//   PpTrein(nil)^.Update;
-
-	// Treinen doen
-	Trein := pAlleTreinen;
-	while assigned(Trein) do begin
-		Trein^.Update;
-		RijTrein(Trein);
-		Trein := Trein^.Volgende;
-	end;
-	Trein := pAlleTreinen;
-	while assigned(Trein) do begin
-		if Trein^.Wissen then begin
-			tmpTrein := Trein^.Volgende;
-			WisTrein(Trein);
-			Trein := tmpTrein
-		end else
-			Trein := Trein^.Volgende;
-	end;
 
 	// Wissels doen
 	Wissel := pAlleWissels;

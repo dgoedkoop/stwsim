@@ -2,7 +2,7 @@ unit stwpRails;
 
 interface
 
-//uses stwpWissels;
+uses stwpDatatypes;
 
 type
 	PpRegLijst = ^TpRegLijst;
@@ -44,14 +44,14 @@ type
 
 	TpWissel = record
 		w_naam:				String;
-		stand_aftakkend:	boolean;	// Bij niet-wissels altijd niet-aftakkend!
-		nw_aftakkend:		boolean;	// Gewenste wisselstand.
+		stand:				TWisselstand;	// Bij niet-wissels altijd niet-aftakkend!
+		nw_stand:			TWisselstand;	// Gewenste wisselstand.
 		nw_tijd:				integer;	// Wanneer de wissel omgezet wordt.
 		Meetpunt:			pointer;	// Welk meetpunt moet vrij zijn om de wissel
 												// om te kunnen zetten?
 		// Defecten
-		defect:		boolean;
-		defecttot:	integer;
+		defect:		TpWisselDefect;
+		Monteur:		pointer;
 		// OVERIG
 		veranderd:	boolean;
 		vanwie:		pointer;	  		// TClient
@@ -71,6 +71,7 @@ type
 	end;
 
 procedure WisselOpenrijden(Conn: PpRailConn);
+function WisselWerkzaamheden(Conn: PpRailConn): boolean;
 procedure VolgendeRail(Conn: PpRailConn; var Rail: PpRail; var Achteruit: boolean);
 procedure RaillijstWissen(var Raillijst: PpRailLijst);
 function RaillijstenSnijden(Raillijst1, Raillijst2: PpRailLijst): boolean;
@@ -79,7 +80,11 @@ function RailOpLijst(Rail: PpRail; Lijst: PpRailLijst): boolean;
 
 function ZoekRail(pAlleRails: PpRailLijst; Naam: string): PpRail;
 
+function IsHierHoofdsein(Conn: PpRailConn): boolean;
+
 implementation
+
+uses stwpSeinen;
 
 function ZoekRail;
 var
@@ -102,22 +107,55 @@ var
 begin
 	// Voor het openrijden moeten we de OMGEKEERDE connectie bekijken.
 	VolgendeRail(Conn, naarRail, naarAchteruit);
+	if not assigned(naarRail) then exit;	// Zou niet voor mogen komen, de trein
+														// moet dan al gecrasht zijn.
 	if naarAchteruit then
 		wConn := naarRail^.Volgende
 	else
 		wConn := naarRail^.Vorige;
 	// En nu ons ding doen.
 	if not assigned(wConn^.WisselData) then exit;
-	if (wConn^.recht = Conn^.VanRail) and wConn^.WisselData^.stand_aftakkend then begin
-		wConn^.WisselData^.stand_aftakkend := false;
-		wConn^.WisselData^.nw_aftakkend := false;
+	if (wConn^.recht = Conn^.VanRail) and (wConn^.WisselData^.stand <> wsRechtdoor) then begin
+		wConn^.WisselData^.stand := wsRechtdoor;
+		wConn^.WisselData^.nw_stand := wsRechtdoor;
+		if wConn^.WisselData^.defect = wdHeel then
+			wConn^.WisselData^.defect := wdEenmalig;
 		wConn^.WisselData^.veranderd := true;
 	end;
-	if (wConn^.aftakkend = Conn^.VanRail) and not wConn^.WisselData^.stand_aftakkend then begin
-		wConn^.WisselData^.stand_aftakkend := true;
-		wConn^.WisselData^.nw_aftakkend := true;
+	if (wConn^.aftakkend = Conn^.VanRail) and (wConn^.WisselData^.stand <> wsAftakkend) then begin
+		wConn^.WisselData^.stand := wsAftakkend;
+		wConn^.WisselData^.nw_stand := wsAftakkend;
+		if wConn^.WisselData^.defect = wdHeel then
+			wConn^.WisselData^.defect := wdEenmalig;
 		wConn^.WisselData^.veranderd := true;
 	end;
+end;
+
+function WisselWerkzaamheden;
+var
+	naarRail: 		PpRail;
+	naarAchteruit:	boolean;
+	wConn:			PpRailConn;
+begin
+	result := false;
+
+	// Vooruit kijken
+	if assigned(Conn^.Wisseldata) then
+		if assigned(Conn^.Wisseldata^.Monteur) then
+			result := true;
+
+	// Achteruit kijken
+	VolgendeRail(Conn, naarRail, naarAchteruit);
+	if not assigned(naarRail) then exit;	// Zou niet voor mogen komen, de trein
+														// moet dan al gecrasht zijn.
+	if naarAchteruit then
+		wConn := naarRail^.Volgende
+	else
+		wConn := naarRail^.Vorige;
+	// En nu ons ding doen.
+	if assigned(wConn^.WisselData) then
+		if assigned(wConn^.Wisseldata^.Monteur) then
+			result := true;
 end;
 
 function RailOpLijst;
@@ -137,19 +175,24 @@ end;
 
 procedure VolgendeRail;
 var
-	tmpaft: boolean;
+	tmpaft: TWisselStand;
 begin
 	if not Conn^.wissel then
-		tmpaft := false
+		tmpaft := wsRechtdoor
 	else
-		tmpaft := Conn^.WisselData^.stand_aftakkend;
+		tmpaft := Conn^.WisselData^.stand;
 
-	if not tmpaft then begin
+	case tmpaft of
+	wsRechtdoor: begin
 		Rail := Conn.recht;
 		achteruit := Conn.r_foutom;
-	end else begin
+	end;
+	wsAftakkend: begin
 		Rail := Conn.aftakkend;
 		achteruit := Conn.a_foutom;
+	end;
+	else
+		Rail := nil;
 	end;
 end;
 
@@ -181,6 +224,11 @@ begin
       dispose(tmp2);
 	end;
 	Raillijst := nil;
+end;
+
+function IsHierHoofdsein;
+begin
+	result := IsHoofdsein(PpSein(Conn^.sein));
 end;
 
 end.

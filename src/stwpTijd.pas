@@ -11,6 +11,8 @@ procedure SetTijd(tt: integer);
 function GetTijd: integer;
 function TijdVerstreken(tt: integer): boolean;
 
+function RandomWachtTijd(mint, maxt: double): integer;
+
 implementation
 
 var
@@ -78,7 +80,12 @@ end;
 
 function TijdVerstreken;
 begin
-	result := tt >= t;
+	result := t >= tt;
+end;
+
+function RandomWachtTijd;
+begin
+	result := GetTijd + round(mint*60) + round(random * (maxt-mint)*60);
 end;
 
 end.

@@ -51,6 +51,16 @@ type
 		volgende:			PpSein;
 	end;
 
+function IsHoofdsein(Sein: PpSein): boolean;
+
 implementation
+
+function IsHoofdsein;
+begin
+	result := (sein <> nil) AND
+		(Sein^.Bediend or
+		 Sein^.Autosein or
+		 (Sein^.H_Maxsnelheid = 0));
+end;
 
 end.

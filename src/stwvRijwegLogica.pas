@@ -15,7 +15,8 @@ type
 		Scrollbox:	TScrollBox;
 		Titel:		string;
 		ID:			integer;
-		Volgende: PTablist;
+		Volgende: 	PTablist;
+		Details:		boolean;
 	end;
 
 	TWatMetActief = (wmaError, wmaOK);
@@ -28,7 +29,9 @@ type
 		procedure StelRijwegInNu(Rijweg: PvRijweg; ROZ, Auto: boolean);
 		function RijwegVrij(Rijweg: PvRijweg): boolean;
 		function RijwegAlActief(Rijweg: PvRijweg): boolean;
-		procedure DoeHokjes(Meetpunt: PvMeetpunt; Rijweg: PvRijweg);
+		procedure DoeKruisHokjes(Meetpunt: PvMeetpunt; Rijweg: PvRijweg);
+		function ControleerDubbelSubroute(Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
+			KruisingHokjes: PvKruisingHokje; strikt: boolean): boolean;
 	public
 		// Hulpmiddelen
 		Tabs:		PTabList;
@@ -58,9 +61,365 @@ type
 		procedure Aankondigen(Meetpunt: PvMeetpunt);
 		procedure MarkeerBezet(Meetpunt: PvMeetpunt);
 		procedure MarkeerVrij(Meetpunt: PvMeetpunt);
+		procedure WisselOm(Wissel: PvWissel);
+		// Voor de editor
+		// Deze bovenste variant willen we eigenlijk niet!!
+		function CreateSubrouteFrom(Rijweg: PvRijweg; Meetpunt: PvMeetpunt):PvSubroute; overload;
+		function CreateSubrouteFrom(Meetpunt: PvMeetpunt):PvSubroute; overload;
+		function ZoekSubroute(Meetpunt: PvMeetpunt; strikt: boolean):PvSubroute;
+		procedure DoeHokjes(Meetpunt: PvMeetpunt; strikt: boolean);
+		// Tijdelijk hulpmiddel
+		procedure ZetRijwegInSubroutesOm;
 	end;
 
 implementation
+
+function TRijwegLogica.ControleerDubbelSubroute;
+var
+	Subroute:	PvSubroute;
+	OK:					boolean;
+begin
+	result := false;
+
+	// Als er geen inactieve hokjes (kunnen) zijn hoeven we ook niks toe te
+	// voegen.
+	if not assigned(Wisselstanden) and not assigned(Kruisinghokjes) then begin
+		result := true;
+		exit;
+	end;
+
+	Subroute := Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
+		// We gaan ervan uit dat dit een duplicaat is.
+		OK := true;
+
+		if Subroute^.Meetpunt <> Meetpunt then
+			OK := false;
+
+		if OK then
+			OK := OK and CmpWisselstanden(Subroute^.Wisselstanden, Wisselstanden, strikt);
+
+		if OK then
+			OK := OK and CmpKruisingHokjes(Subroute^.KruisingHokjes, KruisingHokjes, strikt);
+
+		// OK?
+		if OK then begin
+			result := true;
+			exit;
+		end;
+
+		Subroute := Subroute^.Volgende;
+	end;
+end;
+
+function TRijwegLogica.ZoekSubroute;
+var
+	Tab:					PTablist;
+	Hokje:				TvHokje;
+	KruisingHokje:		PvKruisingHokje;
+	Subroute:			PvSubroute;
+	OK:					boolean;
+	WisselStand:		PvWisselstand;
+	// Voor strikt
+	Gevonden:			boolean;
+	Wissel:				PvWissel;
+	x,y:					integer;
+	HokjeMeetpunt:		PvMeetpunt;
+	rechtsonderkruis:	integer;
+begin
+	result := nil;
+	Subroute := Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
+		OK := true;
+		// Meetpunt controleren
+		if Subroute^.Meetpunt <> Meetpunt then
+			OK := false;
+		// Wisselstanden controleren
+		if OK then begin
+			WisselStand := Subroute^.Wisselstanden;
+			while assigned(Wisselstand) do begin
+				if Wisselstand^.Rechtdoor then
+					OK := OK and (Wisselstand^.Wissel^.Stand = wsRechtdoor)
+				else
+					OK := OK and (Wisselstand^.Wissel^.Stand = wsAftakkend);
+				Wisselstand := Wisselstand^.Volgende;
+			end;
+		end;
+		// Kruisingen controleren
+		if OK then begin
+			KruisingHokje := Subroute^.KruisingHokjes;
+			while assigned(KruisingHokje) do begin
+				Tab := Tabs;
+				while assigned(Tab) do begin
+					if KruisingHokje.schermID = Tab^.ID then begin
+						Hokje := Tab^.Gleisplan.GetHokje(KruisingHokje.x, KruisingHokje.y);
+						case Hokje.Soort of
+						1: if KruisingHokje.RechtsonderKruisRijweg then
+								OK := OK and (PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg = 1)
+							else
+								OK := OK and (PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg = 2);
+						end;
+					end;
+					Tab := Tab^.Volgende;
+				end;
+				KruisingHokje := KruisingHokje^.volgende;
+			end;
+		end;
+		// Bij strikt moeten we kijken of niet meer is ingesteld dan deze
+		// InactiefHokjeDescr zegt.
+		if OK and strikt then begin
+			Wissel := EersteWissel(Core);
+			while assigned(Wissel) do begin
+				if Wissel^.Meetpunt = Meetpunt then begin
+					// Kijk of dit wissel in de InactiefHokjeDescr zit.
+					WisselStand := Subroute^.Wisselstanden;
+					gevonden := false;
+					while assigned(Wisselstand) do begin
+						if (Wisselstand^.Wissel = Wissel) then begin
+							gevonden := true;
+							break;
+						end;
+						Wisselstand := Wisselstand^.Volgende;
+					end;
+					if (not gevonden) and (Wissel^.Stand <> wsOnbekend) then begin
+						OK := false;
+						break;
+					end;
+				end;
+				Wissel := VolgendeWissel(Wissel);
+			end;
+		end;
+		if OK and strikt then begin
+			Tab := Tabs;
+			while assigned(Tab) do begin
+				for x := 0 to Tab^.Gleisplan.MaxX-1 do
+					for y := 0 to Tab^.Gleisplan.MaxY-1 do begin
+						HokjeMeetpunt := nil;
+						Rechtsonderkruis := 0;
+						Hokje := Tab^.Gleisplan.GetHokje(x, y);
+						case Hokje.Soort of
+						1: begin
+							if (PvHokjeSpoor(Hokje.grdata).GrX >= 7) and
+								(PvHokjeSpoor(Hokje.grdata).GrX <= 14) and
+								(PvHokjeSpoor(Hokje.grdata).GrY >= 0) and
+								(PvHokjeSpoor(Hokje.grdata).GrY <= 1) then begin
+								// Dit is een kruising-hokje
+								HokjeMeetpunt := PvHokjeSpoor(Hokje.grdata).Meetpunt;
+								Rechtsonderkruis := PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg;
+							end;
+						end;
+						end;
+						if Meetpunt = HokjeMeetpunt then begin
+							gevonden := false;
+							KruisingHokje := Subroute^.KruisingHokjes;
+							while assigned(KruisingHokje) do begin
+								if (KruisingHokje^.schermID = Tab^.ID) and
+									(KruisingHokje^.x = x) and
+									(KruisingHokje^.y = y) then begin
+									gevonden := true;
+									break;
+								end;
+								KruisingHokje := KruisingHokje^.Volgende;
+							end;
+							if (not gevonden) and (rechtsonderkruis > 0) then begin
+								OK := false;
+								// break; heeft geen zin hier omdat we in 3 lussen zitten.
+							end;
+						end;
+					end;
+				Tab := Tab^.Volgende;
+			end;
+		end;
+		// OK?
+		if OK then begin
+			result := Subroute;
+			exit;
+		end;
+
+		Subroute := Subroute^.Volgende;
+	end;
+end;
+
+function TRijwegLogica.CreateSubrouteFrom(Meetpunt: PvMeetpunt):PvSubroute;
+var
+	Wissel:					PvWissel;
+	WisselStanden:			PvWisselStand;
+	NieuweWisselstand:	PvWisselStand;
+	KruisingHokjes:		PvKruisingHokje;
+	NieuwKruisingHokje:	PvKruisingHokje;
+	Tab:						PTabList;
+	Hokje:					TvHokje;
+	x,y:					integer;
+	HokjeMeetpunt:		PvMeetpunt;
+	rechtsonderkruis:	integer;
+begin
+	result := nil;
+	// Zoek alle wissels die bij dit meetpunt horen
+	WisselStanden := nil;
+	Wissel := EersteWissel(Core);
+	while assigned(Wissel) do begin
+		if (Wissel^.Meetpunt = Meetpunt) and
+			(Wissel^.Stand in [wsRechtdoor, wsAftakkend]) then begin
+			new(NieuweWisselStand);
+			NieuweWisselstand^.Wissel := Wissel;
+			NieuweWisselstand^.Rechtdoor := Wissel^.Stand = wsRechtdoor;
+			NieuweWisselstand^.Volgende := WisselStanden;
+			WisselStanden := NieuweWisselstand;
+		end;
+		Wissel := VolgendeWissel(Wissel);
+	end;
+	// Zoek alle kruisinghokjes die bij dit meetpunt horen
+	KruisingHokjes := nil;
+	Tab := Tabs;
+	while assigned(Tab) do begin
+		for x := 0 to Tab^.Gleisplan.MaxX-1 do
+			for y := 0 to Tab^.Gleisplan.MaxY-1 do begin
+				HokjeMeetpunt := nil;
+				Rechtsonderkruis := 0;
+				Hokje := Tab^.Gleisplan.GetHokje(x, y);
+				case Hokje.Soort of
+				1: begin
+					if (PvHokjeSpoor(Hokje.grdata).GrX >= 7) and
+						(PvHokjeSpoor(Hokje.grdata).GrX <= 14) and
+						(PvHokjeSpoor(Hokje.grdata).GrY >= 0) and
+						(PvHokjeSpoor(Hokje.grdata).GrY <= 1) then begin
+						// Dit is een kruising-hokje
+						HokjeMeetpunt := PvHokjeSpoor(Hokje.grdata).Meetpunt;
+						Rechtsonderkruis := PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg;
+					end;
+				end;
+				end;
+				if assigned(HokjeMeetpunt) then begin
+					new(NieuwKruisingHokje);
+					NieuwKruisingHokje^.schermID := Tab^.ID;
+					NieuwKruisingHokje^.x := x;
+					NieuwKruisingHokje^.y := y;
+					NieuwKruisingHokje^.Meetpunt := HokjeMeetpunt;
+					NieuwKruisingHokje^.RechtsonderKruisRijweg := rechtsonderkruis = 1;
+					NieuwKruisingHokje^.volgende := KruisingHokjes;
+					KruisingHokjes := NieuwKruisingHokje;
+				end;
+			end;
+		Tab := Tab^.Volgende;
+	end;
+
+	// Zo. Nu hebben we alle gegevens die de inactieve hokjes eenduidig
+	// bepalen.
+
+	// We gaan een nieuwe subroute maken, dus inactieve hokjes zijn er nog niet.
+
+	// Nu hebben we alles => toevoegen
+	if not ControleerDubbelSubroute(Meetpunt, WisselStanden, KruisingHokjes, true) then
+		result := AddSubroute(Core, Meetpunt, WisselStanden, KruisingHokjes, nil);
+end;
+
+function TRijwegLogica.CreateSubrouteFrom(Rijweg: PvRijweg; Meetpunt: PvMeetpunt):PvSubroute;
+var
+	WisselStanden:			PvWisselStand;
+	WisselStand:			PvWisselStand;
+	NieuweWisselstand:	PvWisselStand;
+	InactieveHokjes:		PvInactiefHokje;
+	InactiefHokje:			PvInactiefHokje;
+	NieuwInactiefHokje:	PvInactiefHokje;
+	KruisingHokjes:		PvKruisingHokje;
+	KruisingHokje:			PvKruisingHokje;
+	NieuwKruisingHokje:	PvKruisingHokje;
+	Tab:						PTabList;
+	Hokje:					TvHokje;
+begin
+	result := nil;
+	// Zoek alle wissels die bij dit meetpunt horen
+	WisselStanden := nil;
+	WisselStand := Rijweg^.Wisselstanden;
+	while assigned(WisselStand) do begin
+		if WisselStand^.Wissel^.Meetpunt = Meetpunt then begin
+			new(NieuweWisselStand);
+			NieuweWisselstand^ := WisselStand^;
+			NieuweWisselstand^.Volgende := WisselStanden;
+			WisselStanden := NieuweWisselstand;
+		end;
+		WisselStand := WisselStand^.Volgende;
+	end;
+	// Zoek alle kruisinghokjes die bij dit meetpunt horen
+	KruisingHokjes := nil;
+	KruisingHokje := Rijweg^.KruisingHokjes;
+	while assigned(KruisingHokje) do begin
+		Tab := Tabs;
+		while assigned(Tab) do begin
+			if KruisingHokje.schermID = Tab^.ID then begin
+				Hokje := Tab^.Gleisplan.GetHokje(KruisingHokje.x, KruisingHokje.y);
+				case Hokje.Soort of
+					1: if (PvHokjeSpoor(Hokje.grdata).Meetpunt = Meetpunt) then begin
+						new(NieuwKruisingHokje);
+						NieuwKruisingHokje^ := KruisingHokje^;
+						NieuwKruisingHokje^.volgende := KruisingHokjes;
+						KruisingHokjes := NieuwKruisingHokje;
+					end;
+				end;
+			end;
+			Tab := Tab^.Volgende;
+		end;
+		KruisingHokje := KruisingHokje^.Volgende;
+	end;
+
+	// Zo. Nu hebben we alle gegevens die de inactieve hokjes eenduidig
+	// bepalen.
+
+	// Zoek alle inactieve hokjes die bij dit meetpunt horen
+	InactieveHokjes := nil;
+	InactiefHokje := Rijweg^.InactieveHokjes;
+	while assigned(InactiefHokje) do begin
+		Tab := Tabs;
+		while assigned(Tab) do begin
+			if InactiefHokje.schermID = Tab^.ID then begin
+				Hokje := Tab^.Gleisplan.GetHokje(InactiefHokje.x, InactiefHokje.y);
+				case Hokje.Soort of
+					1: if (PvHokjeSpoor(Hokje.grdata).Meetpunt = Meetpunt) then begin
+						new(NieuwInactiefHokje);
+						NieuwInactiefHokje^ := InactiefHokje^;
+						NieuwInactiefHokje^.volgende := InactieveHokjes;
+						InactieveHokjes := NieuwInactiefHokje;
+					end;
+					5: if (PvHokjeWissel(Hokje.grdata).Meetpunt = Meetpunt) then begin
+						new(NieuwInactiefHokje);
+						NieuwInactiefHokje^ := InactiefHokje^;
+						NieuwInactiefHokje^.volgende := InactieveHokjes;
+						InactieveHokjes := NieuwInactiefHokje;
+					end;
+				end;
+			end;
+			Tab := Tab^.Volgende;
+		end;
+		InactiefHokje := InactiefHokje^.volgende
+	end;
+
+	// Nu hebben we alles => toevoegen
+	if not ControleerDubbelSubroute(Meetpunt, WisselStanden, KruisingHokjes, true) then
+		result := AddSubroute(Core, Meetpunt, WisselStanden, KruisingHokjes, InactieveHokjes);
+end;
+
+procedure TRijwegLogica.ZetRijwegInSubroutesOm;
+var
+	Rijweg:					PvRijweg;
+	MeetpuntL:				PvMeetpuntLijst;
+	Meetpunt:				PvMeetpunt;
+	log:string;
+begin
+	Rijweg := Core.vAlleRijwegen;
+	while assigned(Rijweg) do begin
+		MeetpuntL := Rijweg^.Meetpunten;
+		while assigned(MeetpuntL) do begin
+			Meetpunt := MeetpuntL^.Meetpunt;
+
+			CreateSubrouteFrom(Rijweg, Meetpunt);
+
+			MeetpuntL := MeetpuntL^.Volgende;
+		end;
+		Rijweg.InactieveHokjes := nil;
+		Rijweg := Rijweg^.Volgende;
+	end;
+	Application.MessageBox(pchar('Voor de volgende detectiepunten is een subroute aangemaakt:'+#13#10+log), 'Subroutes aangemaakt', 0);
+end;
 
 constructor TRijwegLogica.Create;
 begin
@@ -357,33 +716,49 @@ end;
 
 procedure TRijwegLogica.DoeHokjes;
 var
+	Tab:				PTablist;
+	Hokje:			TvHokje;
+	InactiefHokje:	PvInactiefHokje;
+	Subroute:		PvSubroute;
+begin
+	Subroute := ZoekSubroute(Meetpunt, strikt);
+	if assigned(Subroute) then begin
+		// Deze hokjes markeren
+		InactiefHokje := Subroute^.EersteHokje;
+		while assigned(InactiefHokje) do begin
+			Tab := Tabs;
+			while assigned(Tab) do begin
+				if InactiefHokje.schermID = Tab^.ID then begin
+					Hokje := Tab^.Gleisplan.GetHokje(InactiefHokje.x, InactiefHokje.y);
+					case Hokje.Soort of
+						1: if (PvHokjeSpoor(Hokje.grdata).Meetpunt = Meetpunt) and
+							not PvHokjeSpoor(Hokje.grdata).InactiefWegensRijweg then begin
+							PvHokjeSpoor(Hokje.grdata).InactiefWegensRijweg := true;
+							Tab^.Gleisplan.PaintHokje(InactiefHokje.x, InactiefHokje.y);
+						end;
+						5: if (PvHokjeWissel(Hokje.grdata).Meetpunt = Meetpunt) and
+							not PvHokjeWissel(Hokje.grdata).InactiefWegensRijweg then begin
+							PvHokjeWissel(Hokje.grdata).InactiefWegensRijweg := true;
+							Tab^.Gleisplan.PaintHokje(InactiefHokje.x, InactiefHokje.y);
+						end;
+					end;
+				end;
+				Tab := Tab^.Volgende;
+			end;
+			InactiefHokje := InactiefHokje.Volgende;
+		end;
+	end;
+end;
+
+procedure TRijwegLogica.DoeKruisHokjes;
+var
 	Tab:					PTablist;
 	Hokje:				TvHokje;
-	InactiefHokje:		PvInactiefHokje;
 	KruisingHokje:		PvKruisingHokje;
 begin
 	Tab := Tabs;
 	while assigned(Tab) do begin
 		// Weergave-finetuning
-		InactiefHokje := Rijweg.InactieveHokjes;
-		while assigned(InactiefHokje) do begin
-			if InactiefHokje.schermID = Tab^.ID then begin
-				Hokje := Tab^.Gleisplan.GetHokje(InactiefHokje.x, InactiefHokje.y);
-				case Hokje.Soort of
-					1: if (PvHokjeSpoor(Hokje.grdata).Meetpunt = Meetpunt) and
-						not PvHokjeSpoor(Hokje.grdata).InactiefWegensRijweg then begin
-						PvHokjeSpoor(Hokje.grdata).InactiefWegensRijweg := true;
-						Tab^.Gleisplan.PaintHokje(InactiefHokje.x, InactiefHokje.y);
-					end;
-					5: if (PvHokjeWissel(Hokje.grdata).Meetpunt = Meetpunt) and
-						not PvHokjeWissel(Hokje.grdata).InactiefWegensRijweg then begin
-						PvHokjeWissel(Hokje.grdata).InactiefWegensRijweg := true;
-						Tab^.Gleisplan.PaintHokje(InactiefHokje.x, InactiefHokje.y);
-					end;
-				end;
-			end;
-			InactiefHokje := InactiefHokje.Volgende;
-		end;
 		KruisingHokje := Rijweg.KruisingHokjes;
 		while assigned(KruisingHokje) do begin
 			if KruisingHokje.schermID = Tab^.ID then begin
@@ -494,18 +869,28 @@ begin
 		end;
 		Wissel := VolgendeWissel(Wissel);
 	end;
-	// Inactief en kruisings-hokjes resetten
-	Tab := Tabs;
-	while assigned(Tab) do begin
-		Tab^.Gleisplan.ResetMeetpunt(Meetpunt);
-		Tab := Tab^.Volgende;
-	end;
 
 	// Misschien kunnen we een pending-rijweg instellen
 	DoeActieveRijwegen;
 
 	// Tenslotte openen we overwegen als dat kan.
 	DoeOverwegen;
+end;
+
+procedure TRijwegLogica.WisselOm;
+var
+	Tab: PTablist;
+begin
+	if assigned(Wissel^.Meetpunt) then begin
+		// Inactief en kruisings-hokjes resetten
+		Tab := Tabs;
+		while assigned(Tab) do begin
+			Tab^.Gleisplan.ResetMeetpunt(Wissel^.Meetpunt);
+			Tab := Tab^.Volgende;
+		end;
+		// En opnieuw instellen
+		DoeHokjes(Wissel^.Meetpunt, false);
+	end;
 end;
 
 function TRijwegLogica.MoetApproachLock;
@@ -737,10 +1122,10 @@ begin
 						Tab := Tab^.Volgende;
 					end;
 				end;
-				wisselsgoed := wisselsgoed and
-				(((WisselStand^.Rechtdoor and (WisselStand^.Wissel^.Stand = wsRechtdoor)) or
-				 (not WisselStand^.Rechtdoor and (WisselStand^.Wissel^.Stand = wsAftakkend))) and
-				 (not WisselStand^.Wissel^.Groep.OnbekendAanwezig));
+				if WisselStand^.Rechtdoor then
+					wisselsgoed := wisselsgoed and WisselsLiggenGoed(WisselStand^.Wissel, wsRechtdoor)
+				else
+					wisselsgoed := wisselsgoed and WisselsLiggenGoed(WisselStand^.Wissel, wsAftakkend);
 				WisselStand := WisselStand^.Volgende;
 			end;
 
@@ -764,7 +1149,11 @@ begin
 							MeetpuntLijst^.Meetpunt^.RijwegOnderdeel := ActieveRijweg;
 							Tab := Tabs;
 							while assigned(Tab) do begin
-								DoeHokjes(MeetpuntLijst^.Meetpunt, Rijweg);
+								DoeKruisHokjes(MeetpuntLijst^.Meetpunt, Rijweg);
+								// Inactieve hokjes ook herberekenen, want die kunnen
+								// nu na het instellen van de kruisinghokjes ineens
+								// duidelijk zijn.
+								DoeHokjes(MeetpuntLijst^.Meetpunt, false);
 								Tab^.Gleisplan.PaintMeetpunt(MeetpuntLijst^.Meetpunt);
 								Tab := Tab^.Volgende;
 							end;
@@ -961,11 +1350,10 @@ begin
 	// Zet de wissels goed
 	Wissel := Rijweg^.Wisselstanden;
 	while assigned(Wissel) do begin
-		if not Wissel^.Wissel^.Groep^.OnbekendAanwezig then
-			if Wissel^.Rechtdoor then
-				SendMsg.SendWissel(Wissel^.Wissel, wsRechtdoor)
-			else
-				SendMsg.SendWissel(Wissel^.Wissel, wsAftakkend);
+		if Wissel^.Rechtdoor then
+			SendMsg.SendWissel(Wissel^.Wissel, wsRechtdoor)
+		else
+			SendMsg.SendWissel(Wissel^.Wissel, wsAftakkend);
 		Wissel := Wissel^.volgende;
 	end;
 

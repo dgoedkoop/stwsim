@@ -2,20 +2,21 @@ unit stwpTreinen;
 
 interface
 
-uses stwpRails, stwpRijplan, stwpTijd, stwpSeinen, stwvMisc;
+uses stwpRails, stwpRijplan, stwpTijd, stwpSeinen, stwvMisc, stwpDatatypes,
+	stwpTelefoongesprek;
 
 const
 	RemwegSnelheid	 		 = 40;
 
 type
 	PpWagon = ^TpWagon;
-   TpWagon = record
-   	lengte:		double;	// m
-      gewicht:		integer;	// kg
-      vermogen:	integer;	// W
-      trekkracht:	integer;	// N
-      remkracht:	integer;	// N
-      maxsnelheid:integer;	// km/u
+	TpWagon = record
+		lengte:		double;	// m
+		gewicht:		integer;	// kg
+		vermogen:	integer;	// W
+		trekkracht:	integer;	// N
+		remkracht:	integer;	// N
+		maxsnelheid:integer;	// km/u
 		cw:			double;	// Luchtweerstandscoefficient
 		elektrisch:	boolean;	// Elektrolok?
       bedienbaar:	boolean;	// Lok of stuurstandrijtuig
@@ -41,10 +42,11 @@ type
 
 	PpTrein = ^TpTrein;
 	TpTrein = class
-		EersteWagon:	PpWagonConn;
+		EersteWagon:		PpWagonConn;
 
-		Treinnummer:	string;
-		Planpunten:		PpRijplanPunt;
+		Treinnummer:		string;
+
+		Planpunten:			PpRijplanPunt;
 		StationModusPlanpunt:	PpRijplanpunt;	// Rijplanpunt van het station
 															// waar we bij stilstaan.
 
@@ -81,9 +83,7 @@ type
 		pos_dist:	double;	// Positie in m binnen deze rail.
 		achteruit:	boolean;	// eind->begin
 
-		modus:		integer;	// 1 = wachten op vertrektijd
-									// 2 = rijden!
-									// 3 = botsing! Dan doen we niks meer.
+		modus:		TpTreinmodus;
 
 		vorigeaankomstvertraging: integer;
 		vertraging:		integer;	// Vertraging in minuten
@@ -118,6 +118,7 @@ type
 			var GevPos: double);
 
 		procedure NieuweMaxsnelheid(snelheid: integer);
+
 		procedure ZieVoorsein(Sein: PpSein);
 
 		Procedure DraaiOm;
@@ -139,8 +140,21 @@ procedure LoadTrein(var f: file; pMaterieel: PpMaterieelFile; pAlleRails: PpRail
 procedure SaveTreinen(var f: file; Treinen: PpTrein);
 function LoadTreinen(var f: file; pMaterieel: PpMaterieelFile; pAlleRails: PpRailLijst): PpTrein;
 
+function TreinnummerGt(moetgroter, moetkleiner: string): boolean;
 
 implementation
+
+function TreinnummerGt;
+var
+	gti, kli, code1, code2: integer;
+begin
+	Val(moetgroter, gti, code1);
+	Val(moetkleiner, kli, code2);
+	if code1+code2=0 then
+		result := gti > kli
+	else
+		result := moetgroter > moetkleiner
+end;
 
 function ZoekWagonType(pMaterieel: PpMaterieelFile; naam: string): PpWagon;
 var
@@ -234,7 +248,7 @@ begin
 	stringwrite(f, Trein^.pos_rail^.Naam);
 	doublewrite(f, Trein^.pos_dist);
 	boolwrite(f, Trein^.achteruit);
-	intwrite (f, Trein^.modus);
+	bytewrite (f, Ord(Trein^.modus));
 	intwrite (f, Trein^.vorigeaankomstvertraging);
 	intwrite (f, Trein^.vertraging);
 	intwrite (f, Trein^.huidigemaxsnelheid);
@@ -250,6 +264,7 @@ procedure LoadTrein;
 var
 	StationmodusPlanpuntAssigned: boolean;
 	RailNaam: string;
+	modus: byte;
 begin
 	Trein^.EersteWagon := LoadWagons(f, pMaterieel);
 	stringread(f, Trein^.Treinnummer);
@@ -273,7 +288,7 @@ begin
 	Trein^.pos_rail := ZoekRail(pAlleRails, RailNaam);
 	doubleread(f, Trein^.pos_dist);
 	boolread(f, Trein^.achteruit);
-	intread (f, Trein^.modus);
+	byteread (f, modus); Trein^.modus := TpTreinModus(Modus);
 	intread (f, Trein^.vorigeaankomstvertraging);
 	intread (f, Trein^.vertraging);
 	intread (f, Trein^.huidigemaxsnelheid);
@@ -332,9 +347,9 @@ begin
 	// Dienst instellen
 	Treinnummer := '';
 	Planpunten := nil;
-   StationModusPlanpunt := nil;
+	StationModusPlanpunt := nil;
 	// Modus instellen: wachten op vertrektijd.
-	Modus := 1;
+	Modus := tmStilstaan;
 	// Dynamische gegevens instellen
 	snelheid := 0;
 	vorigeaankomstvertraging := 0;

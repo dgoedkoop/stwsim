@@ -4,12 +4,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons, 
+  StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons,
   stwvMeetpunt, clientReadMsg, clientSendMsg, stwvCore,
   stwvGleisplan, stwvHokjes, stwvSporen, stwpTijd, stwvRijwegen, stwvSeinen,
   stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
   stwvProcesPlan, stwsimComm, stwpCore, serverSendMsg, serverReadMsg,
-  stwpTreinen;
+  stwpTreinen, stwvTreinComm, stwpTreinPhysics, stwpMonteurPhysics,
+  stwpCommPhysics;
 
 type
 	TUpdateChg = record
@@ -31,7 +32,7 @@ type
     SimOpenen: TAction;
 	 Afsluiten: TAction;
     TreinInterpose: TAction;
-	 TreinBericht: TAction;
+    TreinBellen: TAction;
 	 WisselSwitch: TAction;
     WisselBedienVerh: TAction;
 	 WisselRijwegVerh: TAction;
@@ -61,7 +62,7 @@ type
     ROZRijwegnaarbezetspoor1: TMenuItem;
     ARijwegmetautomatischeseinen1: TMenuItem;
     HRijwegherroepen1: TMenuItem;
-	 NieuwBericht: TAction;
+    TelefoonShow: TAction;
     Broadcast: TAction;
     Hulpmiddelen1: TMenuItem;
     vannaarPanel: TPanel;
@@ -93,7 +94,7 @@ type
     SpeedTrack: TTrackBar;
     Label2: TLabel;
     Label3: TLabel;
-    Hulpmiddelentonen1: TMenuItem;
+	 Hulpmiddelentonen1: TMenuItem;
     DienstEdit: TAction;
     Dienstregelingbewerken1: TMenuItem;
     DoorspoelBut: TButton;
@@ -114,6 +115,7 @@ type
     SGOpenen: TAction;
     SGSave: TAction;
     Spelopslaanals1: TMenuItem;
+    Wisselreparatie: TAction;
 	 procedure FormCreate(Sender: TObject);
 	 procedure TijdTimerTimer(Sender: TObject);
 	 procedure SimOpenenExecute(Sender: TObject);
@@ -121,7 +123,7 @@ type
 	 procedure BlinkTimerTimer(Sender: TObject);
 	 procedure WisselSwitchExecute(Sender: TObject);
 	 procedure WisselBedienVerhExecute(Sender: TObject);
-    procedure WisselRijwegVerhExecute(Sender: TObject);
+	 procedure WisselRijwegVerhExecute(Sender: TObject);
     procedure TreinInterposeExecute(Sender: TObject);
 	 procedure AfsluitenExecute(Sender: TObject);
 	 procedure TreinStatusExecute(Sender: TObject);
@@ -131,8 +133,8 @@ type
 	 procedure RijwegROZExecute(Sender: TObject);
 	 procedure RijwegAutoExecute(Sender: TObject);
     procedure RijwegCancelExecute(Sender: TObject);
-	 procedure TreinBerichtExecute(Sender: TObject);
-	 procedure NieuwBerichtExecute(Sender: TObject);
+	 procedure TreinBellenExecute(Sender: TObject);
+	 procedure TelefoonShowExecute(Sender: TObject);
 	 procedure SchermenTabChange(Sender: TObject);
 	 procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
 		WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
@@ -159,6 +161,10 @@ type
 		pCore:		PpCore;
 		vCore:		PvCore;
 		SimComm:		TStringComm;
+		// Berekeningen
+		TreinPhysics:	TpTreinPhysics;
+		MonteurPhysics:TpMonteurPhysics;
+		CommPhysics:	TpCommPhysics;
 		// Tekenen
 		UpdateChg:	TUpdateChg;
 		VisibleTab: PTabList;
@@ -179,6 +185,7 @@ type
 		selVan,
 		selNaar:		 string;
 		// Telefoon
+		rinkelen: boolean;
 		rinkelsound: THandle;
 		rinkelstapjes: integer;
 		// Sim-bediening
@@ -211,8 +218,11 @@ type
 		procedure ChangeErlaubnis(Erlaubnis: PvErlaubnis);
 		procedure ChangeOverweg(Overweg: PvOverweg);
 		procedure smsg(tekst: string);
+		procedure TelefoonGaat(van: TvMessageWie);
+		procedure TelefoonOpgenomen(van: TvMessageWie);
+		procedure TelefoonMsg(van: TvMessageWie; soort: TvMessageSoort; tekst: string);
+		procedure TelefoonOpgehangen(van: TvMessageWie);
 		procedure OntvangDefectSein(Sein: PvSein; defectSeinbeeld: TSeinbeeld);
-		procedure OntvangTreinBericht(treinnr, tekst: string);
 		procedure Tijd(u,m,s: integer);
 		procedure Score;
 		// Bediening
@@ -225,9 +235,9 @@ var
 
 implementation
 
-uses stwsimClientInfo, stwsimClientConnect, stwsimClientInterpose,
-  stwsimclientTreinMsg, stwsimclientBericht, clientProcesplanForm,
-  stwsimclientScore, stwsimclientTreinStatus, stwsimServerDienstreg;
+uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
+	stwsimclientScore, stwsimclientTreinStatus, stwsimServerDienstreg,
+	stwsimclientTelefoongesprek, stwsimclientTelefoon, stwsimClientStringInput;
 
 {$R *.DFM}
 
@@ -240,6 +250,9 @@ procedure TstwsimMainForm.DoeStapje;
 begin
 	try
 		pCore.DoeStapje;
+		TreinPhysics.DoeTreinen;
+		CommPhysics.DoeGesprekken;
+		MonteurPhysics.CheckWacht(pCore.pMonteur);
 	except
 		on EAccessViolation do begin
 			// Zet de simulatie op pauze
@@ -342,6 +355,7 @@ begin
 	CloseFile(f);
 
 	BerekenAankondigingen(vCore);
+	RijwegLogica.ZetRijwegInactieveHokjesOm;
 
 	UpdateChg.Schermaantal := true;
 	UpdateChg.Schermen := true;
@@ -466,17 +480,24 @@ begin
 		UpdateChg.Vannaar := false;
 	end;
 	if UpdateChg.Menus then begin
+		TreinStatus.Visible := assigned(selMeetpunt);
+		TreinInterpose.Visible := assigned(selMeetpunt);
+		TreinBellen.Visible := assigned(selMeetpunt);
+		WisselSwitch.Visible := assigned(selWissel);
+		WisselBedienVerh.Visible := assigned(selWissel);
+		WisselRijwegVerh.Visible := assigned(selWissel);
+
 		if assigned(selMeetpunt) then begin
 			TreinStatus.Enabled := selMeetpunt^.treinnummer <> '';
 			TreinInterpose.Enabled := true;
-			TreinBericht.Enabled := selMeetpunt^.treinnummer <> '';
+			TreinBellen.Enabled := selMeetpunt^.treinnummer <> '';
 		end else begin
 			TreinStatus.Enabled := false;
 			TreinInterpose.Enabled := false;
-			TreinBericht.Enabled := false;
+			TreinBellen.Enabled := false;
 		end;
 		if assigned(selWissel) then begin
-			WisselSwitch.Enabled := WisselKanOmgezet(selWissel, true);
+			WisselSwitch.Enabled := WisselKanOmgezet(selWissel);
 			WisselBedienVerh.Enabled := true;
 			WisselBedienVerh.Checked := selWissel^.Groep^.bedienverh;
 			WisselRijwegVerh.Enabled := true;
@@ -491,7 +512,9 @@ begin
 		UpdateChg.Menus := false;
 	end;
 	if UpdateChg.Berichten then begin
-		NieuwBericht.Enabled := assigned(vCore.vAlleBerichten);
+		Rinkelen := assigned(vCore.vAlleBinnenkomendeGesprekken);
+		if assigned(stwscTelefoonForm) and stwscTelefoonForm.Visible then
+			stwscTelefoonForm.reshow;
 		UpdateChg.Berichten := false;
 	end;
 end;
@@ -528,24 +551,22 @@ begin
 	vReadMsg := TvReadMsg.Create;
 	vSendMsg := TvSendMsg.Create;
 	new(vCore);
-	vCore^.vAlleWisselGroepen := nil;
-	vCore^.vAlleMeetpunten := nil;
-	vCore^.vAlleSeinen := nil;
-	vCore^.vAlleRijwegen := nil;
-	vCore^.vAllePrlRijwegen := nil;
-	vCore^.vAlleErlaubnisse := nil;
-	vCore^.vActieveRijwegen := nil;
-	vCore^.vAlleBerichten := nil;
-	vCore^.vAlleOverwegen := nil;
+	vCore_Create(vCore);
 	vReadMsg.SendMsg := vSendMsg;
 	vReadMsg.Core := vCore;
 
 	new(pCore);
 	pCore^ := TpCore.Create;
 
+	CommPhysics := TpCommPhysics.Create(pCore, @pSendMsg);
+	TreinPhysics := TpTreinPhysics.Create(pCore, @CommPhysics);
+	MonteurPhysics := TpMonteurPhysics.Create(pCore);
+
 	pReadMsg := TpReadMsg.Create;
 	pReadMsg.Core := pCore;
 	pReadMsg.SendMsg := @pSendMsg;
+	pReadMsg.MonteurPhysics := @MonteurPhysics;
+	pReadMsg.CommPhysics := @CommPhysics;
 	pSendMsg := TpSendMsg.Create;
 	pCore.SendMsg := @pSendMsg;
 
@@ -561,7 +582,10 @@ begin
 	vReadMsg.ChangeRichtingEvent := ChangeErlaubnis;
 	vReadMsg.ChangeOverwegEvent := ChangeOverweg;
 	vReadMsg.smsgEvent := smsg;
-	vReadMsg.mmsgEvent := OntvangTreinBericht;
+	vReadMsg.TelefoonBelEvent := TelefoonGaat;
+	vReadMsg.TelefoonOpneemEvent := TelefoonOpgenomen;
+	vReadMsg.TelefoonMsgEvent := TelefoonMsg;
+	vReadMsg.TelefoonOphangEvent := TelefoonOpgehangen;
 	vReadMsg.TijdEvent := Tijd;
 	vReadMsg.ScoreEvent := Score;
 	vReadMsg.DefectSeinEvent := OntvangDefectSein;
@@ -615,10 +639,14 @@ end;
 
 procedure TstwsimMainForm.ChangeWissel;
 begin
+	if Wissel^.Wensstand = wsEgal then
+		Wissel^.Wensstand := Wissel^.Stand;
+
 	// Berekenen of in de groep een onbekend wisselaanwezig is.
 	BerekenOnbekendAanwezig(Wissel^.Groep);
 
 	// Rijwegen herberekenen
+	RijwegLogica.WisselOm(Wissel);
 	RijwegLogica.DoeActieveRijwegen;
 
 	// En wissel tekenen;
@@ -650,6 +678,39 @@ begin
 		stwscTreinStatusForm.BerichtEinde;
 end;
 
+procedure TstwsimMainForm.TelefoonGaat;
+begin
+	AddBinnenkomendGesprek(vCore, van);
+	UpdateChg.Berichten := true;
+	UpdateControls;
+end;
+
+procedure TstwsimMainForm.TelefoonOpgenomen;
+begin
+	if stwscTelefoonGesprekForm.GesprekStatus <> gsOpgehangen then
+		stwscTelefoonGesprekForm.GesprekStart;
+end;
+
+procedure TstwsimMainForm.TelefoonMsg;
+begin
+	if stwscTelefoonGesprekForm.GesprekStatus <> gsOpgehangen then
+		stwscTelefoonGesprekForm.Bericht(soort, tekst);
+end;
+
+procedure TstwsimMainForm.TelefoonOpgehangen;
+begin
+	if (stwscTelefoonGesprekForm.GesprekStatus <> gsOpgehangen) and
+		CmpMessageWie(stwscTelefoonGesprekForm.metwie, van) then
+		// Het huidige gesprek is beeindigd
+		stwscTelefoonGesprekForm.Opgehangen
+	else begin
+		// Een gesprek in de wachtrij is beeindigd.
+		DeleteBinnenkomendGesprek(vCore, van);
+		UpdateChg.Berichten := true;
+		UpdateControls;
+	end;
+end;
+
 procedure TstwsimMainForm.OntvangDefectSein;
 var
 	lampkleur: string;
@@ -661,13 +722,6 @@ begin
 		lampkleur := 'gele';
 	if lampkleur <> '' then
 		LogMsg('Sein '+Sein^.naam+' heeft een defecte '+lampkleur+' lamp.');
-end;
-
-procedure TstwsimMainForm.OntvangTreinBericht;
-begin
-	AddBericht(vCore, treinnr, tekst, GetTijd);
-	UpdateChg.Berichten := true;
-	UpdateControls;
 end;
 
 procedure TstwsimMainForm.Tijd;
@@ -734,25 +788,27 @@ begin
 		Tab := Tab^.Volgende;
 	end;
 
-	if telBtn.Enabled then begin
+	if rinkelen then begin
 		if telBtn.Font.Color = clBlack then
 			telBtn.Font.Color := clWhite
 		else
 			telBtn.Font.Color := clBlack;
 
-		if (rinkelstapjes = 0) and not stwscBerichtForm.Visible then
+		if (rinkelstapjes = 0) and not stwscTelefoonForm.Visible then
 			PlaySound(rinkelsound);
 		inc(rinkelstapjes);
 		if rinkelstapjes = 15 then
 			rinkelstapjes := 0;
-	end else
+	end else begin
 		rinkelstapjes := 0;
+		telBtn.Font.Color := clBlack;
+	end;
 end;
 
 procedure TstwsimMainForm.WisselSwitchExecute(Sender: TObject);
 begin
 	if assigned(selWissel) then
-		if WisselKanOmgezet(selWissel, true) then
+		if WisselKanOmgezet(selWissel) then
 			vSendMsg.SendWisselChg(selWissel);
 end;
 
@@ -831,9 +887,11 @@ end;
 procedure TstwsimMainForm.TreinInterposeExecute(Sender: TObject);
 begin
 	if assigned(selMeetpunt) then begin
-		stwscInterposeForm.treinnrEdit.Text := selMeetpunt^.treinnummer;
-		if stwscInterposeForm.showModal = mrOK then
-			vSendMsg.SendSetTreinnr(selMeetpunt, stwscInterposeForm.treinnrEdit.Text);
+		stwscStringInputForm.Caption := 'Treinnummer wijzigen';
+		stwscStringInputForm.Inputlabel.Caption := 'Nieuw treinnummer:';
+		stwscStringInputForm.InputEdit.Text := selMeetpunt^.treinnummer;
+		if stwscStringInputForm.showModal = mrOK then
+			vSendMsg.SendSetTreinnr(selMeetpunt, stwscStringInputForm.InputEdit.Text);
 	end;
 end;
 
@@ -847,7 +905,7 @@ begin
 	if assigned(selMeetpunt) then begin
 		stwscTreinStatusForm.Treinnr := selMeetpunt^.treinnummer;
 		stwscTreinStatusForm.Wissen;
-		vSendMsg.SendTreinMsg(selMeetpunt^.treinnummer, 'tsr');
+		vSendMsg.SendGetTreinStatus(selMeetpunt^.treinnummer);
 		stwscTreinStatusForm.ShowModal;
 	end;
 end;
@@ -863,8 +921,9 @@ begin
 	stwscProcesPlanForm.OnHerkenProcesplanClose := HerkenProcesplanClose;
 	stwscProcesplanForm.WindowState := wsMaximized;
 
-	stwscTreinMsgForm.SendMsg := vSendMsg;
-	stwscBerichtForm.Core := vCore;
+	stwscTelefoonGesprekForm.SendMsg := vSendMsg;
+	stwscTelefoonForm.SendMsg := vSendMsg;
+	stwscTelefoonForm.Core := vCore;
 
 	stwssDienstregForm.Core := pCore^;
 
@@ -920,18 +979,23 @@ begin
 	UpdateControls;
 end;
 
-procedure TstwsimMainForm.TreinBerichtExecute(Sender: TObject);
+procedure TstwsimMainForm.TreinBellenExecute(Sender: TObject);
 begin
 	if assigned(selMeetpunt) then
-		if selMeetpunt^.treinnummer <> '' then begin
-			stwscTreinMsgForm.treinnr := selMeetpunt^.treinnummer;
-			stwscTreinMsgForm.ShowModal;
-		end;
+		if selMeetpunt^.treinnummer <> '' then
+			if stwscTelefoongesprekForm.GesprekStatus = gsOpgehangen then begin
+				stwscTelefoongesprekForm.metwie.wat := 't';
+				stwscTelefoongesprekForm.metwie.ID := selMeetpunt^.treinnummer;
+				stwscTelefoongesprekForm.GesprekInit;
+				vSendMsg.SendBel(stwscTelefoongesprekForm.metwie);
+				stwscTelefoongesprekForm.GaatOver;
+				stwscTelefoongesprekForm.ShowModal;
+			end;
 end;
 
-procedure TstwsimMainForm.NieuwBerichtExecute(Sender: TObject);
+procedure TstwsimMainForm.TelefoonShowExecute(Sender: TObject);
 begin
-	stwscBerichtForm.ShowModal;
+	stwscTelefoonForm.ShowModal;
 	UpdateChg.Berichten := true;
 	UpdateControls;
 end;

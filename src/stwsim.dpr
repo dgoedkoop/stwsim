@@ -1,21 +1,18 @@
 program stwsim;
 
-{%File 'rijweg.txt'}
-
 uses
   Forms,
   stwsimMain in 'stwsimMain.pas' {stwsimMainForm},
   stwsimClientInfo in 'stwsimClientInfo.pas' {stwscInfoForm},
   stwsimClientConnect in 'stwsimClientConnect.pas' {stwscConnectForm},
-  stwsimClientInterpose in 'stwsimClientInterpose.pas' {stwscInterposeForm},
-  stwsimclientTreinMsg in 'stwsimclientTreinMsg.pas' {stwscTreinMsgForm},
-  stwsimclientBericht in 'stwsimclientBericht.pas' {stwscBerichtForm},
+  stwsimClientStringInput in 'stwsimClientStringInput.pas' {stwscStringInputForm},
+  stwsimclientTelefoongesprek in 'stwsimclientTelefoongesprek.pas' {stwscTelefoonGesprekForm},
+  stwsimclientTelefoon in 'stwsimclientTelefoon.pas' {stwscTelefoonForm},
   clientProcesplanForm in 'clientProcesplanForm.pas' {stwscProcesplanForm},
   clientProcesPlanFrame in 'clientProcesPlanFrame.pas' {stwscProcesPlanFrame: TFrame},
   clientPlanregelEdit in 'clientPlanregelEdit.pas' {stwscPlanregelEditForm},
   stwsimClientNieuwPlanpunt in 'stwsimClientNieuwPlanpunt.pas' {stwscNieuwPlanpuntForm},
   stwsimclientNieuweDienst in 'stwsimclientNieuweDienst.pas' {stwscNieuweDienstForm},
-  stwsimclientRA in 'stwsimclientRA.pas' {stwscRAform},
   stwsimclientScore in 'stwsimclientScore.pas' {stwscScoreForm},
   stwsimclientTreinStatus in 'stwsimclientTreinStatus.pas' {stwscTreinStatusForm},
   stwvMeetpunt in 'stwvMeetpunt.pas',
@@ -44,7 +41,19 @@ uses
   stwsimServerTreinDienst in 'stwsimServerTreinDienst.pas' {stwssTreinDienstForm},
   stwsimserverTreinnr in 'stwsimserverTreinnr.pas' {stwssTreinnrForm},
   stwsimServerVerschijnpunt in 'stwsimServerVerschijnpunt.pas' {stwssVerschijnpuntForm},
-  stwsimComm in 'stwsimComm.pas';
+  stwsimComm in 'stwsimComm.pas',
+  serverReadMsg in 'serverReadMsg.pas',
+  serverSendMsg in 'serverSendMsg.pas',
+  stwpTreinPhysics in 'stwpTreinPhysics.pas',
+  stwpDatatypes in 'stwpDatatypes.pas',
+  stwpTelefoongesprek in 'stwpTelefoongesprek.pas',
+  stwpCommPhysics in 'stwpCommPhysics.pas',
+  stwpMonteur in 'stwpMonteur.pas',
+  stwpMonteurPhysics in 'stwpMonteurPhysics.pas',
+  stwsimclientTelefoonBel in 'stwsimclientTelefoonBel.pas' {stwscTelefoonBelForm},
+  stwvMisc in 'stwvMisc.pas',
+  stwvRijwegen in 'stwvRijwegen.pas',
+  stwvSporen in 'stwvSporen.pas';
 
 {$R *.RES}
 
@@ -54,14 +63,13 @@ begin
   Application.CreateForm(TstwsimMainForm, stwsimMainForm);
   Application.CreateForm(TstwscInfoForm, stwscInfoForm);
   Application.CreateForm(TstwscConnectForm, stwscConnectForm);
-  Application.CreateForm(TstwscInterposeForm, stwscInterposeForm);
-  Application.CreateForm(TstwscTreinMsgForm, stwscTreinMsgForm);
-  Application.CreateForm(TstwscBerichtForm, stwscBerichtForm);
+  Application.CreateForm(TstwscStringInputForm, stwscStringInputForm);
+  Application.CreateForm(TstwscTelefoonForm, stwscTelefoonForm);
+  Application.CreateForm(TstwscTelefoonGesprekForm, stwscTelefoonGesprekForm);
   Application.CreateForm(TstwscProcesplanForm, stwscProcesplanForm);
   Application.CreateForm(TstwscPlanregelEditForm, stwscPlanregelEditForm);
   Application.CreateForm(TstwscNieuwPlanpuntForm, stwscNieuwPlanpuntForm);
   Application.CreateForm(TstwscNieuweDienstForm, stwscNieuweDienstForm);
-  Application.CreateForm(TstwscRAform, stwscRAform);
   Application.CreateForm(TstwscScoreForm, stwscScoreForm);
   Application.CreateForm(TstwscTreinStatusForm, stwscTreinStatusForm);
   Application.CreateForm(TstwssDienstregForm, stwssDienstregForm);
@@ -69,5 +77,6 @@ begin
   Application.CreateForm(TstwssTreinDienstForm, stwssTreinDienstForm);
   Application.CreateForm(TstwssTreinnrForm, stwssTreinnrForm);
   Application.CreateForm(TstwssVerschijnpuntForm, stwssVerschijnpuntForm);
+  Application.CreateForm(TstwscTelefoonBelForm, stwscTelefoonBelForm);
   Application.Run;
 end.

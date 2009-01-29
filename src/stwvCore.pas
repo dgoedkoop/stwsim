@@ -5,6 +5,9 @@ interface
 uses stwvMeetpunt, stwvSeinen, stwvRijwegen, stwvSporen, stwvMisc,
 	stwvTreinComm, stwvScore;
 
+// Dit is eigenlijk heel slecht geprogrammeerd. Niet object-georienteerd, maar
+// toch eigenlijk weer wel...
+
 type
 	PvCore = ^TvCore;
 	TvCore = record
@@ -15,12 +18,24 @@ type
 		vAlleOverwegen:		PvOverweg;
 		vAlleErlaubnisse:		PvErlaubnis;
 		vActieveRijwegen:		PvActieveRijwegLijst;
-		vAlleBerichten:		PvMessage;
 		vAllePrlRijwegen:		PvPrlRijweg;
+		vAlleBinnenkomendeGesprekken:	PvBinnenkomendGesprek;
+		vAlleSubroutes:		PvSubroute;
 		vScore:					TScoreInfo;
 		pauze:					boolean;
 		Tijd_u, Tijd_m, Tijd_s: integer;
 	end;
+
+// moet weg!!!
+procedure RijwegVoegInactiefHokjeToe(Rijweg: PvRijweg; schermID: integer; x,y: integer; meetpunt: PvMeetpunt);
+
+procedure vCore_Create(core: PvCore);
+
+function AddSubroute(core: PvCore; Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
+	KruisingHokjes: PvKruisingHokje; InactieveHokjes: PvInactiefHokje): PvSubroute;
+
+procedure AddBinnenkomendGesprek(core: PvCore; metwie: TvMessageWie);
+procedure DeleteBinnenkomendGesprek(core: PvCore; metwie: TvMessageWie);
 
 function ZoekMeetpunt(core: PvCore; naam: string): PvMeetpunt;
 procedure AddMeetpunt(core: PvCore; naam: string);
@@ -50,9 +65,6 @@ function ZoekPrlRijweg(core: PvCore; van, naar: string; dwang: byte): PvPrlRijwe
 function AddActieveRijweg(core: PvCore; Rijweg: PvRijweg; ROZ, Auto: boolean): PvActieveRijwegLijst;
 procedure DeleteActieveRijweg(core: PvCore; ActieveRijweg: PvActieveRijwegLijst);
 
-procedure AddBericht(core: PvCore; trein, bericht: string; tijd: integer);
-procedure DeleteBericht(core: PvCore; bericht: PvMessage);
-
 procedure SaveSein(var f: file; Sein: PvSein);
 procedure LoadSein(var f: file; core: PvCore; Sein: PvSein);
 procedure SaveRijweg(var f: file; Rijweg: PvRijweg);
@@ -70,6 +82,86 @@ procedure BerekenAankondigingen(Core: PvCore);
 procedure BerekenOnbekendAanwezig(Groep: PvWisselGroep);
 
 implementation
+
+procedure RijwegVoegInactiefHokjeToe;
+var
+	nInactiefHokje: PvInactiefHokje;
+begin
+	nInactiefHokje := Rijweg.InactieveHokjes;
+	while assigned(nInactiefHokje) do begin
+		if (nInactiefHokje^.schermID = schermID) and
+			(nInactiefHokje^.x = x) and
+			(nInactiefHokje^.y = y) then
+			exit;
+		nInactiefHokje := nInactiefHokje^.Volgende;
+	end;
+	new(nInactiefHokje);
+	nInactiefHokje^.schermID := schermID;
+	nInactiefHokje^.x := x;
+	nInactiefHokje^.y := y;
+	nInactiefHokje^.volgende := Rijweg.InactieveHokjes;
+	Rijweg.InactieveHokjes := nInactiefHokje;
+end;
+
+procedure vCore_Create;
+begin
+	Core^.vAlleWisselGroepen := nil;
+	Core^.vAlleMeetpunten := nil;
+	Core^.vAlleSeinen := nil;
+	Core^.vAlleRijwegen := nil;
+	Core^.vAllePrlRijwegen := nil;
+	Core^.vAlleErlaubnisse := nil;
+	Core^.vActieveRijwegen := nil;
+	Core^.vAlleOverwegen := nil;
+	Core^.vAlleSubroutes := nil;
+	Core^.vAlleBinnenkomendeGesprekken := nil;
+end;
+
+function AddSubroute;
+var
+	tmpSubroute: PvSubroute;
+begin
+	new(tmpSubroute);
+	tmpSubroute^.Meetpunt := Meetpunt;
+	tmpSubroute^.Wisselstanden := Wisselstanden;
+	tmpSubroute^.KruisingHokjes := KruisingHokjes;
+	tmpSubroute^.EersteHokje := InactieveHokjes;
+	tmpSubroute^.Volgende := Core^.vAlleSubroutes;
+	Core^.vAlleSubroutes := tmpSubroute;
+	result := tmpSubroute;
+end;
+
+procedure AddBinnenkomendGesprek;
+var
+	bkg: PvBinnenkomendGesprek;
+begin
+	new(bkg);
+	bkg^.MetWie := metwie;
+	bkg^.volgende := Core.vAlleBinnenkomendeGesprekken;
+	Core.vAlleBinnenkomendeGesprekken := bkg;
+end;
+
+procedure DeleteBinnenkomendGesprek;
+var
+	vbkg, bkg, nbkg: PvBinnenkomendGesprek;
+begin
+	bkg := Core.vAlleBinnenkomendeGesprekken;
+	vbkg := nil;
+	while assigned(bkg) do begin
+		if CmpMessageWie(bkg^.MetWie, metwie) then begin
+			nbkg := bkg^.volgende;
+			if assigned(vbkg) then
+				vbkg^.volgende := nbkg
+			else
+				Core.vAlleBinnenkomendeGesprekken := nbkg;
+			dispose(bkg);
+			bkg := nbkg;
+		end else begin
+			vbkg := bkg;
+			bkg := bkg^.Volgende;
+		end;
+	end;
+end;
 
 function ZoekMeetpunt;
 var
@@ -532,51 +624,6 @@ begin
 	dispose(ActieveRijweg);
 end;
 
-procedure AddBericht;
-var
-	nmsg: PvMessage;
-	msg: PvMessage;
-begin
-	new(nmsg);
-	nmsg^.Trein := trein;
-	nmsg^.Bericht := bericht;
-	nmsg^.Tijd := Tijd;
-	nmsg^.volgende := nil;
-	msg := Core^.vAlleBerichten;
-	if assigned(msg) then
-		while assigned(msg) do begin
-			if msg^.Volgende = nil then begin
-				msg^.Volgende := nmsg;
-				break;
-			end;
-			msg := msg^.Volgende;
-		end
-	else
-		Core^.vAlleBerichten := nmsg;
-end;
-
-procedure DeleteBericht;
-var
-	msg, vmsg, tmsg: PvMessage;
-begin
-	vmsg := nil;
-	msg := Core^.vAlleBerichten;
-	while assigned(msg) do begin
-		if msg = bericht then begin
-			tmsg := msg^.Volgende;
-			if assigned(vmsg) then
-				vmsg^.volgende := tmsg
-			else
-				core^.vAlleBerichten := tmsg;
-			dispose(msg);
-			msg := tmsg;
-		end else begin
-			vmsg := msg;
-			msg := msg^.volgende;
-		end;
-	end;
-end;
-
 procedure SaveSein;
 var
 	wat: char;
@@ -675,19 +722,6 @@ begin
 		stringwrite(f, Stand^.Wissel^.WisselID);
 		boolwrite(f, Stand^.Rechtdoor);
 		Stand := Stand^.volgende;
-	end;
-	wat := 'i';
-	InactiefHokje := Rijweg^.InactieveHokjes;
-	while assigned(InactiefHokje) do begin
-		blockwrite(f, wat, sizeof(wat));
-		intwrite(f, InactiefHokje^.schermID);
-		intwrite(f, InactiefHokje^.x);
-		intwrite(f, InactiefHokje^.y);
-		if assigned(InactiefHokje^.Meetpunt) then
-			stringwrite(f, InactiefHokje^.Meetpunt^.meetpuntID)
-		else
-			stringwrite(f, '');
-		InactiefHokje := InactiefHokje^.Volgende;
 	end;
 	wat := 'k';
 	KruisingHokje := Rijweg^.KruisingHokjes;

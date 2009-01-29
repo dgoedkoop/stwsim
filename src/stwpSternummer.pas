@@ -2,7 +2,7 @@ unit stwpSternummer;
 
 interface
 
-uses Sysutils;
+uses Sysutils, stwvMisc;
 
 var
 	sternr: integer = 1;
@@ -13,7 +13,7 @@ implementation
 
 function Sternummer;
 begin
-	result := '*'+inttostr(sternr);
+	result := '*'+Pad(inttostr(sternr), 5, '0', vaVoor);
 	inc(sternr);
 end;
 

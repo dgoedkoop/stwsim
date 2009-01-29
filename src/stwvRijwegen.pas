@@ -16,7 +16,6 @@ type
 	TvInactiefHokje = record
 		schermID: integer;
 		x, y:	Integer;	// Locatie van het hokje
-		Meetpunt: PvMeetpunt;	// Bijbehorend meetpunt
 		volgende: PvInactiefHokje;
 	end;
 
@@ -27,6 +26,18 @@ type
 		Meetpunt: PvMeetpunt;	// Bijbehorend meetpunt
 		RechtsonderKruisRijweg: boolean; // Zie stwvHokjes
 		volgende: PvKruisingHokje;
+	end;
+
+	PvSubroute = ^TvSubroute;
+	TvSubroute = record
+		// Waardoor wordt het eenduidig vastgelegd?
+		Meetpunt:			PvMeetpunt;
+		Wisselstanden:		PvWisselstand;
+		KruisingHokjes:	PvKruisingHokje;
+		// En welke hokjes zijn dan nu precies inactief?
+		EersteHokje:		PvInactiefHokje;
+
+		Volgende:			PvSubroute;
 	end;
 
 	PvRijweg = ^TvRijweg;
@@ -47,9 +58,7 @@ type
 		Naar:			string;						// Voor het bedienen.
 
 		// Statische gegevens mbt. weergave
-		InactieveHokjes:	PvInactiefHokje;	// Welke hokjes die bij een gebruikt
-														// meetpunt horen, horen toch niet bij
-														// deze rijweg?
+		InactieveHokjes:	PvInactiefHokje;	// Dit moet eruit!!!
 		KruisingHokjes:	PvKruisingHokje;	// Welke hokjes geven een kruising weer
 														// en hoe moet de kruising worden
 														// weergegeven als de rijweg actief is?
@@ -110,8 +119,6 @@ procedure RijwegVoegMeetpuntToe(Rijweg: PvRijweg; Meetpunt: PvMeetpunt);
 procedure RijwegVerwijderMeetpunt(Rijweg: PvRijweg; Meetpunt: PvMeetpunt);
 procedure RijwegVoegWisselToe(Rijweg: PvRijweg; Wissel: PvWissel; Rechtdoor: boolean);
 procedure RijwegVerwijderWissel(Rijweg: PvRijweg; Wissel: PvWissel);
-procedure RijwegVoegInactiefHokjeToe(Rijweg: PvRijweg; schermID: integer; x,y: integer; meetpunt: PvMeetpunt);
-function RijwegVerwijderInactiefHokje(Rijweg: PvRijweg; schermID: integer; x,y: integer): boolean;
 procedure RijwegVoegKruisingHokjeToe(Rijweg: PvRijweg; schermID: integer; x,y: integer; meetpunt: PvMeetpunt; RechtsonderKruisRijweg: boolean);
 function RijwegVerwijderKruisingHokje(Rijweg: PvRijweg; schermID: integer; x,y: integer): boolean;
 function RijwegWisselstandVereist(Rijweg: PvRijweg; Wissel: PvWissel): byte;
@@ -119,7 +126,116 @@ function RijwegWisselstandVereist(Rijweg: PvRijweg; Wissel: PvWissel): byte;
 procedure DisposePrlRijweg(PrlRijweg: PvPrlRijweg);
 procedure PrlRijwegVoegRijwegToe(PrlRijweg: PvPrlRijweg; Rijweg: PvRijweg);
 
+function CmpWisselstanden(Wisselstanden1, Wisselstanden2: PvWisselstand; strikt: boolean): boolean;
+function CmpKruisingHokjes(Hokjes1, Hokjes2: PvKruisingHokje; strikt: boolean): boolean;
+
 implementation
+
+function CmpWisselstanden;
+var
+	Wisselstand1, Wisselstand2:	PvWisselstand;
+	gevonden: boolean;
+	i: byte;
+begin
+	result := true;
+	WisselStand1 := Wisselstanden1;
+	while assigned(Wisselstand1) do begin
+		Wisselstand2 := Wisselstanden2;
+		while assigned(Wisselstand2) do begin
+			if (Wisselstand1^.Wissel = Wisselstand2^.Wissel) and
+				(Wisselstand1^.rechtdoor <> Wisselstand2^.rechtdoor) then begin
+				// Verschillende wisselstand => geen duplicaat
+				result := false;
+				exit
+			end;
+			Wisselstand2 := Wisselstand2^.Volgende;
+		end;
+		Wisselstand1 := Wisselstand1^.Volgende;
+	end;
+	
+	Wisselstand1 := nil; Wisselstand2 := nil;
+	if strikt then
+		for i := 1 to 2 do begin
+			case i of
+			1: Wisselstand1 := Wisselstanden1;
+			2: Wisselstand1 := Wisselstanden2;
+			end;
+			while assigned(Wisselstand1) do begin
+				gevonden := false;
+				case i of
+				1: Wisselstand2 := Wisselstanden2;
+				2: Wisselstand2 := Wisselstanden1;
+				end;
+				while assigned(Wisselstand2) do begin
+					if (Wisselstand1^.Wissel = Wisselstand2^.Wissel) then begin
+						gevonden := true;
+						break;
+					end;
+					Wisselstand2 := Wisselstand2^.Volgende;
+				end;
+				if not gevonden then begin
+					result := false;
+					exit;
+				end;
+				Wisselstand1 := Wisselstand1^.Volgende;
+			end;
+		end;
+end;
+
+function CmpKruisingHokjes;
+var
+	KruisingHokje1, KruisingHokje2:	PvKruisingHokje;
+	gevonden: boolean;
+	i: byte;
+begin
+	result := true;
+	KruisingHokje1 := Hokjes1;
+	while assigned(KruisingHokje1) do begin
+		KruisingHokje2 := Hokjes2;
+		while assigned(KruisingHokje2) do begin
+			if (KruisingHokje1^.schermID = KruisingHokje2^.schermID) and
+				(KruisingHokje1^.x = KruisingHokje2^.x) and
+				(KruisingHokje1^.y = KruisingHokje2^.y) and
+				(KruisingHokje1^.RechtsonderKruisRijweg <> KruisingHokje2^.RechtsonderKruisRijweg) then begin
+				// Verschillende stand => geen duplicaat
+				result := false;
+				exit
+			end;
+			KruisingHokje2 := KruisingHokje2^.Volgende;
+		end;
+		KruisingHokje1 := KruisingHokje1^.Volgende;
+	end;
+
+	KruisingHokje1 := nil; KruisingHokje2 := nil;
+	if strikt then
+		for i := 1 to 2 do begin
+			case i of
+			1: KruisingHokje1 := Hokjes1;
+			2: KruisingHokje1 := Hokjes2;
+			end;
+			while assigned(KruisingHokje1) do begin
+				gevonden := false;
+				case i of
+				1: KruisingHokje2 := Hokjes2;
+				2: KruisingHokje2 := Hokjes1;
+				end;
+				while assigned(KruisingHokje2) do begin
+					if (KruisingHokje1^.schermID = KruisingHokje2^.schermID) and
+						(KruisingHokje1^.x = KruisingHokje2^.x) and
+						(KruisingHokje1^.y = KruisingHokje2^.y) then begin
+						gevonden := true;
+						break;
+					end;
+					KruisingHokje2 := KruisingHokje2^.Volgende;
+				end;
+				if not gevonden then begin
+					result := false;
+					exit;
+				end;
+				KruisingHokje1 := KruisingHokje1^.Volgende;
+			end;
+		end;
+end;
 
 procedure DisposeRijweg;
 var
@@ -214,22 +330,6 @@ begin
 		if Punt.Meetpunt = Meetpunt then begin
 			// We hebben het punt! Nu moeten we nog eventjes bijbehorende
 			// hokjesdingen opruimen.
-			vInactiefHokje := nil;
-			InactiefHokje := Rijweg.InactieveHokjes;
-			while assigned(InactiefHokje) do begin
-				if InactiefHokje^.Meetpunt = Meetpunt then begin
-					if assigned(vInactiefHokje) then
-						vInactiefHokje.Volgende := InactiefHokje.Volgende
-					else
-						Rijweg.InactieveHokjes := InactiefHokje.Volgende;
-					tInactiefHokje := InactiefHokje.Volgende;
-					Dispose(InactiefHokje);
-					InactiefHokje := tInactiefHokje;
-				end else begin
-					vInactiefHokje := InactiefHokje;
-					InactiefHokje := vInactiefHokje.Volgende;
-				end;
-			end;
 			vKruisingHokje := nil;
 			KruisingHokje := Rijweg.KruisingHokjes;
 			while assigned(KruisingHokje) do begin
@@ -294,53 +394,6 @@ begin
 		vorigeWissel := tmpWissel;
 		tmpWissel := tmpWissel^.Volgende;
 	end;
-end;
-
-procedure RijwegVoegInactiefHokjeToe;
-var
-	nInactiefHokje: PvInactiefHokje;
-begin
-	nInactiefHokje := Rijweg.InactieveHokjes;
-	while assigned(nInactiefHokje) do begin
-		if (nInactiefHokje^.schermID = schermID) and
-			(nInactiefHokje^.x = x) and
-			(nInactiefHokje^.y = y) then begin
-			nInactiefHokje^.Meetpunt := meetpunt;
-			exit;
-		end;
-		nInactiefHokje := nInactiefHokje^.Volgende;
-	end;
-	new(nInactiefHokje);
-	nInactiefHokje^.schermID := schermID;
-	nInactiefHokje^.x := x;
-	nInactiefHokje^.y := y;
-	nInactiefHokje^.Meetpunt := Meetpunt;
-	nInactiefHokje^.volgende := Rijweg.InactieveHokjes;
-	Rijweg.InactieveHokjes := nInactiefHokje;
-end;
-
-function RijwegVerwijderInactiefHokje;
-var
-	vInactiefHokje, InactiefHokje: PvInactiefHokje;
-begin
-	vInactiefHokje := nil;
-	InactiefHokje := Rijweg.InactieveHokjes;
-	while assigned(InactiefHokje) do begin
-		if (InactiefHokje^.schermID = schermID) and
-			(InactiefHokje^.x = x) and
-			(InactiefHokje^.y = y) then begin
-			if assigned(vInactiefHokje) then
-				vInactiefHokje.Volgende := InactiefHokje.Volgende
-			else
-				Rijweg.InactieveHokjes := InactiefHokje.Volgende;
-			dispose(InactiefHokje);
-			result := true;
-			exit;
-		end;
-		vInactiefHokje := InactiefHokje;
-		InactiefHokje := InactiefHokje^.Volgende;
-	end;
-	result := false;
 end;
 
 procedure RijwegVoegKruisingHokjeToe;

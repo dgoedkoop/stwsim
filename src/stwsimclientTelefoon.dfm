@@ -1,9 +1,9 @@
-object stwscBerichtForm: TstwscBerichtForm
-  Left = 351
-  Top = 185
+object stwscTelefoonForm: TstwscTelefoonForm
+  Left = 450
+  Top = 102
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
-  Caption = 'Binnengekomen berichten'
+  Caption = 'Telefoon'
   ClientHeight = 209
   ClientWidth = 329
   Color = clBtnFace
@@ -20,35 +20,29 @@ object stwscBerichtForm: TstwscBerichtForm
   object treinCaption: TLabel
     Left = 8
     Top = 8
-    Width = 127
+    Width = 177
     Height = 13
-    Caption = 'Binnengekomen berichten:'
+    Caption = 'Binnenkomende telefoongesprekken:'
   end
-  object berichtenList: TListBox
+  object gesprekkenList: TListBox
     Left = 8
     Top = 24
     Width = 313
-    Height = 97
+    Height = 145
     ItemHeight = 13
     TabOrder = 0
-    OnClick = berichtenListClick
+    OnClick = gesprekkenListClick
+    OnDblClick = gesprekkenListDblClick
   end
-  object berichtMemo: TMemo
-    Left = 8
-    Top = 128
-    Width = 313
-    Height = 41
-    ScrollBars = ssVertical
-    TabOrder = 1
-  end
-  object replyBut: TButton
+  object opneemBut: TButton
     Left = 248
     Top = 176
     Width = 73
     Height = 25
-    Caption = 'Beantwoord'
+    Caption = 'Opnemen...'
     Default = True
-    TabOrder = 2
+    TabOrder = 4
+    OnClick = opneemButClick
   end
   object cancelBut: TButton
     Left = 8
@@ -58,6 +52,24 @@ object stwscBerichtForm: TstwscBerichtForm
     Cancel = True
     Caption = 'Sluiten'
     ModalResult = 2
+    TabOrder = 1
+  end
+  object belBut: TButton
+    Left = 88
+    Top = 176
+    Width = 73
+    Height = 25
+    Caption = 'Opbellen...'
+    TabOrder = 2
+    OnClick = belButClick
+  end
+  object weigerBut: TButton
+    Left = 168
+    Top = 176
+    Width = 73
+    Height = 25
+    Caption = 'Weigeren'
     TabOrder = 3
+    OnClick = weigerButClick
   end
 end

@@ -2,9 +2,13 @@ unit stwsimEditHelpers;
 
 interface
 
-uses stwvCore, stwvMeetpunt, stwvGleisplan, stwvHokjes;
+uses forms, stwvCore, stwvMeetpunt, stwvGleisplan, stwvHokjes, stwvSporen,
+	stwvRijwegen, stwvRijwegLogica;
 
 procedure WisRijwegenVanPlan(Gleisplan: TvGleisplan);
+procedure RijwegVoegInactiefHokjeToe(RijwegLogica: TRijweglogica; Tab: PTabList; x,y: integer);
+function RijwegVerwijderInactiefHokje(RijwegLogica: TRijweglogica; Tab: PTabList; x,y: integer): boolean;
+function ZoekSubrouteBijHokje(RijwegLogica: TRijweglogica; Tab: PTabList; x,y: integer): PvSubroute;
 
 implementation
 
@@ -53,6 +57,7 @@ begin
 					PvHokjeWissel(Hokje.grdata)^.InactiefWegensRijweg := false;
 					if assigned(PvHokjeWissel(Hokje.grdata)^.Wissel^.RijwegOnderdeel) then begin
 						PvHokjeWissel(Hokje.grdata)^.Wissel^.RijwegOnderdeel := nil;
+						PvHokjeWissel(Hokje.grdata)^.Wissel^.Stand := wsOnbekend;
 						Gleisplan.PaintWissel(PvHokjeWissel(Hokje.grdata)^.Wissel);
 					end;
 				end;
@@ -65,6 +70,91 @@ begin
 				end;
 			end;
 		end;
+end;
+
+function ZoekSubrouteBijHokje;
+var
+	Hokje:		TvHokje;
+	Meetpunt:	PvMeetpunt;
+	Subroute: 	PvSubroute;
+begin
+	result := nil;
+	// Zoek het tab.
+	Hokje := Tab^.Gleisplan.GetHokje(x,y);
+	case Hokje.Soort of
+	1:	Meetpunt := PvHokjeSpoor(Hokje.grdata)^.Meetpunt;
+	5: Meetpunt := PvHokjeWissel(Hokje.grdata)^.Meetpunt;
+	else
+		Meetpunt := nil;
+	end;
+	if not assigned(meetpunt) then exit;
+
+	Subroute := RijwegLogica.ZoekSubroute(Meetpunt, true);
+	if not assigned(Subroute) then
+		Subroute := RijwegLogica.CreateSubrouteFrom(Meetpunt);
+
+	if not assigned(Subroute) then
+		Application.MessageBox('Interne fout: subroute niet gevonden, maar kon ook niet gemaakt worden?','Fout',0);
+
+	result := subroute;
+end;
+
+procedure RijwegVoegInactiefHokjeToe;
+var
+	nInactiefHokje: PvInactiefHokje;
+	Subroute: 	PvSubroute;
+begin
+	Subroute := ZoekSubrouteBijHokje(RijwegLogica, Tab, x, y);
+
+	if not assigned(Subroute) then exit;
+
+	// Kijk of het hokje niet al in de subroute zit.
+	nInactiefHokje := Subroute.EersteHokje;
+	while assigned(nInactiefHokje) do begin
+		if (nInactiefHokje^.schermID = Tab^.ID) and
+			(nInactiefHokje^.x = x) and
+			(nInactiefHokje^.y = y) then begin
+			exit;
+		end;
+		nInactiefHokje := nInactiefHokje^.Volgende;
+	end;
+	// En toevoegen maar.
+	new(nInactiefHokje);
+	nInactiefHokje^.schermID := Tab^.ID;
+	nInactiefHokje^.x := x;
+	nInactiefHokje^.y := y;
+	nInactiefHokje^.volgende := Subroute.EersteHokje;
+	Subroute.EersteHokje := nInactiefHokje;
+end;
+
+function RijwegVerwijderInactiefHokje;
+var
+	vInactiefHokje, InactiefHokje: PvInactiefHokje;
+	Subroute: PvSubroute;
+begin
+	result := false;
+
+	Subroute := ZoekSubrouteBijHokje(RijwegLogica, Tab, x, y);
+
+	if not assigned(Subroute) then exit;
+
+	vInactiefHokje := nil;
+	InactiefHokje := Subroute.EersteHokje;
+	while assigned(InactiefHokje) do begin
+		if (InactiefHokje^.schermID = Tab^.ID) and
+			(InactiefHokje^.x = x) and
+			(InactiefHokje^.y = y) then begin
+			if assigned(vInactiefHokje) then
+				vInactiefHokje.Volgende := InactiefHokje.Volgende
+			else
+				Subroute.EersteHokje := InactiefHokje.Volgende;
+			dispose(InactiefHokje);
+			result := true;
+			exit;
+		end;
+		vInactiefHokje := InactiefHokje;
+		InactiefHokje := InactiefHokje^.Volgende;
+	end;
 end;
 
 end.

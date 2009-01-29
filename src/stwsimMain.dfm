@@ -66,11 +66,11 @@ object stwsimMainForm: TstwsimMainForm
         Caption = '00:00'
       end
       object telBtn: TSpeedButton
-        Left = 330
+        Left = 384
         Top = 52
-        Width = 169
+        Width = 115
         Height = 25
-        Action = NieuwBericht
+        Action = TelefoonShow
         Anchors = [akRight, akBottom]
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
@@ -182,7 +182,7 @@ object stwsimMainForm: TstwsimMainForm
     object SpeedButton1: TSpeedButton
       Left = 8
       Top = 8
-      Width = 169
+      Width = 177
       Height = 25
       Action = Broadcast
       Font.Charset = DEFAULT_CHARSET
@@ -466,7 +466,7 @@ object stwsimMainForm: TstwsimMainForm
       Action = TreinInterpose
     end
     object Berichtnaartreinsturen1: TMenuItem
-      Action = TreinBericht
+      Action = TreinBellen
     end
     object N1: TMenuItem
       Caption = '-'
@@ -506,10 +506,10 @@ object stwsimMainForm: TstwsimMainForm
       Caption = 'Treinnummer wijzigen...'
       OnExecute = TreinInterposeExecute
     end
-    object TreinBericht: TAction
+    object TreinBellen: TAction
       Category = 'Popup'
-      Caption = 'Bericht naar trein sturen...'
-      OnExecute = TreinBerichtExecute
+      Caption = 'Trein bellen...'
+      OnExecute = TreinBellenExecute
     end
     object WisselSwitch: TAction
       Category = 'Popup'
@@ -556,14 +556,14 @@ object stwsimMainForm: TstwsimMainForm
       ShortCut = 115
       OnExecute = RijwegCancelExecute
     end
-    object NieuwBericht: TAction
+    object TelefoonShow: TAction
       Category = 'Tools'
-      Caption = 'Toon oproepen'
-      OnExecute = NieuwBerichtExecute
+      Caption = 'Telefoon'
+      OnExecute = TelefoonShowExecute
     end
     object Broadcast: TAction
       Category = 'Tools'
-      Caption = 'Verzend Broadcast'
+      Caption = 'Verzend broadcast'
       OnExecute = BroadcastExecute
     end
     object LaatProcesplanZien: TAction
@@ -646,6 +646,10 @@ object stwsimMainForm: TstwsimMainForm
       Enabled = False
       ShortCut = 16467
       OnExecute = SGSaveExecute
+    end
+    object Wisselreparatie: TAction
+      Category = 'Tools'
+      Caption = 'Wissel repareren...'
     end
   end
   object OpenDialog: TOpenDialog
