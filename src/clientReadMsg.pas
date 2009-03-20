@@ -3,7 +3,7 @@ unit clientReadMsg;
 interface
 
 uses lists, stwvCore, clientSendMsg, stwvMeetpunt, stwvSeinen,
-	stwvSporen, stwvScore;
+	stwvSporen, stwvScore, stwvTreinComm;
 
 const
 	LF = #$0A;
@@ -12,7 +12,6 @@ const
 type
 	TSeinbeeld = (sbGroen, sbGeel, sbRood);
 
-	TErrorEvent = procedure(cmdsoort: byte; cmddata: pointer; errormsg: string) of object;
 	TConfirmEvent = procedure(cmdsoort: byte; cmddata: pointer; okmsg: string) of object;
 	TChangeWisselEvent = procedure(Wissel: PvWissel) of object;
 	TChangeSeinEvent = procedure(Sein: PvSein) of object;
@@ -20,7 +19,12 @@ type
 	TChangeRichtingEvent = procedure(Erlaubnis: PvErlaubnis) of object;
 	TChangeOverwegEvent = procedure(Overweg: PvOverweg) of object;
 	TsmsgEvent = procedure(tekst: string) of object;
-	TmmsgEvent = procedure(treinnummer, tekst: string) of object;
+
+	TTelefoonBelEvent = procedure(van: TvMessageWie) of object;
+	TTelefoonOpneemEvent = procedure(van: TvMessageWie) of object;
+	TTelefoonMsgEvent = procedure(van: TvMessageWie; soort: TvMessageSoort; tekst: string) of object;
+	TTelefoonOphangEvent = procedure(van: TvMessageWie) of object;
+
 	TTijdEvent = procedure(u,m,s: integer) of object;
 	TScoreEvent = procedure of object;
 	TDefectSeinEvent = procedure(Sein: PvSein; defectSeinbeeld: TSeinbeeld) of object;
@@ -34,7 +38,6 @@ type
 		Core:	PvCore;
 		SendMsg: TvSendMsg;
 		// De volgende events zijn voor de gebruiker:
-		ErrorEvent: TErrorEvent;
 		ConfirmEvent: TConfirmEvent;
 		ChangeWisselEvent: TChangeWisselEvent;
 		ChangeSeinEvent: TChangeSeinEvent;
@@ -42,7 +45,10 @@ type
 		ChangeRichtingEvent: TChangeRichtingEvent;
 		ChangeOverwegEvent: TChangeOverwegEvent;
 		smsgEvent: TsmsgEvent;
-		mmsgEvent: TmmsgEvent;
+		TelefoonBelEvent: TTelefoonBelEvent;
+		TelefoonOpneemEvent: TTelefoonOpneemEvent;
+		TelefoonMsgEvent: TTelefoonMsgEvent;
+		TelefoonOphangEvent: TTelefoonOphangEvent;
 		TijdEvent: TTijdEvent;
 		ScoreEvent: TScoreEvent;
 		DefectSeinEvent: TDefectSeinEvent;
@@ -71,11 +77,14 @@ end;
 constructor TvReadMsg.Create;
 begin
 	inherited;
-	ErrorEvent := nil;
 	ChangeWisselEvent := nil;
 	ChangeSeinEvent := nil;
 	ChangeMeetpuntEvent := nil;
 	smsgEvent := nil;
+	TelefoonBelEvent := nil;
+	TelefoonOpneemEvent := nil;
+	TelefoonMsgEvent := nil;
+	TelefoonOphangEvent := nil;
 	TijdEvent := nil;
 	ClaimsSent := false;
 	ScoreEvent := nil;
@@ -97,8 +106,10 @@ var
 	oudetreinnr: string;
 	// Voor terugmelding
 	ID, waarde, waarde2: string;
+	// Voor telefoon
+	Metwie: TvMessageWie;
 	// Voor mmsg
-	treinnr, tekst: string;
+	soortstr, tekst: string;
 	// Voor defecten
 	DefectWat, DefectID, DefectRest: string;
 	// Voor t
@@ -106,9 +117,6 @@ var
 	u,m,s, code: integer;
 	// Voor erlaubnis
 	stand, vergrendeld: string;
-	// Voor error/confirm
-	soort: byte;
-	data: pointer;
 begin
 	p := pos(':', msg);
 	if p <> 0 then begin
@@ -118,19 +126,11 @@ begin
 		cmd := msg;
 		tail := '';
 	end;
-	if cmd = 'err' then begin
-		if assigned(ErrorEvent) then begin
-			SendMsg.GetFirst(soort,data);
-			ErrorEvent(soort,data,tail)
-		end;
-		SendMsg.DropOne;
-	end else if cmd = 'ok' then begin
-		if assigned(ConfirmEvent) then begin
-			SendMsg.GetFirst(soort,data);
-			ConfirmEvent(soort,data,tail)
-		end;
-		SendMsg.DropOne;
-	end else if cmd = 'pause' then begin
+	if cmd = 'err' then
+		SendMsg.SetReturned(false, tail)
+	else if cmd = 'ok' then
+		SendMsg.SetReturned(true, tail)
+	else if cmd = 'pause' then begin
 		if tail='n' then Core^.pauze := false;
 		if tail='j' then Core^.pauze := true;
 	end else if cmd = 'w' then begin
@@ -208,10 +208,31 @@ begin
 	end else if cmd = 'smsg' then begin
 		if assigned(smsgEvent) then
 			smsgEvent(tail);
-	end else if cmd = 'mmsg' then begin
-		SplitOff(tail, treinnr, tekst);
-		if assigned(mmsgEvent) then
-			mmsgEvent(treinnr, tekst);
+	end else if cmd = 'comm_bel' then begin
+		SplitOff(tail, Metwie.wat, Metwie.ID);
+		if assigned(TelefoonBelEvent) then
+			TelefoonBelEvent(Metwie);
+	end else if cmd = 'comm_opn' then begin
+		SplitOff(tail, Metwie.wat, Metwie.ID);
+		if assigned(TelefoonOpneemEvent) then
+			TelefoonOpneemEvent(Metwie);
+	end else if cmd = 'comm_msg' then begin
+		SplitOff(tail, Metwie.wat, tail);
+		if Metwie.wat = 't' then
+			SplitOff(tail, Metwie.ID, tail);
+		SplitOff(tail, soortstr, tekst);
+		if assigned(TelefoonMsgEvent) then begin
+			if soortstr = 'r' then TelefoonMsgEvent(Metwie, vmsTreinStoptonend, tekst);
+			if soortstr = 'sts' then TelefoonMsgEvent(Metwie, vmsTreinSTSpassage, tekst);
+			if soortstr = 'ok' then TelefoonMsgEvent(Metwie, vmsVraagOK, tekst);
+			if soortstr = 'tact' then TelefoonMsgEvent(Metwie, vmsTreinOpdracht, tekst);
+			if soortstr = 'mact' then TelefoonMsgEvent(Metwie, vmsMonteurOpdracht, tekst);
+			if soortstr = 'i' then TelefoonMsgEvent(Metwie, vmsInfo, tekst);
+		end
+	end else if cmd = 'comm_oph' then begin
+		SplitOff(tail, Metwie.wat, Metwie.ID);
+		if assigned(TelefoonOphangEvent) then
+			TelefoonOphangEvent(Metwie);
 	end else if cmd = 'score' then begin
 		SplitOff(tail, ID, waarde);
 		if ID = 'punct0' then val(waarde, Core.vScore.AankomstOpTijd, code);

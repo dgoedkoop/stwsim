@@ -21,14 +21,10 @@ type
 implementation
 
 const
-	mintijd_onderweg	= 1;
-	maxtijd_onderweg	= 1;
-	mintijd_repareren	= 100;
-	maxtijd_repareren	= 100;
-{	mintijd_onderweg	= 10;
+	mintijd_onderweg	= 10;
 	maxtijd_onderweg	= 20;
 	mintijd_repareren	= 3;
-	maxtijd_repareren	= 10;}
+	maxtijd_repareren	= 10;
 
 constructor TpMonteurPhysics.Create;
 begin

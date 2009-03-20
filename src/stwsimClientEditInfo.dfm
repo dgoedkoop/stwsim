@@ -97,26 +97,26 @@ object stwsceInfoForm: TstwsceInfoForm
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       Lines.Strings = (
-        'StwSim Client Editor'
-        'Copyright © 2007, 2008, Daan Goedkoop. Alle '
-        'rechten voorbehouden.'
+        'StwSim Editor'
+        'Copyright © 2007, 2008, 2009, Daan Goedkoop. '
+        'Alle rechten voorbehouden.'
         ''
-        'StwSim Client Editor mag gratis gebruikt worden'
-        'voor  privé-doeleinden. Het gebruik voor '
-        'commerciële of educatieve doeleinden, alsmede het'
-        'wijzigen van  het programma is niet toegestaan.'
+        'StwSim Editor mag gratis gebruikt worden voor '
+        'privé-doeleinden. Het gebruik voor commerciële of '
+        'educatieve doeleinden, alsmede het wijzigen van '
+        'het programma is niet toegestaan.'
         ''
-        'De correctheid van StwSim Client Editor kan niet'
-        'worden  gegarandeerd. Gebruik van StwSim Client'
-        'Editor voor  veiligheidskritische toepassingen is'
-        'daarom niet toegestaan.'
+        'De correctheid van StwSim Editor kan niet worden  '
+        'gegarandeerd. Gebruik van StwSim Editor voor '
+        'veiligheidskritische toepassingen is daarom niet '
+        'toegestaan.'
         ''
-        'StwSim Client wordt geleverd zonder enige '
-        'garantie, in welke vorm dan ook. Het gebruik ervan '
-        'geschiedt op eigen risico. De auteur accepteert '
-        'geen enkele aansprakelijkheid voor welke schade '
-        'dan ook die direct of indirect door StwSim Client zou '
-        'kunnen zijn veroorzaakt.')
+        'StwSim wordt geleverd zonder enige garantie, in '
+        'welke vorm dan ook. Het gebruik ervan geschiedt '
+        'op eigen risico. De auteur accepteert geen enkele '
+        'aansprakelijkheid voor welke schade dan ook die '
+        'direct of indirect door StwSim zou kunnen zijn '
+        'veroorzaakt.')
       ParentFont = False
       ReadOnly = True
       ScrollBars = ssVertical

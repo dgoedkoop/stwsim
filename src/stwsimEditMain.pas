@@ -48,14 +48,14 @@ type
 	 wTab: TTabSheet;
     Label3: TLabel;
 	 Label4: TLabel;
-    wdBut: TButton;
+	 wdBut: TButton;
     wtBut: TButton;
     wnEdit: TEdit;
 	 wList: TListBox;
 	 wmBox: TComboBox;
 	 gplTab: TTabSheet;
 	 tsBut: TButton;
-    nsEdit: TEdit;
+	 nsEdit: TEdit;
     dsBut: TButton;
 	 nsBut: TButton;
     reTab: TTabSheet;
@@ -73,7 +73,7 @@ type
     SpeedButton8: TSpeedButton;
     SpeedButton7: TSpeedButton;
     SpeedButton16: TSpeedButton;
-    SpeedButton15: TSpeedButton;
+	 SpeedButton15: TSpeedButton;
 	 SpeedButton17: TSpeedButton;
     Label1: TLabel;
 	 Label2: TLabel;
@@ -93,7 +93,7 @@ type
     Label17: TLabel;
     mElBox: TComboBox;
     elCheck: TCheckBox;
-    wElBox: TComboBox;
+	 wElBox: TComboBox;
 	 sElBox: TComboBox;
 	 txTxt: TEdit;
     lenEdit: TSpinEdit;
@@ -112,7 +112,7 @@ type
 	 rijwegbox: TGroupBox;
 	 rList: TListBox;
 	 rtBut: TButton;
-    rdBut: TButton;
+	 rdBut: TButton;
     drawNiks: TSpeedButton;
 	 SpeedButton26: TSpeedButton;
     SpeedButton27: TSpeedButton;
@@ -123,7 +123,7 @@ type
 	 Label24: TLabel;
     SpeedButton31: TSpeedButton;
     SpeedButton34: TSpeedButton;
-    SpeedButton36: TSpeedButton;
+	 SpeedButton36: TSpeedButton;
     Label25: TLabel;
     SpeedButton38: TSpeedButton;
     SpeedButton39: TSpeedButton;
@@ -131,7 +131,7 @@ type
     eElBox: TComboBox;
     Panel1: TPanel;
 	 eDownBut: TRadioButton;
-    eUpBut: TRadioButton;
+	 eUpBut: TRadioButton;
 	 wgBox: TComboBox;
     Label28: TLabel;
     basisRechtdoor: TCheckBox;
@@ -148,9 +148,9 @@ type
 	 tsLast: TCheckBox;
     rijwegeditbox: TGroupBox;
     Label18: TLabel;
-    Label19: TLabel;
+	 Label19: TLabel;
     Label20: TLabel;
-    rijwegVanWijzig: TSpeedButton;
+	 rijwegVanWijzig: TSpeedButton;
     rijwegNaarWijzig: TSpeedButton;
     SpeedButton23: TSpeedButton;
     SpeedButton24: TSpeedButton;
@@ -169,11 +169,11 @@ type
     richtingEdit: TEdit;
     PrlRijwegTab: TTabSheet;
 	 prlRBox: TGroupBox;
-    prlRlist: TListBox;
+	 prlRlist: TListBox;
     prlrtBut: TButton;
     prlrdBut: TButton;
     prlreditbox: TGroupBox;
-    Label29: TLabel;
+	 Label29: TLabel;
     prlSpoorLijst: TListBox;
     AddPrlSpoorBut: TSpeedButton;
 	 RmPrlSpoorBut: TSpeedButton;
@@ -188,7 +188,7 @@ type
     mEdit: TEdit;
     mList: TListBox;
     Rijrichtingsvelden: TGroupBox;
-    edBut: TButton;
+	 edBut: TButton;
     etBut: TButton;
     eEdit: TEdit;
     eList: TListBox;
@@ -198,7 +198,7 @@ type
     sdBut: TButton;
     sList: TListBox;
     ovmgroep: TGroupBox;
-    movdbut: TButton;
+	 movdbut: TButton;
     movtbut: TButton;
     ovmList: TListBox;
     mOvBox: TComboBox;
@@ -223,10 +223,10 @@ type
 	 tnvvanwis: TSpeedButton;
     Label35: TLabel;
     rijwegtnvnaaredit: TEdit;
-    tnvnaarwijzig: TSpeedButton;
+	 tnvnaarwijzig: TSpeedButton;
     tnvnaarwis: TSpeedButton;
     naarSeinWijzigBut: TSpeedButton;
-    naarSeinEdit: TEdit;
+	 naarSeinEdit: TEdit;
     Label36: TLabel;
     naarseinWisBut: TSpeedButton;
     triggerDelBut: TSpeedButton;
@@ -239,6 +239,11 @@ type
     infraStatus: TLabel;
     Opslaan: TAction;
 	 Opslaan1: TMenuItem;
+    Label8: TLabel;
+    RijwegSubroutes: TListBox;
+    SubrouteUp: TBitBtn;
+    SubrouteDown: TBitBtn;
+    BlinkTimer: TTimer;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -279,7 +284,7 @@ type
 	 procedure SpeedButton20Click(Sender: TObject);
     procedure SpeedButton19Click(Sender: TObject);
     procedure OpslaanAlsExecute(Sender: TObject);
-    procedure OpenenExecute(Sender: TObject);
+	 procedure OpenenExecute(Sender: TObject);
     procedure exitActExecute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 	 procedure rtButClick(Sender: TObject);
@@ -293,12 +298,12 @@ type
 	 procedure SpeedButton23Click(Sender: TObject);
 	 procedure SpeedButton24Click(Sender: TObject);
     procedure SpeedButton25Click(Sender: TObject);
-    procedure SpeedButton26Click(Sender: TObject);
+	 procedure SpeedButton26Click(Sender: TObject);
     procedure SpeedButton27Click(Sender: TObject);
     procedure SpeedButton28Click(Sender: TObject);
 	 procedure SpeedButton29Click(Sender: TObject);
     procedure SpeedButton31Click(Sender: TObject);
-    procedure SpeedButton34Click(Sender: TObject);
+	 procedure SpeedButton34Click(Sender: TObject);
     procedure SpeedButton36Click(Sender: TObject);
 	 procedure SpeedButton37Click(Sender: TObject);
     procedure etButClick(Sender: TObject);
@@ -317,8 +322,8 @@ type
     procedure prlRlistClick(Sender: TObject);
     procedure prlrdButClick(Sender: TObject);
     procedure DwangEditChange(Sender: TObject);
-    procedure RmPrlSpoorButClick(Sender: TObject);
-    procedure AddPrlSpoorButClick(Sender: TObject);
+	 procedure RmPrlSpoorButClick(Sender: TObject);
+	 procedure AddPrlSpoorButClick(Sender: TObject);
     procedure triggerDelButClick(Sender: TObject);
     procedure triggerChgButClick(Sender: TObject);
 	 procedure prlRijwegNiksClick(Sender: TObject);
@@ -336,13 +341,17 @@ type
     procedure detailsOffClick(Sender: TObject);
     procedure tnvvanwisClick(Sender: TObject);
     procedure tnvnaarwisClick(Sender: TObject);
-    procedure tnvvanwijzigClick(Sender: TObject);
+	 procedure tnvvanwijzigClick(Sender: TObject);
     procedure tnvnaarwijzigClick(Sender: TObject);
     procedure naarSeinWijzigButClick(Sender: TObject);
     procedure naarseinWisButClick(Sender: TObject);
     procedure onbevCheckClick(Sender: TObject);
     procedure InfraOpenButClick(Sender: TObject);
     procedure OpslaanExecute(Sender: TObject);
+	 procedure RijwegSubroutesClick(Sender: TObject);
+	 procedure SubrouteUpClick(Sender: TObject);
+	 procedure SubrouteDownClick(Sender: TObject);
+	 procedure BlinkTimerTimer(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab: 	PTabList;
@@ -368,7 +377,9 @@ type
 		filename:		string;
 		// Fysieke infrastructuur
 		Infrastructuur:	TStringList;
+		procedure UpdateSubrouteUpDownCtls;
 		procedure UpdateControls;
+		procedure SwapSubroutes(eersteIdx, tweedeIdx: integer);
 		procedure AddScherm(ID: integer; titel: string; waar: firstlast; details: boolean);
 		function GetScherm(ID: Integer): PTabList;
 		function SchermTitel(ID: integer): string;
@@ -388,7 +399,14 @@ uses stwsimClientEditInfo;
 {$R *.DFM}
 
 const
-	MagicCode = 'StwSim Client Beta 6';
+	MagicCode = 'StwSim Client Beta 7';
+
+procedure TstwseMain.UpdateSubrouteUpDownCtls;
+begin
+	SubrouteUp.Enabled := RijwegSubroutes.ItemIndex >= 1;
+	SubrouteDown.Enabled := (RijwegSubroutes.ItemIndex >= 0) and
+									(RijwegSubroutes.ItemIndex <= RijwegSubroutes.Items.Count-2);
+end;
 
 procedure TstwseMain.UpdateControls;
 var
@@ -706,6 +724,7 @@ begin
 			end;
 		end;
 
+		RijwegSubroutes.Items.Clear;
 		RijwegBestaatUit.Items.Clear;
 		RijwegVanEdit.Text := '';
 		RijwegNaarEdit.Text := '';
@@ -713,13 +732,13 @@ begin
 		RijwegTNVNaarEdit.Text := '';
 		seinEdit.Text := '';
 		NaarseinEdit.Text := '';
+		UpdateSubrouteUpDownCtls;
 		if assigned(Rijweg) then begin
 			// Inhoudsopgave bijwerken
-			RijwegBestaatUit.Items.Add('MEETPUNTEN:');
 			rMeetpunt := Rijweg.Meetpunten;
 			while assigned(rMeetpunt) do begin
 				Meetpunt := rMeetpunt^.Meetpunt;
-				RijwegBestaatUit.Items.Add(Meetpunt^.meetpuntID);
+				RijwegSubroutes.Items.Add(Meetpunt^.meetpuntID);
 				rMeetpunt := rMeetpunt^.volgende;
 			end;
 			RijwegBestaatUit.Items.Add('APPROACH-LOCKING-MEETPUNTEN:');
@@ -822,6 +841,40 @@ begin
 	end;
 end;
 
+procedure TstwseMain.SwapSubroutes;
+var
+	Eerste, nEerste: PvMeetpuntLijst;
+	Tweede, nTweede: PvMeetpuntLijst;
+	tmpMeetpuntL: PvMeetpuntLijst;
+	i: integer;
+begin
+	if not assigned(selRijweg) then exit;
+	if eersteIdx = tweedeIdx then exit;
+	// Zoek het eerste ding
+	Eerste := selRijweg^.Meetpunten;
+	for i := 1 to eersteIdx do
+		Eerste := Eerste^.Volgende;
+	nEerste := Eerste^.Volgende;
+	// Zoek het tweede ding
+	Tweede := selRijweg^.Meetpunten;
+	for i := 1 to tweedeIdx do
+		Tweede := Tweede^.Volgende;
+	nTweede := Tweede^.Volgende;
+	// Wissel om
+	new(tmpMeetpuntL);
+	tmpMeetpuntL^ := Eerste^;
+	Eerste^ := Tweede^;
+	Tweede^ := tmpMeetpuntL^;
+	Eerste^.Volgende := nEerste;
+	Tweede^.Volgende := nTweede;
+	dispose(tmpMeetpuntL);
+	// De lijst bijwerken
+	RijwegSubroutes.Items[eersteIdx] := Eerste^.Meetpunt^.meetpuntID;
+	RijwegSubroutes.Items[tweedeIdx] := Tweede^.Meetpunt^.meetpuntID;
+	// En dit nog doen.
+   Modified := true;
+end;
+
 procedure TstwseMain.AddScherm;
 var
 	Tab, l: PTabList;
@@ -851,6 +904,7 @@ begin
 	Tab^.Gleisplan.ShowSeinWisselNummers := true;
 	Tab^.Gleisplan.ShowInactieveRichtingen := true;
 	Tab^.Gleisplan.ShowPointPositions := false;
+	Tab^.Gleisplan.OnbekendeWisselsKnipperen := false;
 	Tab^.Gleisplan.Visible := true;
 	if waar = flLast then begin
 		Tab^.Volgende := nil;
@@ -1887,8 +1941,6 @@ begin
 		until schermID = 0;
 	end;
 
-	RijwegLogica.ZetRijwegInSubroutesOm;
-
 	UpdateChg.Infra := true;
 	UpdateChg.Meetpunten := true;
 	UpdateChg.Erlaubnisse := true;
@@ -1905,7 +1957,7 @@ begin
 	UpdateControls;
 
 	modified := false;
-   Openen.Enabled := false;
+	Openen.Enabled := false;
 end;
 
 procedure TstwseMain.exitActExecute(Sender: TObject);
@@ -2631,6 +2683,46 @@ begin
 	closefile(f);
 
 	Modified := false;
+end;
+
+procedure TstwseMain.RijwegSubroutesClick(Sender: TObject);
+var
+	i: integer;
+	MeetpuntL: PvMeetpuntLijst;
+	DoeKnipper: Boolean;
+begin
+	UpdateSubrouteUpDownCtls;
+	if assigned(selRijweg) then begin
+		MeetpuntL := selRijweg^.Meetpunten;
+		for i := 0 to RijwegSubroutes.Items.Count-1 do begin
+			DoeKnipper := i = RijwegSubroutes.ItemIndex;
+			if MeetpuntL^.Meetpunt^.Knipperen <> DoeKnipper then begin
+				MeetpuntL^.Meetpunt^.Knipperen := DoeKnipper;
+				VisibleTab^.Gleisplan.PaintMeetpunt(MeetpuntL^.Meetpunt);
+			end;
+			MeetpuntL := MeetpuntL^.Volgende;
+		end;
+	end;
+end;
+
+procedure TstwseMain.SubrouteUpClick(Sender: TObject);
+begin
+	SwapSubroutes(RijwegSubroutes.ItemIndex-1,RijwegSubroutes.ItemIndex);
+	RijwegSubroutes.ItemIndex := RijwegSubroutes.ItemIndex - 1;
+	UpdateSubrouteUpDownCtls;
+end;
+
+procedure TstwseMain.SubrouteDownClick(Sender: TObject);
+begin
+	SwapSubroutes(RijwegSubroutes.ItemIndex,RijwegSubroutes.ItemIndex+1);
+	RijwegSubroutes.ItemIndex := RijwegSubroutes.ItemIndex + 1;
+	UpdateSubrouteUpDownCtls;
+end;
+
+procedure TstwseMain.BlinkTimerTimer(Sender: TObject);
+begin
+	if assigned(VisibleTab) then
+		VisibleTab^.Gleisplan.KnipperGedoofd := not VisibleTab^.Gleisplan.KnipperGedoofd;
 end;
 
 end.

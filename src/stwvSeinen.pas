@@ -7,14 +7,18 @@ uses stwvSporen, stwvMeetpunt;
 type
 	PvSein = ^TvSein;
 	TvSein = record
+		// Vaste gegevens
 		Naam:			string;
 		Stand:		string;
-		Stand_wens:	string;		
+		Stand_wens:	string;
 		HerroepMeetpunten:PvMeetpuntLijst;	// Welk meetpunten moet vrij zijn om een rijweg
 														// direct te kunnen herroepen? (dus
 														// zonder approach locking
 		Van				: string;
 		VanTNVMeetpunt, TriggerMeetpunt:		PvMeetpunt;
+		// Berekende gegevens
+		RijwegenNaarSeinBestaan:	boolean;
+		// Dynamische gegevens
 		RijwegOnderdeel: pointer;
 		registered		: boolean;
 		changed			: boolean;

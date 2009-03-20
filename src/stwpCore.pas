@@ -38,19 +38,19 @@ const
 	wisseldefectreparatiemaxtijd	= 10;
 	storingsdienstnaam				= 'Storingsdienst';
 
-	meetpuntdefectbijtreinkans		= 1/2000;
-	seindefectkans						= 1/600;
+	meetpuntdefectbijtreinkans		= 1/1500;
+	seindefectkans						= 1/400;
 	seindefectmintijd					= 10;
 	seindefectmaxtijd					= 20;
 
-	treindefectkans			 	= 1/1000;
+	treindefectkans			 	= 1/200;
 	treindefectberichtstart 	= 'Sorry, we kunnen nog niet weg, want ';
 	treindefectberichtaantal 	= 5;
 	treindefectberichten: array[1..treindefectberichtaantal] of string = (
 	'hij doet het niet.',
 	'de HC is koffie aan het halen.',
 	'de HC moet naar de WC.',
-	'ik krijg geen groen licht.',
+	'er is een storing met de deuren.',
 	'er moet een schoolklas mee.');
 	treindefectmintijd			= 5;
 	treindefectmaxtijd			= 15;

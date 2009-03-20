@@ -4,7 +4,8 @@ interface
 
 uses lists, stwpCore, serverSendMsg, stwpSeinen, stwpMeetpunt,
 	stwpRails, stwpTreinen, sysutils, stwpRijplan, stwpTijd, stwpOverwegen,
-	stwsimComm;
+	stwsimComm, stwpDatatypes, stwpTelefoongesprek, stwpMonteur,
+	stwpMonteurPhysics, stwpCommPhysics;
 
 const
 	LF = #$0A;
@@ -16,8 +17,12 @@ type
 	private
 		procedure SendTreinDienst(Planpunten: PpRijplanPunt; maxaantal: integer);
 		function MaakRijplanpunt(s: string): PpRijplanPunt;
+		procedure SendOK;
+		procedure SendError(msg: string);
 	public
 		Core:	PpCore;
+		MonteurPhysics: PpMonteurPhysics;
+		CommPhysics: PpCommPhysics;
 		SendMsg: PpSendMsg;
 		procedure ReadMsg(msg: string);
 	end;
@@ -38,6 +43,16 @@ begin
 		first := copy(s,1,p-1);
 		rest := copy(s,p+1,length(s)-p);
 	end;
+end;
+
+procedure TpReadMsg.SendOK;
+begin
+	SendMsg.SendPlainString('ok');
+end;
+
+procedure TpReadMsg.SendError;
+begin
+	SendMsg.SendPlainString('err:'+msg);
 end;
 
 procedure TpReadMsg.SendTreinDienst(Planpunten: PpRijplanPunt; maxaantal: integer);
@@ -166,8 +181,9 @@ var
 	naam: string;
 	// Erlaubnis
 	standnr: byte;
+	// Gesprek
+	Gesprek: PpTelefoongesprek;
 	// Trein-msg
-	tmpTrein: PpTrein;
 	tcmd: string;
 	nwn_nr, nwn_vanaf: string;
 	rppunt:	PpRijplanPunt;
@@ -175,6 +191,8 @@ var
 	rppunt_na: string;
 	ok: boolean;
 	statusstr: string;
+	// Monteur
+	Opdracht: TpMonteurOpdracht;
 	// Telefoonwachten
 	tm, code: integer;
 	// Broadcast-bericht
@@ -194,51 +212,45 @@ begin
 		tmpWissel := Core.ZoekWissel(nummer);
 		if assigned(tmpWissel) then
 			if stand = 'r' then begin
-				if not tmpWissel^.stand_aftakkend then
-					SendMsg.SendPlainString('ok:nothing to do')
+				if Core.ZetWissel(tmpWissel, wsRechtdoor) then
+					SendOK
 				else
-					if Core.ZetWissel(tmpWissel, false) then
-						SendMsg.SendPlainString('ok:please wait')
-					else
-						SendMsg.SendPlainString('err:could not change switch')
+					SendError('could not change point')
 			end else if stand = 'a' then begin
-				if tmpWissel^.stand_aftakkend then
-					SendMsg.SendPlainString('ok:nothing to do')
+				if Core.ZetWissel(tmpWissel, wsAftakkend) then
+					SendOK
 				else
-					if Core.ZetWissel(tmpWissel, true) then
-						SendMsg.SendPlainString('ok:please wait')
-					else
-						SendMsg.SendPlainString('err:could not change switch')
+					SendError('could not change point')
 			end else
-				SendMsg.SendPlainString('err:unknown direction')
+				SendError('unknown direction')
 		else
-			SendMsg.SendPlainString('err:unknown switch');
+			SendError('unknown point');
 	end else if cmd = 's' then begin
 		SplitOff(tail, nummer, stand);
 		tmpSein := Core.ZoekSein(nummer);
 		if assigned(tmpSein) then
 			if stand = 'g' then begin
 				tmpSein^.Bediend_Stand := 1;
-				SendMsg.SendPlainString('ok')
+				SendOK
 			end else if stand = 'gk' then begin
 				tmpSein^.Bediend_Stand := 2;
-				SendMsg.SendPlainString('ok')
+				SendOK
 			end else if stand = 'r' then begin
 				tmpSein^.Bediend_Stand := 0;
-				SendMsg.SendPlainString('ok')
+				SendOK
 			end else
-				SendMsg.SendPlainString('err:unknown signal message')
+				SendError('unknown signal message')
 		else
-			SendMsg.SendPlainString('err:unknown signal');
+			SendError('unknown signal');
 	end else if cmd = 'm' then begin
 		SplitOff(tail, nummer, naam);
 		tmpMeetpunt := Core.ZoekMeetpunt(nummer);
 		if assigned(tmpMeetpunt) then begin
 			tmpMeetpunt^.Treinnaam := naam;
 			tmpMeetpunt^.veranderd := true;
-			SendMsg.SendPlainString('ok');
+			SendOK;
 		end else
-			SendMsg.SendPlainString('err:unknown detector');
+			SendError('unknown detector');
 	end else if cmd = 'e' then begin
 		SplitOff(tail, nummer, tail);
 		SplitOff(tail, wat, stand);
@@ -257,9 +269,9 @@ begin
 					tmpErlaubnis^.richting := standnr;
 					tmpErlaubnis^.voorvergendeld := true;
 					tmpErlaubnis^.vergrendeld := true;
-					SendMsg.SendPlainString('ok');
+					SendOK
 				end else
-					SendMsg.SendPlainString('err:direction can not be changed like this now.')
+					SendError('direction can not be changed like this now.')
 			end else if (wat = 'r') then begin
 				if (tmpErlaubnis^.richting = standnr) then begin
 					// We geven een reeds geclaimde rijrichting vrij. In ieder
@@ -272,13 +284,13 @@ begin
 						tmpErlaubnis^.vergrendeld := false;
 						tmpErlaubnis^.veranderd := true;
 					end;
-					SendMsg.SendPlainString('ok');
+					SendOK
 				end else
-					SendMsg.SendPlainString('err:direction can only be released by owner.')
+					SendError('direction can only be released by owner.')
 			end else
-				SendMsg.SendPlainString('err:unknown action for direction.')
+				SendError('unknown action for direction.')
 		end else
-			SendMsg.SendPlainString('err:unknown direction');
+			SendError('unknown direction');
 	end else if cmd = 'o' then begin
 		SplitOff(tail, nummer, stand);
 		tmpOverweg := Core.ZoekOverweg(nummer);
@@ -290,147 +302,275 @@ begin
 					tmpOverweg^.Status := 4;
 					with core^ do
 						tmpOverweg^.VolgendeStatusTijd := GetTijd+ovOpenTijd;
-					SendMsg.SendPlainString('ok')
+					SendOK
 				end else if tmpOverweg^.Status = 1 then begin
 					tmpOverweg^.Status := 0;
 					tmpOverweg^.VolgendeStatusTijd := -1;
-					SendMsg.SendPlainString('ok')
+					SendOK
 				end else
-					SendMsg.SendPlainString('ok:nothing to do')
+					SendOK
 			end else if (stand = 's') then begin
 				if tmpOverweg^.Status = 0 then begin
 					tmpOverweg^.Status := 1;
 					with core^ do
 						tmpOverweg^.VolgendeStatusTijd := GetTijd+ovAankTijd;
-					SendMsg.SendPlainString('ok')
+					SendOK
 				end else if tmpOverweg^.Status = 4 then begin
 					tmpOverweg^.Status := 2;
 					with core^ do
 						tmpOverweg^.VolgendeStatusTijd := GetTijd+ovSluitTijd;
-					SendMsg.SendPlainString('ok')
+					SendOK
 				end else
-					SendMsg.SendPlainString('ok:nothing to do')
+					SendOK
 			end else
-				SendMsg.SendPlainString('err:unknown lc message')
+				SendError('unknown level crossing message')
 		else
-			SendMsg.SendPlainString('err:unknown lc');
-	end else if cmd = 'mmsg' then begin
-		SplitOff(tail, nummer, tail);
-		tmpTrein := Core.ZoekTrein(nummer);
-		if assigned(tmpTrein) then begin
-			SplitOff(tail, tcmd, tail);
-			if tcmd = 'rl' then begin	// Rijplan Laden
-				SplitOff(tail, nwn_nr, nwn_vanaf);
-				tmpTrein^.Treinnummer := nwn_nr;
-				tmpTrein^.WisPlanpunten;
-				tmpTrein^.Planpunten := Core^.CopyDienstFrom(nwn_nr, nwn_vanaf);
-				if assigned(tmpTrein^.StationModusPlanpunt) then begin
-					dispose(tmpTrein^.StationModusPlanpunt);
-					tmpTrein^.StationModusPlanpunt := tmpTrein^.GetVolgendRijplanpunt;
-				end;
-				SendMsg.SendPlainString('ok');
-			end else	if tcmd = 'tsr' then begin	// TreinStatus Rapporteren
-				SendMsg.SendPlainString('ok');
-				statusstr := 'smsg:TREIN '+nummer+' ('+
-					inttostr(round(tmpTrein^.Snelheid))+' km/u';
-				if tmpTrein^.huidigemaxsnelheid = 0 then
-					statusstr := statusstr + ' - STS gepasseerd';
-				if tmpTrein^.doorroodopdracht then
-					statusstr := statusstr + ' - bezit lastgeving STS-passage';
-				statusstr := statusstr + ')';
-				if tmpTrein^.Vertraging = 0 then
-					statusstr := statusstr + ' (op tijd)';
-				if tmpTrein^.Vertraging >= 1 then
-					statusstr := statusstr + ' (+'+inttostr(tmpTrein^.Vertraging)+')';
-				if tmpTrein^.Vertraging <= -1 then
-					statusstr := statusstr + ' ('+inttostr(tmpTrein^.Vertraging)+')';
-				SendMsg.SendPlainString(statusstr);
-				if tmpTrein^.modus = 2 then
-					if assigned(tmpTrein^.Planpunten) then begin
-						SendMsg.SendPlainString('smsg:'+rlsStatusHeading);
-						SendMsg.SendPlainString('smsg:Op weg naar:');
-						SendTreinDienst(tmpTrein^.Planpunten, 4);
-					end else
-						SendMsg.SendPlainString('smsg:Rijden zonder rijplan.');
-				if tmpTrein^.modus = 1 then
-					if assigned(tmpTrein^.StationModusPlanpunt) then begin
-						SendMsg.SendPlainString('smsg:'+rlsStatusHeading);
-						SendMsg.SendPlainString('smsg:'+RijpuntLijstStr(tmpTrein^.StationModusPlanpunt, rlsStatus));
-						SendMsg.SendPlainString('smsg:Daarna verder naar:');
-						SendTreinDienst(tmpTrein^.Planpunten, 3);
-					end else
-						SendMsg.SendPlainString('smsg:Stilstaan zonder rijplan.');
-				if tmpTrein^.modus = 0 then
-					SendMsg.SendPlainString('smsg:Trein is gecrasht');
-				SendMsg.SendPlainString('smsg:--');
-			end else if tcmd = 'stsp' then begin	// StopTonend Sein Passeren
-				tmpTrein^.doorroodopdracht := true;
-				SendMsg.SendPlainString('ok');
-			end else if tcmd = 'stspa' then begin	// STSP-opdracht Annuleren
-				tmpTrein^.doorroodopdracht := false;
-				SendMsg.SendPlainString('ok');
-			end else if tcmd = 'vnstsp' then begin	// Verderrijden Na STS-Passage
-				tmpTrein^.doorroodverderrijden := true;
-				SendMsg.SendPlainString('ok');
-			end else if tcmd = 'ra' then begin		// Rijplanpunt Annuleren
-				v_rppunt := nil;
-				if tail <> '' then begin
-					rppunt := tmpTrein^.Planpunten;
-					while assigned(rppunt) do begin
-						if rppunt^.Station = tail then break;
-						v_rppunt := rppunt;
-						rppunt := rppunt^.volgende;
-					end;
+			SendError('unknown level crossing');
+	end else	if cmd = 'tsr' then begin	// TreinStatus Rapporteren
+		nummer := tail;
+		Trein := Core.ZoekTrein(nummer);
+		if assigned(Trein) then begin
+			SendOK;
+			statusstr := 'smsg:TREIN '+Trein^.Treinnummer+' ('+
+				inttostr(round(Trein^.Snelheid))+' km/u';
+			if Trein^.huidigemaxsnelheid = 0 then
+				statusstr := statusstr + ' - STS gepasseerd';
+			if Trein^.doorroodopdracht then
+				statusstr := statusstr + ' - bezit aanwijzing STS-passage';
+			statusstr := statusstr + ')';
+			if Trein^.Vertraging = 0 then
+				statusstr := statusstr + ' (op tijd)';
+			if Trein^.Vertraging >= 1 then
+				statusstr := statusstr + ' (+'+inttostr(Trein^.Vertraging)+')';
+			if Trein^.Vertraging <= -1 then
+				statusstr := statusstr + ' ('+inttostr(Trein^.Vertraging)+')';
+			SendMsg.SendPlainString(statusstr);
+			case Trein^.Modus of
+			tmRijden:
+				if assigned(Trein^.Planpunten) then begin
+					SendMsg.SendPlainString('smsg:'+rlsStatusHeading);
+					SendMsg.SendPlainString('smsg:Op weg naar:');
+					SendTreinDienst(Trein^.Planpunten, 4);
 				end else
-					rppunt := tmpTrein^.Planpunten;
-				if assigned(rppunt) then begin
-					if assigned(v_rppunt) then
-						v_rppunt^.volgende := rppunt^.volgende
-					else
-						tmpTrein^.Planpunten := rppunt^.volgende;
-					SendMsg.SendPlainString('ok');
+					SendMsg.SendPlainString('smsg:Rijden zonder rijplan.');
+			tmStilstaan:
+				if assigned(Trein^.StationModusPlanpunt) then begin
+					SendMsg.SendPlainString('smsg:'+rlsStatusHeading);
+					SendMsg.SendPlainString('smsg:'+RijpuntLijstStr(Trein^.StationModusPlanpunt, rlsStatus));
+					SendMsg.SendPlainString('smsg:Daarna verder naar:');
+					SendTreinDienst(Trein^.Planpunten, 3);
 				end else
-					SendMsg.SendPlainString('err:station not on plan');
-			end else if tcmd = 'nr' then begin		// Nieuw Rijplanpunt
-				ok := true;
-				SplitOff(tail, rppunt_na, tail);
-				if rppunt_na = '-' then
-					v_rppunt := nil
-				else begin
-					v_rppunt := tmpTrein^.Planpunten;
-					while assigned(v_rppunt) do begin
-						if v_rppunt.Station = rppunt_na then break;
-						v_rppunt := v_rppunt^.Volgende;
-					end;
-					if not assigned(v_rppunt) then ok := false;
-				end;
-				if ok then begin
-					rppunt := MaakRijplanpunt(tail);
-					if assigned(rppunt) then begin
-						if not assigned(v_rppunt) then begin
-							rppunt^.Volgende := tmpTrein^.Planpunten;
-							tmpTrein^.Planpunten := rppunt;
-						end else begin
-							rppunt^.volgende := v_rppunt^.volgende;
-							v_rppunt^.volgende := rppunt;
-						end;
-						SendMsg.SendPlainString('ok');
-					end else
-						SendMsg.SendPlainString('err:incorrect plan entry');
-				end else
-					SendMsg.SendPlainString('err:given after-station does not exist');
-			end else if tcmd = 'wtt' then begin		// WachT met Telefoneren
-				val(tail,tm,code);
-				if code = 0 then
-					tmpTrein^.berichtwachttijd := GetTijd + MkTijd(0,tm,0)
-				else
-					SendMsg.SendPlainString('err:wrong number of minutes');
-			end else
-				SendMsg.SendPlainString('err:unknown train command');
+					SendMsg.SendPlainString('smsg:Stilstaan zonder rijplan.');
+			tmGecrasht:
+				SendMsg.SendPlainString('smsg:Trein is gecrasht');
+			end;
+			SendMsg.SendPlainString('smsg:--');
 		end else
-			SendMsg.SendPlainString('err:unknown train');
+			SendError('unknown train.');
+	end else if cmd = 'comm_bel' then begin
+		SplitOff(tail, wat, nummer);
+		if Wat = 't' then begin
+			Trein := Core.ZoekTrein(nummer);
+			if assigned(Trein) then begin
+				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtGebeldWorden, true);
+				Gesprek^.tekstX := 'Hier trein '+Trein^.Treinnummer+'. Zegt u het maar.';
+				Gesprek^.tekstXsoort := pmsTreinOpdracht;
+				SendOK
+			end else
+				SendError('unknown train.');
+		end else if Wat = 'r' then begin
+			Gesprek := Core.NieuwTelefoongesprek(Core.pMonteur, tgtGebeldWorden, true);
+			Gesprek^.tekstX := 'Met de storingsdienst. Waarmee kan ik u van dienst zijn?';
+			Gesprek^.tekstXsoort := pmsMonteurOpdracht;
+			SendOK
+		end else
+			SendError('unknown telephone nr');
+	end else if cmd = 'comm_opn' then begin
+		SplitOff(tail, wat, nummer);
+		if Wat = 't' then begin
+			Trein := Core.ZoekTrein(nummer);
+			if assigned(Trein) then begin
+				Gesprek := Core.ZoekTelefoongesprek(Trein);
+				if assigned(Gesprek) then begin
+					SendOK;
+					CommPhysics.TrdlNeemtOp(Gesprek)
+				end else
+					SendError('unknown conversation.')
+			end else
+				SendError('unknown train.');
+		end else	if Wat = 'r' then begin
+			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
+			if assigned(Gesprek) then begin
+				CommPhysics.TrdlNeemtOp(Gesprek);
+				SendMsg.SendPlainString('ok')
+			end else
+				SendMsg.SendPlainString('err:unknown conversation.')
+		end else
+			SendError('unknown telephone nr');
+	end else if cmd = 'comm_oph' then begin
+		// Niet echt slimme code-reuse... ;-)
+		SplitOff(tail, wat, nummer);
+		if Wat = 't' then begin
+			Trein := Core.ZoekTrein(nummer);
+			if assigned(Trein) then begin
+				Gesprek := Core.ZoekTelefoongesprek(Trein);
+				if assigned(Gesprek) then begin
+					SendOK;
+					CommPhysics.TrdlHangtOp(Gesprek)
+				end else
+					SendError('unknown conversation.')
+			end else
+				SendError('unknown train.');
+		end else	if Wat = 'r' then begin
+			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
+			if assigned(Gesprek) then begin
+				SendOK;
+				CommPhysics.TrdlHangtOp(Gesprek)
+			end else
+				SendError('unknown conversation.')
+		end;
+	end else if cmd = 'comm_msg' then begin
+		// Niet echt slimme code-reuse... ;-)
+		SplitOff(tail, wat, tail);
+		if Wat = 't' then begin
+			SplitOff(tail, nummer, tail);
+			Trein := Core.ZoekTrein(nummer);
+			if assigned(Trein) then begin
+				Gesprek := Core.ZoekTelefoongesprek(Trein);
+				if assigned(Gesprek) then
+					if Gesprek^.Status = tgsWachtOpAntwoord then begin
+
+						// inspringen
+
+						SplitOff(tail, tcmd, tail);
+						if tcmd = 'ok' then begin
+							if Gesprek^.tekstXsoort = pmsVraagOK then begin
+								SendOK;
+								CommPhysics.AntwoordGegeven(Gesprek);
+							end else
+								SendError('wrong kind of answer.');
+						end else
+						if tcmd = 'rl' then begin	// Rijplan Laden
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							SplitOff(tail, nwn_nr, nwn_vanaf);
+							Trein^.Treinnummer := nwn_nr;
+							Trein^.WisPlanpunten;
+							Trein^.Planpunten := Core^.CopyDienstFrom(nwn_nr, nwn_vanaf);
+							if assigned(Trein^.StationModusPlanpunt) then begin
+								dispose(Trein^.StationModusPlanpunt);
+								Trein^.StationModusPlanpunt := Trein^.GetVolgendRijplanpunt;
+							end;
+						end else if tcmd = 'stsp' then begin	// StopTonend Sein Passeren
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							Trein^.doorroodopdracht := true;
+						end else if tcmd = 'stspa' then begin	// STSP-opdracht Annuleren
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							Trein^.doorroodopdracht := false;
+						end else if tcmd = 'vnstsp' then begin	// Verderrijden Na STS-Passage
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							Trein^.doorroodverderrijden := true;
+						end else if tcmd = 'ra' then begin		// Rijplanpunt Annuleren
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							v_rppunt := nil;
+							if tail <> '' then begin
+								rppunt := Trein^.Planpunten;
+								while assigned(rppunt) do begin
+									if rppunt^.Station = tail then break;
+									v_rppunt := rppunt;
+									rppunt := rppunt^.volgende;
+								end;
+							end else
+								rppunt := Trein^.Planpunten;
+							if assigned(rppunt) then begin
+								if assigned(v_rppunt) then
+									v_rppunt^.volgende := rppunt^.volgende
+								else
+									Trein^.Planpunten := rppunt^.volgende;
+							end else
+								Gesprek^.tekstOK := 'Sorry, maar ik kom niet langs station '+tail+'.';
+						end else if tcmd = 'nr' then begin		// Nieuw Rijplanpunt
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							ok := true;
+							SplitOff(tail, rppunt_na, tail);
+							if rppunt_na = '-' then
+								v_rppunt := nil
+							else begin
+								v_rppunt := Trein^.Planpunten;
+								while assigned(v_rppunt) do begin
+									if v_rppunt.Station = rppunt_na then break;
+									v_rppunt := v_rppunt^.Volgende;
+								end;
+								if not assigned(v_rppunt) then ok := false;
+							end;
+							if ok then begin
+								rppunt := MaakRijplanpunt(tail);
+								if assigned(rppunt) then begin
+									if not assigned(v_rppunt) then begin
+										rppunt^.Volgende := Trein^.Planpunten;
+										Trein^.Planpunten := rppunt;
+									end else begin
+										rppunt^.volgende := v_rppunt^.volgende;
+										v_rppunt^.volgende := rppunt;
+									end;
+								end else
+									Gesprek^.tekstOK := 'Sorry, maar dat snap ik niet!';
+							end else
+								Gesprek^.tekstOK := 'Sorry, maar ik kom niet langs station '+rppunt_na+'.';
+						end else if tcmd = 'wtt' then begin		// WachT met Telefoneren
+							val(tail,tm,code);
+							if code = 0 then begin
+								Gesprek^.WachtMetBellen := MkTijd(0,tm,0);
+								CommPhysics.AntwoordGegeven(Gesprek);
+								SendOK
+							end else
+								SendError('wrong number of minutes');
+						end else
+							SendError('unknown train command');
+
+					end else
+						SendError('answer cannot be heard now.')
+				else
+					SendError('unknown conversation.')
+			end else
+				SendError('unknown train.');
+		end else if Wat = 'r' then begin
+			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
+			if assigned(Gesprek) then
+				if Gesprek^.Status = tgsWachtOpAntwoord then begin
+
+					SplitOff(tail, wat, nummer);
+					if wat = 'ok' then begin
+						if Gesprek^.tekstXsoort = pmsVraagOK then begin
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+						end else
+							SendError('wrong kind of answer.');
+					end else
+					if wat = 'w' then begin
+						SendOK;
+						CommPhysics.AntwoordGegeven(Gesprek);
+						Opdracht.Wat := mrwWissel;
+						Opdracht.ID := nummer;
+						if not MonteurPhysics.StuurMonteur(Core.pMonteur, Opdracht) then
+							Gesprek^.tekstOK := 'Sorry, maar ik heb nu geen tijd.';
+						CommPhysics.AntwoordGegeven(Gesprek)
+					end else
+						SendError('unknown repair thing');
+
+				end else
+					SendError('answer cannot be heard now.')
+			else
+				SendError('unknown conversation.')
+		end else
+			SendError('unknown telephone nr');
 	end else if cmd = 'bc' then begin
-		SendMsg.SendPlainString('ok');
+		SendOK;
 		tmpMeetpunt := Core^.pAlleMeetpunten;
 		while assigned(tmpMeetpunt) do begin
 			RailLijst := tmpMeetpunt^.ZichtbaarLijst;
@@ -438,8 +578,11 @@ begin
 				Trein := Core^.pAlleTreinen;
 				while assigned(Trein) do begin
 					if Trein^.pos_rail = RailLijst^.Rail then
-						SendMsg.SendPlainString('mmsg:'+Trein^.Treinnummer+
-							',Meldt!');
+						if not assigned(Core.ZoekTelefoongesprek(Trein)) then begin
+							Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
+							Gesprek^.tekstX := 'Trein '+Trein^.Treinnummer+' meldt zich!';
+							Gesprek^.tekstXsoort := pmsInfo;
+						end;
 					Trein := Trein^.Volgende;
 				end;
 				RailLijst := RailLijst^.Volgende;
@@ -447,6 +590,7 @@ begin
 			tmpMeetpunt := tmpMeetpunt^.Volgende;
 		end;
 	end else if cmd = 'score' then begin
+		SendOK;
 		SendMsg.SendPlainString('score:start');
 		SendMsg.SendPlainString('score:punct0,'+inttostr(Core.ScoreInfo.AankomstOpTijd));
 		SendMsg.SendPlainString('score:punct3,'+inttostr(Core.ScoreInfo.AankomstBinnenDrie));
@@ -457,7 +601,7 @@ begin
 		SendMsg.SendPlainString('score:platfn,'+inttostr(Core.ScoreInfo.PerronFout));
 		SendMsg.SendPlainString('score:done');
 	end else
-		SendMsg.SendPlainString('err:unknown command');
+		SendError('unknown command');
 end;
 
 end.

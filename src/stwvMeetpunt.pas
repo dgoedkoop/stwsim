@@ -22,11 +22,14 @@ type
 		registered		: boolean;
 		changed			: boolean;
 		volgende			: PvMeetpunt;
+		// Gegevens voor volgordedwang
+		OnterechtBezet	: boolean;
 		// Gegevens voor aankondiging
 		Aankondiging	: boolean;
 		Aank_Spoor		: string;
 		Aank_Erlaubnis : PvErlaubnis;
 		Aank_Erlaubnisstand:	byte;
+		Knipperen		: boolean;
 	end;
 
 function OmgekeerdeErlaubnisstand(stand: byte): byte;

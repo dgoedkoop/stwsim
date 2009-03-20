@@ -1,8 +1,8 @@
 object stwscProcesplanForm: TstwscProcesplanForm
-  Left = 192
-  Top = 106
-  Width = 492
-  Height = 353
+  Left = 194
+  Top = 108
+  Width = 488
+  Height = 349
   Caption = 'Procesplan Rijwegen'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,17 +21,17 @@ object stwscProcesplanForm: TstwscProcesplanForm
   object LiPanel: TPanel
     Left = 0
     Top = 25
-    Width = 234
-    Height = 301
+    Width = 230
+    Height = 290
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
   end
   object RePanel: TPanel
-    Left = 234
+    Left = 230
     Top = 25
     Width = 250
-    Height = 301
+    Height = 290
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
@@ -40,7 +40,7 @@ object stwscProcesplanForm: TstwscProcesplanForm
   object LiBtnPanel: TPanel
     Left = 0
     Top = 0
-    Width = 484
+    Width = 480
     Height = 25
     Align = alTop
     BevelOuter = bvNone
@@ -48,7 +48,7 @@ object stwscProcesplanForm: TstwscProcesplanForm
     object Button1: TButton
       Left = 0
       Top = 0
-      Width = 484
+      Width = 480
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Procesplan toevoegen'

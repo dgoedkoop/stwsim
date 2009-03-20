@@ -1,8 +1,8 @@
 object stwscProcesPlanFrame: TstwscProcesPlanFrame
   Left = 0
   Top = 0
-  Width = 500
-  Height = 320
+  Width = 496
+  Height = 316
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,8 +15,8 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
   object RegelList: TListBox
     Left = 0
     Top = 129
-    Width = 500
-    Height = 191
+    Width = 496
+    Height = 187
     Align = alClient
     Color = clBlack
     Font.Charset = DEFAULT_CHARSET
@@ -32,7 +32,7 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
   object btnPanel: TPanel
     Left = 0
     Top = 17
-    Width = 500
+    Width = 496
     Height = 25
     Align = alTop
     BevelOuter = bvNone
@@ -78,7 +78,7 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
   object TitelPanel: TPanel
     Left = 0
     Top = 0
-    Width = 500
+    Width = 496
     Height = 17
     Align = alTop
     BevelOuter = bvNone
@@ -94,7 +94,7 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
   object HistList: TListBox
     Left = 0
     Top = 42
-    Width = 500
+    Width = 496
     Height = 87
     Align = alTop
     Color = clBlack

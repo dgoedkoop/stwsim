@@ -270,6 +270,66 @@ CHANGELOG:
   opgegeven.
 - Berichtjes aan machinist voor het even wachten op groen aangepast.
 
+0.1.1.0 (23 januari 2009):
+- Bij het combineren gaan we verder met het laagste treinnummer
+- Als een trein een nieuw nummer krijgt (omnummeren, splitsen) wordt het rijplan
+  geladen vanaf het station waar we nu zijn. Wel zo zinnig...
+
+24 januari:
+- Fysiek kan een wissel nu ook een onbekende stand hebben
+- Een trein crasht als die een wissel met onbekende stand spits berijdt.
+- Wissels die handmatig worden omgelegd, kunnen wederom worden omgelegd.
+- Het instellen van een rijweg kan nu ook als handmatig wissels zijn omgelegd
+- Het beantwoord-venster van berichten van treinen laat nu alleen die antwoorden
+  zien die nuttig zijn
+- Defecten van wissels aangepast. Is een wissel een beetje defect, dan helpt
+  omleggen. Is een wissel helemaal defect, dan moet een reparatieploeg worden
+  gestuurd. Als die aan het werk is mag je uiteraard niet het wissel omleggen!
+- Defecten van meetpunten aangepast. Rijdt een trein over een defect meetpunt,
+  dan wordt dat meetpunt weer heel.
+
+28 januari:
+- In de afgelopen dagen het communicatiesysteem grondig verbeterd.
+
+2 februari:
+- Inbouw van subroutes afgerond.
+- Fix: Fout in herroepen van rijwegen gecorrigeerd
+
+11 februari:
+- XP Themes uiterlijk wordt nu ondersteund
+- Bij opslaan en inladen wordt de volgorde van meetpunten in een rijweg niet
+  meer omgedraaid.
+- In de editor kunnen de meetpunten/subroutes van een rijweg nu op volgorde
+  worden gezet.
+
+12 februari:
+- Een rijweg naar Bezet Spoor wordt netjes voortgezet als de trein op het
+  bezette spoor wegrijdt.
+- Volgordedwang ingebouwd.
+- Rijwegen naar bezet spoor worden nu ook automatisch opgeheven
+- Fix: Een rijweg naar bezet spoor kan niet meer naar een spoor worden ingesteld
+  dat niet bezet is, maar waar wel van de andere kant een rijweg naar is
+  ingesteld.
+
+13 februari:
+- Knipperende spoorsectie aan het einde van een rijweg als "aankondiging"
+
+15 februari:
+- Volgordedwang nog strikter gemaakt
+
+16 februari:
+- Fix: correctie in volgordedwang
+- Fix: telefoonknop deactiveren indien simulatie gepauzeerd.
+
+27 februari:
+- Fix: geen volgordedwang meer bij controle vrijmelding, vanwege failsafe.
+- Rijweg opheffen als trein voor einde omkeert verbeterd
+
+20 maart:
+- Fix: Rijweg naar Bezet Spoor mag al op geel-knipper worden gezet als bij de
+  rijweg in tegengestelde richting het sein is afgereden. De trein op die rijweg
+  hoeft niet meer de laatste sectie van de betreffende rijweg te bezetten.
+
 BERICHTEN AAN DE MACHINIST:
 
 - Rijd langzaam door het eerstvolgende rode sein

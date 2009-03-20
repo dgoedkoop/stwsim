@@ -1,8 +1,8 @@
 object stwsimMainForm: TstwsimMainForm
-  Left = 213
-  Top = 165
-  Width = 732
-  Height = 551
+  Left = 215
+  Top = 167
+  Width = 728
+  Height = 547
   Caption = 'StwSim'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -25,13 +25,13 @@ object stwsimMainForm: TstwsimMainForm
   object BedienPanel: TPanel
     Left = 0
     Top = 0
-    Width = 724
+    Width = 720
     Height = 81
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object Splitter1: TSplitter
-      Left = 213
+      Left = 209
       Top = 0
       Width = 3
       Height = 77
@@ -41,7 +41,7 @@ object stwsimMainForm: TstwsimMainForm
     object msgMemo: TMemo
       Left = 0
       Top = 0
-      Width = 213
+      Width = 209
       Height = 77
       Align = alClient
       ParentColor = True
@@ -50,7 +50,7 @@ object stwsimMainForm: TstwsimMainForm
       TabOrder = 0
     end
     object statPanel: TPanel
-      Left = 216
+      Left = 212
       Top = 0
       Width = 508
       Height = 77
@@ -153,7 +153,7 @@ object stwsimMainForm: TstwsimMainForm
     object hsepPanel: TPanel
       Left = 0
       Top = 77
-      Width = 724
+      Width = 720
       Height = 4
       Align = alBottom
       BevelOuter = bvNone
@@ -163,7 +163,7 @@ object stwsimMainForm: TstwsimMainForm
   object SchermenTab: TTabControl
     Left = 0
     Top = 81
-    Width = 724
+    Width = 720
     Height = 25
     Align = alTop
     Style = tsButtons

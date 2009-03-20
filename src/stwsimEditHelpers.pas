@@ -35,6 +35,10 @@ begin
 							PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.bezet := false;
 							repaint := true;
 						end;
+						if PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.Knipperen then begin
+							PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.Knipperen := false;
+							repaint := true;
+						end;
 					end;
 					if assigned(PvHokjeSpoor(Hokje.grdata)^.DriehoekjeSein) then begin
 						if assigned(PvHokjeSpoor(Hokje.grdata)^.DriehoekjeSein^.RijwegOnderdeel) then begin

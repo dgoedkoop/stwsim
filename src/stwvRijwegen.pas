@@ -304,7 +304,7 @@ end;
 
 procedure RijwegVoegMeetpuntToe;
 var
-	Punt, NieuwMeetpunt: PvMeetpuntLijst;
+	Punt, ZoekMeetpunt, NieuwMeetpunt: PvMeetpuntLijst;
 begin
 	Punt := Rijweg.Meetpunten;
 	while assigned(Punt) do begin
@@ -314,14 +314,20 @@ begin
 	end;
 	new(NieuwMeetpunt);
 	NieuwMeetpunt^.Meetpunt := Meetpunt;
-	NieuwMeetpunt^.Volgende := Rijweg.Meetpunten;
-	Rijweg.Meetpunten := NieuwMeetpunt;
+	NieuwMeetpunt^.Volgende := nil;
+	if not assigned(Rijweg.Meetpunten) then
+		Rijweg.Meetpunten := NieuwMeetpunt
+	else begin
+		ZoekMeetpunt := Rijweg.Meetpunten;
+		while assigned(ZoekMeetpunt^.Volgende) do
+			ZoekMeetpunt := ZoekMeetpunt^.Volgende;
+		ZoekMeetpunt^.Volgende := NieuwMeetpunt;
+	end;
 end;
 
 procedure RijwegVerwijderMeetpunt;
 var
 	vorigePunt, Punt: PvMeetpuntLijst;
-	vInactiefHokje,tInactiefHokje,InactiefHokje: PvInactiefHokje;
 	vKruisingHokje,tKruisingHokje,KruisingHokje: PvKruisingHokje;
 begin
 	vorigePunt := nil;

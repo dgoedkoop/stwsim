@@ -32,6 +32,13 @@ type
 		procedure DoeKruisHokjes(Meetpunt: PvMeetpunt; Rijweg: PvRijweg);
 		function ControleerDubbelSubroute(Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
 			KruisingHokjes: PvKruisingHokje; strikt: boolean): boolean;
+		function ControleerTerecht(Meetpunt: PvMeetpunt): boolean;
+		procedure SetMeetpuntKnipperen(Meetpunt: PvMeetpunt; waarde: boolean);
+		procedure SetAankondigingKnipperen(Rijweg: PvRijweg; waarde: boolean);
+		procedure DeactiveerVoorgaandeAankondiging(Rijweg: PvRijweg);
+		procedure HeractiveerVoorgaandeAankondiging(Rijweg: PvRijweg);
+		procedure ControleerAankondigingKnipperen(Rijweg: PvRijweg); overload;
+		procedure ControleerAankondigingKnipperen(Meetpunt: PvMeetpunt); overload;
 	public
 		// Hulpmiddelen
 		Tabs:		PTabList;
@@ -51,6 +58,7 @@ type
 		function StelRijwegIn(Rijweg: PvRijweg; ROZ, Auto: boolean; WatMetActief: TWatMetActief): boolean;
 		function StelPrlRijwegIn(PrlRijweg: PvPrlRijweg; ROZ, gefaseerd: Boolean; Dwang: byte): boolean;
 		// Herroepen van rijwegen
+		procedure DeclaimRijweg(ActieveRijweg: PvActieveRijwegLijst);
 		function HerroepRijweg(seinnaam: string): boolean;
 		// Periodieke check
 		procedure DoeActieveRijwegen;
@@ -63,16 +71,204 @@ type
 		procedure MarkeerVrij(Meetpunt: PvMeetpunt);
 		procedure WisselOm(Wissel: PvWissel);
 		// Voor de editor
-		// Deze bovenste variant willen we eigenlijk niet!!
-		function CreateSubrouteFrom(Rijweg: PvRijweg; Meetpunt: PvMeetpunt):PvSubroute; overload;
-		function CreateSubrouteFrom(Meetpunt: PvMeetpunt):PvSubroute; overload;
+		function CreateSubrouteFrom(Meetpunt: PvMeetpunt):PvSubroute;
 		function ZoekSubroute(Meetpunt: PvMeetpunt; strikt: boolean):PvSubroute;
 		procedure DoeHokjes(Meetpunt: PvMeetpunt; strikt: boolean);
-		// Tijdelijk hulpmiddel
-		procedure ZetRijwegInSubroutesOm;
 	end;
 
 implementation
+
+procedure TRijwegLogica.SetMeetpuntKnipperen;
+var
+	Tab: PTabList;
+begin
+	if Meetpunt^.Knipperen = waarde then exit;
+	Meetpunt^.Knipperen := waarde;
+	// We moeten het meetpunt opnieuw painten, anders blijft een voorheen
+	// knipperend meetpunt misschien zwart achter.
+	Tab := Tabs;
+	while assigned(Tab) do begin
+		Tab^.Gleisplan.PaintMeetpunt(Meetpunt);
+		Tab := Tab^.Volgende;
+	end;
+end;
+
+procedure TRijwegLogica.SetAankondigingKnipperen;
+var
+	MeetpuntL: PvMeetpuntLijst;
+begin
+	if not assigned(Rijweg^.NaarSein) then exit;
+	MeetpuntL := Rijweg^.Meetpunten;
+	if not assigned(MeetpuntL) then exit;
+	while assigned(MeetpuntL^.Volgende) do
+		MeetpuntL := MeetpuntL^.Volgende;
+	if not MeetpuntL^.Meetpunt^.Bezet then
+		SetMeetpuntKnipperen(MeetpuntL^.Meetpunt, waarde);
+end;
+
+procedure TRijwegLogica.HeractiveerVoorgaandeAankondiging;
+var
+	ActieveRijweg: PvActieveRijwegLijst;
+begin
+	if not Rijweg^.Sein^.RijwegenNaarSeinBestaan then exit;
+
+	ActieveRijweg := Core.vActieveRijwegen;
+	while assigned(ActieveRijweg) do begin
+		if ActieveRijweg^.Rijweg^.NaarSein = Rijweg^.Sein then begin
+			ControleerAankondigingKnipperen(ActieveRijweg^.Rijweg);
+			break;
+		end;
+		ActieveRijweg := ActieveRijweg^.Volgende;
+	end;
+end;
+
+procedure TRijwegLogica.DeactiveerVoorgaandeAankondiging;
+var
+	ActieveRijweg: PvActieveRijwegLijst;
+begin
+	if not Rijweg^.Sein^.RijwegenNaarSeinBestaan then exit;
+
+	ActieveRijweg := Core.vActieveRijwegen;
+	while assigned(ActieveRijweg) do begin
+		if ActieveRijweg^.Rijweg^.NaarSein = Rijweg^.Sein then begin
+			SetAankondigingKnipperen(ActieveRijweg^.Rijweg, false);
+			break;
+		end;
+		ActieveRijweg := ActieveRijweg^.Volgende;
+	end;
+end;
+
+// Deze functie is om te laten knipperen als een rijweg wordt geactiveerd.
+procedure TRijwegLogica.ControleerAankondigingKnipperen(Rijweg: PvRijweg);
+var
+	// Plan A
+	ActieveRijweg: PvActieveRijwegLijst;
+	// Plan B
+	Gevonden:	boolean;
+	MeetpuntL:	PvMeetpuntLijst;
+begin
+	// De laatste sectie van deze rijweg moet gaan knipperen indien voor deze
+	// rijweg een andere rijweg of vrije baan ligt die bezet is.
+	if Rijweg^.Sein^.RijwegenNaarSeinBestaan then begin
+		ActieveRijweg := Core.vActieveRijwegen;
+		while assigned(ActieveRijweg) do begin
+			if ActieveRijweg^.Rijweg^.NaarSein = Rijweg^.Sein then begin
+				if ActieveRijweg^.Pending = 3 then
+					SetAankondigingKnipperen(Rijweg, true);
+				break;
+			end;
+			ActieveRijweg := ActieveRijweg^.Volgende;
+		end;
+	end else begin
+		MeetpuntL := Rijweg^.Sein^.HerroepMeetpunten;
+		Gevonden := false;
+		while assigned(MeetpuntL) do begin
+			if MeetpuntL^.Meetpunt^.bezet then
+				Gevonden := true;
+			MeetpuntL := MeetpuntL^.Volgende;
+		end;
+		if Gevonden then
+			SetAankondigingKnipperen(Rijweg, true);
+	end;
+end;
+
+// Deze functie is om te laten knipperen als een meetpunt bezet wordt gemeld.
+procedure TRijwegLogica.ControleerAankondigingKnipperen(Meetpunt: PvMeetpunt);
+var
+	// Plan A
+	ActieveRijweg: PvActieveRijwegLijst;
+	// Plan B
+	Sein			: PvSein;
+	MeetpuntL	: PvMeetpuntLijst;
+	Gevonden		: boolean;
+begin
+	if assigned(Meetpunt^.RijwegOnderdeel) then begin
+		// Plan A: dit meetpunt hoort bij een actieve rijweg.
+		ActieveRijweg := Meetpunt^.RijwegOnderdeel;
+		// Als we geen naar-sein hebben zijn we klaar.
+		if not assigned(ActieveRijweg^.Rijweg^.NaarSein) then
+			exit;
+		if not assigned(ActieveRijweg^.Rijweg^.NaarSein^.RijwegOnderdeel) then
+			// Bij het volgende sein is geen rijweg ingesteld dus moeten we bij de
+			// huidige rijweg de aankondigingssectie laten knipperen!
+			SetAankondigingKnipperen(ActieveRijweg^.Rijweg, true)
+		else begin
+			// Bij het volgende sein is een rijweg ingesteld. Als die doodloopt
+			// moeten we daar de aankondigingssectie laten knipperen.
+			ActieveRijweg := ActieveRijweg^.Rijweg^.NaarSein^.RijwegOnderdeel;
+			if not assigned(ActieveRijweg^.Rijweg^.NaarSein) then
+				exit;
+			if not assigned(ActieveRijweg^.Rijweg^.NaarSein^.RijwegOnderdeel) then
+				// Bij het volgende sein is geen rijweg ingesteld dus moeten we bij
+				// deze rijweg de aankondigingssectie laten knipperen!
+				SetAankondigingKnipperen(ActieveRijweg^.Rijweg, true)
+		end;
+	end else begin
+		// Plan B: dit meetpunt hoort niet bij een actieve rijweg. Vrije baan?
+		// We gaan nu kijken of we een sein vinden, binnen wiens approach locking
+		// gebied we zitten. En het mag niet mogelijk zijn om een rijweg naar dat
+		// sein in te stellen.
+		Sein := Core.vAlleSeinen;
+		while assigned(Sein) do begin
+			if not Sein^.RijwegenNaarSeinBestaan then begin
+				MeetpuntL := Sein^.HerroepMeetpunten;
+				Gevonden := false;
+				while assigned(MeetpuntL) do begin
+					if MeetpuntL^.Meetpunt = Meetpunt then
+						Gevonden := true;
+					MeetpuntL := MeetpuntL^.Volgende;
+				end;
+				if Gevonden and assigned(Sein^.RijwegOnderdeel) then begin
+					// Er is bij dit sein een rijweg ingesteld.
+					ActieveRijweg := Sein^.RijwegOnderdeel;
+					if not assigned(ActieveRijweg^.Rijweg^.NaarSein) then
+						exit;
+					if not assigned(ActieveRijweg^.Rijweg^.NaarSein^.RijwegOnderdeel) then
+						// Bij het volgende sein is geen rijweg ingesteld dus moeten we bij
+						// deze rijweg de aankondigingssectie laten knipperen!
+						SetAankondigingKnipperen(ActieveRijweg^.Rijweg, true);
+					exit;
+				end;
+			end;
+			Sein := Sein^.Volgende;
+		end;
+	end;
+end;
+
+function TRijwegLogica.ControleerTerecht;
+var
+	ActieveRijweg: PvActieveRijwegLijst;
+	vMeetpunt, zoekMeetpunt: PvMeetpuntLijst;
+begin
+	result := true;
+
+	ActieveRijweg := Meetpunt^.RijwegOnderdeel;
+	if not assigned(ActieveRijweg) then
+		exit;
+	vMeetpunt := nil;
+	zoekMeetpunt := ActieveRijweg^.Rijweg^.Meetpunten;
+	while assigned(zoekMeetpunt) do begin
+		if zoekMeetpunt^.Meetpunt = Meetpunt then
+			break;
+		vMeetpunt := zoekMeetpunt;
+		zoekMeetpunt := zoekMeetpunt^.Volgende;
+	end;
+	if not assigned(zoekMeetpunt) then begin
+		result := false;
+		exit;
+	end;
+	if not assigned(vMeetpunt) then
+		exit;
+	// We gaan ervan uit dat Meetpunt^.bezet veranderd is. De waarde daarvan
+	// zou dezelfde als vMeetpunt^.Meetpunt^.bezet moeten zijn.
+	if vMeetpunt^.Meetpunt.RijwegOnderdeel = ActieveRijweg then
+		result := result and (Meetpunt^.bezet = vMeetpunt^.Meetpunt.bezet);
+	// En het volgende meetpunt, als dat bij de rijweg hoort, moet net het
+	// omgekeerde zijn.
+	if assigned(zoekMeetpunt^.Volgende) then
+		if zoekMeetpunt^.Volgende^.Meetpunt^.RijwegOnderdeel = ActieveRijweg then
+			result := result and (Meetpunt^.bezet <> zoekMeetpunt^.Volgende^.Meetpunt^.bezet);
+end;
 
 function TRijwegLogica.ControleerDubbelSubroute;
 var
@@ -313,114 +509,6 @@ begin
 		result := AddSubroute(Core, Meetpunt, WisselStanden, KruisingHokjes, nil);
 end;
 
-function TRijwegLogica.CreateSubrouteFrom(Rijweg: PvRijweg; Meetpunt: PvMeetpunt):PvSubroute;
-var
-	WisselStanden:			PvWisselStand;
-	WisselStand:			PvWisselStand;
-	NieuweWisselstand:	PvWisselStand;
-	InactieveHokjes:		PvInactiefHokje;
-	InactiefHokje:			PvInactiefHokje;
-	NieuwInactiefHokje:	PvInactiefHokje;
-	KruisingHokjes:		PvKruisingHokje;
-	KruisingHokje:			PvKruisingHokje;
-	NieuwKruisingHokje:	PvKruisingHokje;
-	Tab:						PTabList;
-	Hokje:					TvHokje;
-begin
-	result := nil;
-	// Zoek alle wissels die bij dit meetpunt horen
-	WisselStanden := nil;
-	WisselStand := Rijweg^.Wisselstanden;
-	while assigned(WisselStand) do begin
-		if WisselStand^.Wissel^.Meetpunt = Meetpunt then begin
-			new(NieuweWisselStand);
-			NieuweWisselstand^ := WisselStand^;
-			NieuweWisselstand^.Volgende := WisselStanden;
-			WisselStanden := NieuweWisselstand;
-		end;
-		WisselStand := WisselStand^.Volgende;
-	end;
-	// Zoek alle kruisinghokjes die bij dit meetpunt horen
-	KruisingHokjes := nil;
-	KruisingHokje := Rijweg^.KruisingHokjes;
-	while assigned(KruisingHokje) do begin
-		Tab := Tabs;
-		while assigned(Tab) do begin
-			if KruisingHokje.schermID = Tab^.ID then begin
-				Hokje := Tab^.Gleisplan.GetHokje(KruisingHokje.x, KruisingHokje.y);
-				case Hokje.Soort of
-					1: if (PvHokjeSpoor(Hokje.grdata).Meetpunt = Meetpunt) then begin
-						new(NieuwKruisingHokje);
-						NieuwKruisingHokje^ := KruisingHokje^;
-						NieuwKruisingHokje^.volgende := KruisingHokjes;
-						KruisingHokjes := NieuwKruisingHokje;
-					end;
-				end;
-			end;
-			Tab := Tab^.Volgende;
-		end;
-		KruisingHokje := KruisingHokje^.Volgende;
-	end;
-
-	// Zo. Nu hebben we alle gegevens die de inactieve hokjes eenduidig
-	// bepalen.
-
-	// Zoek alle inactieve hokjes die bij dit meetpunt horen
-	InactieveHokjes := nil;
-	InactiefHokje := Rijweg^.InactieveHokjes;
-	while assigned(InactiefHokje) do begin
-		Tab := Tabs;
-		while assigned(Tab) do begin
-			if InactiefHokje.schermID = Tab^.ID then begin
-				Hokje := Tab^.Gleisplan.GetHokje(InactiefHokje.x, InactiefHokje.y);
-				case Hokje.Soort of
-					1: if (PvHokjeSpoor(Hokje.grdata).Meetpunt = Meetpunt) then begin
-						new(NieuwInactiefHokje);
-						NieuwInactiefHokje^ := InactiefHokje^;
-						NieuwInactiefHokje^.volgende := InactieveHokjes;
-						InactieveHokjes := NieuwInactiefHokje;
-					end;
-					5: if (PvHokjeWissel(Hokje.grdata).Meetpunt = Meetpunt) then begin
-						new(NieuwInactiefHokje);
-						NieuwInactiefHokje^ := InactiefHokje^;
-						NieuwInactiefHokje^.volgende := InactieveHokjes;
-						InactieveHokjes := NieuwInactiefHokje;
-					end;
-				end;
-			end;
-			Tab := Tab^.Volgende;
-		end;
-		InactiefHokje := InactiefHokje^.volgende
-	end;
-
-	// Nu hebben we alles => toevoegen
-	if not ControleerDubbelSubroute(Meetpunt, WisselStanden, KruisingHokjes, true) then
-		result := AddSubroute(Core, Meetpunt, WisselStanden, KruisingHokjes, InactieveHokjes);
-end;
-
-procedure TRijwegLogica.ZetRijwegInSubroutesOm;
-var
-	Rijweg:					PvRijweg;
-	MeetpuntL:				PvMeetpuntLijst;
-	Meetpunt:				PvMeetpunt;
-	log:string;
-begin
-	Rijweg := Core.vAlleRijwegen;
-	while assigned(Rijweg) do begin
-		MeetpuntL := Rijweg^.Meetpunten;
-		while assigned(MeetpuntL) do begin
-			Meetpunt := MeetpuntL^.Meetpunt;
-
-			CreateSubrouteFrom(Rijweg, Meetpunt);
-
-			MeetpuntL := MeetpuntL^.Volgende;
-		end;
-		Rijweg.InactieveHokjes := nil;
-		Rijweg := Rijweg^.Volgende;
-	end;
-	Application.MessageBox(pchar('Voor de volgende detectiepunten is een subroute aangemaakt:'+#13#10+log), 'Subroutes aangemaakt', 0);
-end;
-
 constructor TRijwegLogica.Create;
 begin
 	AankSound := LoadSound('snd_aank');
@@ -488,8 +576,11 @@ begin
 		intwrite(f, MeetpuntCount);
 		Meetpunt := Core^.vAlleMeetpunten;
 		while assigned(Meetpunt) do begin
-			if Meetpunt^.RijwegOnderdeel = ActieveRijweg then
+			if Meetpunt^.RijwegOnderdeel = ActieveRijweg then begin
 				stringwrite(f, Meetpunt^.meetpuntID);
+{				boolwrite  (f, Meetpunt^.OnterechtBezet);
+				boolwrite  (f, Meetpunt^.Knipperen);}
+			end;
 			Meetpunt := Meetpunt^.Volgende;
 		end;
 		SeinCount := 0;
@@ -556,6 +647,8 @@ begin
 			stringread(f, MeetpuntID);
 			Meetpunt := ZoekMeetpunt(Core, MeetpuntID);
 			Meetpunt^.RijwegOnderdeel := ActieveRijweg;
+{			boolread  (f, Meetpunt^.OnterechtBezet);
+			boolread  (f, Meetpunt^.Knipperen);}
 		end;
 		intread(f, SeinCount);
 		for j := 1 to SeinCount do begin
@@ -792,16 +885,32 @@ var
 	Treinnr: string;
 	VanMeetpunt, NaarMeetpunt: PvMeetpunt;
 begin
+	// Controleer of ergens een aankondigingssectie moet gaan knipperen
+	ControleerAankondigingKnipperen(Meetpunt);
+
+	// Bezette secties mogen niet knipperen
+	SetMeetpuntKnipperen(Meetpunt, false);
+
+	// Als het meetpunt niet bij een rijweg hoort hoeven we verder niks te
+	// doen.
 	ActieveRijweg := PvActieveRijwegLijst(Meetpunt^.Rijwegonderdeel);
 	if not assigned(ActieveRijweg) then exit;
 
-	// Sein op rood zetten en pending-status bijwerken - behalve als het een
-	// ROZ-rijweg is.
-	if (ActieveRijweg^.Pending = 2) and (not ActieveRijweg^.ROZ) then begin
+	// Kijk of de bezetmelding terecht is
+	if not ControleerTerecht(Meetpunt) then begin
+		Meetpunt^.OnterechtBezet := true;
+		Log.Log('Onverwachte bezetmelding in rijweg van '+
+			KlikpuntTekst(ActieveRijweg^.Rijweg^.Sein^.Van, false)+' naar '+
+			KlikpuntTekst(ActieveRijweg^.Rijweg^.Naar, false)+'.');
+	end else
+		Meetpunt^.OnterechtBezet := false;
+
+	// Sein op rood zetten en pending-status bijwerken.
+	if (ActieveRijweg^.Pending = 2) then begin
 		// Zet het sein op rood
 		SendMsg.SendSetSein(ActieveRijweg^.Rijweg^.Sein, 'r');
 		// En de-registreer het.
-      ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
+		ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
 		// Verplaats het treinnummer
 		VanMeetpunt := ActieveRijweg^.Rijweg^.Sein^.VanTNVMeetpunt;
 		NaarMeetpunt := ActieveRijweg^.Rijweg^.NaarTNVMeetpunt;
@@ -847,27 +956,59 @@ procedure TRijwegLogica.MarkeerVrij;
 var
 	ActieveRijweg: PvActieveRijwegLijst;
 	Wissel: PvWissel;
+	MeetpuntL, vMeetpuntL: PvMeetpuntLijst;
 	Tab: PTablist;
 begin
-	ActieveRijweg := PvActieveRijwegLijst(Meetpunt^.Rijwegonderdeel);
+	// Kijk of de bezet- en vrijmelding terecht was
+	if Meetpunt^.OnterechtBezet then
+		exit;
 
-	// Als het een ROZ-rijweg is, dan demarkeren we niks.
-	if assigned(ActieveRijweg) then
-		if ActieveRijweg^.ROZ then
-			exit;
+	// Terecht-controle hoeft niet, want vanwege fail-safe is een vrijmelding
+	// altijd terecht.
 
+	// Registratie als rijwegonderdeel opheffen
 	Meetpunt^.RijwegOnderdeel := nil;
+	Meetpunt^.Knipperen := false;
 	Wissel := EersteWissel(Core);
 	while assigned(Wissel) do begin
-		if Wissel^.Meetpunt = Meetpunt then begin
+		if Wissel^.Meetpunt = Meetpunt then
 			Wissel^.RijwegOnderdeel := nil;
-			Tab := Tabs;
-			while assigned(Tab) do begin
-				Tab^.Gleisplan.PaintWissel(Wissel);
-				Tab := Tab^.Volgende;
+		Wissel := VolgendeWissel(Wissel);
+	end;
+
+	// Kijken of dit meetpunt misschien alsnog geclaimd moet worden voor een
+	// voorliggende rijweg naar bezet spoor
+	ActieveRijweg := Core.vActieveRijwegen;
+	while assigned(ActieveRijweg) do begin
+		if ActieveRijweg^.ROZ then begin
+			vMeetpuntL := nil;
+			MeetpuntL := ActieveRijweg^.Rijweg^.Meetpunten;
+			while assigned(MeetpuntL) do begin
+				if (MeetpuntL^.Meetpunt = Meetpunt) then begin
+					if assigned(vMeetpuntL) and (vMeetpuntL^.Meetpunt^.RijwegOnderdeel = ActieveRijweg) then begin
+						// Dit meetpunt moeten we claimen.
+						MeetpuntL^.Meetpunt^.RijwegOnderdeel := ActieveRijweg;
+						Wissel := EersteWissel(Core);
+						while assigned(Wissel) do begin
+							if Wissel^.Meetpunt = MeetpuntL^.Meetpunt then
+								Wissel^.RijwegOnderdeel := ActieveRijweg;
+							Wissel := VolgendeWissel(Wissel);
+						end;
+					end;
+					break;
+				end;
+				vMeetpuntL := MeetpuntL;
+				MeetpuntL := MeetpuntL^.Volgende;
 			end;
 		end;
-		Wissel := VolgendeWissel(Wissel);
+		ActieveRijweg := ActieveRijweg^.Volgende;
+	end;
+
+	// Tekenen
+	Tab := Tabs;
+	while assigned(Tab) do begin
+		Tab^.Gleisplan.PaintMeetpunt(Meetpunt);
+		Tab := Tab^.Volgende;
 	end;
 
 	// Misschien kunnen we een pending-rijweg instellen
@@ -885,7 +1026,7 @@ begin
 		// Inactief en kruisings-hokjes resetten
 		Tab := Tabs;
 		while assigned(Tab) do begin
-			Tab^.Gleisplan.ResetMeetpunt(Wissel^.Meetpunt);
+			Tab^.Gleisplan.MeetpuntResetInactief(Wissel^.Meetpunt);
 			Tab := Tab^.Volgende;
 		end;
 		// En opnieuw instellen
@@ -907,47 +1048,21 @@ end;
 
 procedure TRijwegLogica.HerroepRijwegNu;
 var
-	MeetpuntLijst: PvMeetpuntLijst;
-	WisselStand:	PvWisselstand;
 	Tab:				PTabList;
 begin
-	// Alles de-claimen
-	MeetpuntLijst := ActieveRijweg^.Rijweg^.Meetpunten;
-	while assigned(MeetpuntLijst) do begin
-		if MeetpuntLijst^.Meetpunt^.RijwegOnderdeel = ActieveRijweg then begin
-			MeetpuntLijst^.Meetpunt^.RijwegOnderdeel := nil;
-			Tab := Tabs;
-			while assigned(Tab) do begin
-				Tab^.Gleisplan.ResetMeetpunt(MeetpuntLijst^.Meetpunt);
-				Tab^.Gleisplan.PaintMeetpunt(MeetpuntLijst^.Meetpunt);
-				Tab := Tab^.Volgende;
-			end;
-		end;
-		MeetpuntLijst := MeetpuntLijst^.Volgende;
-	end;
-	WisselStand := ActieveRijweg^.Rijweg^.Wisselstanden;
-	while assigned(WisselStand) do begin
-		if WisselStand^.Wissel^.RijwegOnderdeel = ActieveRijweg then begin
-			WisselStand^.Wissel^.RijwegOnderdeel := nil;
-			Tab := Tabs;
-			while assigned(Tab) do begin
-				Tab^.Gleisplan.PaintWissel(WisselStand^.Wissel);
-				Tab := Tab^.Volgende;
-			end;
-		end;
-		WisselStand := WisselStand^.Volgende;
-	end;
-	if assigned(ActieveRijweg^.Rijweg^.Erlaubnis) then
-		SendMsg.SendRichting(ActieveRijweg^.Rijweg^.Erlaubnis,
-			ActieveRijweg^.Rijweg^.Erlaubnisstand, rwRelease);
+	// Sein de-registreren
 	ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
-	// Sein weer normaal tonen
 	ActieveRijweg^.Rijweg^.Sein^.herroepen := false;
 	Tab := Tabs;
 	while assigned(Tab) do begin
 		Tab^.Gleisplan.PaintSein(ActieveRijweg^.Rijweg^.Sein);
 		Tab := Tab^.Volgende;
 	end;
+
+	// Eventueel een aankondiging van de voorgaande rijweg weer activeren
+	HeractiveerVoorgaandeAankondiging(ActieveRijweg^.Rijweg);
+
+	// Al het andere de-claimen komt als de rijweg wordt opgeruimd (delete).
 
 	// Misschien kan een overweg weer open
 	DoeOverwegen;
@@ -974,6 +1089,7 @@ begin
 		if ActieveRijweg^.Pending < 2 then begin
 			// Het sein staat nog niet op groen -> meteen herroepen.
 			HerroepRijwegNu(ActieveRijweg);
+			DeclaimRijweg(ActieveRijweg);
 			DeleteActieveRijweg(Core, ActieveRijweg);
 		end;
 		if ActieveRijweg^.Pending = 2 then begin
@@ -994,6 +1110,59 @@ begin
 	end;
 end;
 
+procedure TRijwegLogica.DeclaimRijweg;
+var
+	tmpActieveRijweg:	PvActieveRijwegLijst;
+	Tab:					PTablist;
+	MeetpuntLijst:		PvMeetpuntLijst;
+	WisselStand: 		PvWisselstand;
+	ReleaseRichtingMag: boolean;
+begin
+	// Van een eventuele rijrichting mag de voorvergrendeling nu worden
+	// opgeheven. We mogen dit alleen doen als een andere rijweg niet
+	// dezelfde rijrichting nodig heeft.
+	if assigned(ActieveRijweg^.Rijweg^.Erlaubnis) then begin
+		ReleaseRichtingMag := true;
+		tmpActieveRijweg := Core.vActieveRijwegen;
+		while assigned(tmpActieveRijweg) do begin
+			if (tmpActieveRijweg <> ActieveRijweg) and
+				(tmpActieveRijweg^.Rijweg^.Erlaubnis = ActieveRijweg^.Rijweg^.Erlaubnis) then
+				ReleaseRichtingMag := false;
+			tmpActieveRijweg := tmpActieveRijweg^.Volgende;
+		end;
+		if ReleaseRichtingMag then
+			SendMsg.SendRichting(ActieveRijweg^.Rijweg^.Erlaubnis,
+			ActieveRijweg^.Rijweg^.Erlaubnisstand, rwRelease);
+	end;
+	// Claims opheffen
+	MeetpuntLijst := ActieveRijweg^.Rijweg^.Meetpunten;
+	while assigned(MeetpuntLijst) do begin
+		if MeetpuntLijst^.Meetpunt^.RijwegOnderdeel = ActieveRijweg then begin
+			MeetpuntLijst^.Meetpunt^.RijwegOnderdeel := nil;
+			MeetpuntLijst^.Meetpunt^.Knipperen := false;
+			Tab := Tabs;
+			while assigned(Tab) do begin
+				Tab^.Gleisplan.MeetpuntResetKruis(MeetpuntLijst^.Meetpunt);
+				Tab^.Gleisplan.PaintMeetpunt(MeetpuntLijst^.Meetpunt);
+				Tab := Tab^.Volgende;
+			end;
+		end;
+		MeetpuntLijst := MeetpuntLijst^.Volgende;
+	end;
+	WisselStand := ActieveRijweg^.Rijweg^.Wisselstanden;
+	while assigned(WisselStand) do begin
+		if WisselStand^.Wissel^.RijwegOnderdeel = ActieveRijweg then begin
+			WisselStand^.Wissel^.RijwegOnderdeel := nil;
+			Tab := Tabs;
+			while assigned(Tab) do begin
+				Tab^.Gleisplan.PaintWissel(WisselStand^.Wissel);
+				Tab := Tab^.Volgende;
+			end;
+		end;
+		WisselStand := WisselStand^.Volgende;
+	end;
+end;
+
 // Deze functie doet alles met de actieve rijwegen.
 // - De meetpunten worden gemarkeerd, indien mogelijk
 // - De inactief-hokjes worden gekleurd
@@ -1008,15 +1177,13 @@ var
 	Tab:					PTablist;
 	MeetpuntLijst:		PvMeetpuntLijst;
 	meetpuntenvrij:	boolean;
+	meetpuntenrozok:	boolean;
 	WisselStand: 		PvWisselstand;
 	wisselsgoed:		boolean;
 	ErlaubnisGoed:		boolean;
 	Overweg:				PvOverweg;
 	OverwegenGoed:		boolean;
 	DoelseinGoed:		boolean;
-	Meetpunt:			PvMeetpunt;
-	Wissel:				PvWissel;
-	ReleaseRichtingMag: boolean;
 begin
 	// EERST kijken we of misschien de ene of andere rijweg klaar is en verwijderd
 	// kan worden.
@@ -1059,40 +1226,14 @@ begin
 			delete := true;
 			MeetpuntLijst := ActieveRijweg^.Rijweg^.Meetpunten;
 			while assigned(MeetpuntLijst) do begin
-				delete := delete and not MeetpuntLijst^.Meetpunt^.bezet;
+				delete := delete and ((MeetpuntLijst^.Meetpunt^.RijwegOnderdeel <>
+					ActieveRijweg) or not MeetpuntLijst^.Meetpunt^.bezet);
 				MeetpuntLijst := MeetpuntLijst^.Volgende;
 			end;
 		end;
 		if delete then begin
-			// De rijweg is helemaal afgewerkt. Van een eventuele rijrichting mag
-			// de voorvergrendeling nu worden opgeheven. We mogen dit alleen doen
-			// als een andere rijweg niet dezelfde rijrichting nodig heeft.
-			if assigned(ActieveRijweg^.Rijweg^.Erlaubnis) then begin
-				ReleaseRichtingMag := true;
-				tmpActieveRijweg := Core.vActieveRijwegen;
-				while assigned(tmpActieveRijweg) do begin
-					if (tmpActieveRijweg <> ActieveRijweg) and
-						(tmpActieveRijweg^.Rijweg^.Erlaubnis = ActieveRijweg^.Rijweg^.Erlaubnis) then
-						ReleaseRichtingMag := false;
-					tmpActieveRijweg := tmpActieveRijweg^.Volgende;
-				end;
-				if ReleaseRichtingMag then
-					SendMsg.SendRichting(ActieveRijweg^.Rijweg^.Erlaubnis,
-					ActieveRijweg^.Rijweg^.Erlaubnisstand, rwRelease);
-			end;
-			// Claims opheffen
-			Meetpunt := Core^.vAlleMeetpunten;
-			while assigned(Meetpunt) do begin
-				if Meetpunt^.RijwegOnderdeel = ActieveRijweg then
-					Meetpunt^.RijwegOnderdeel := nil;
-				Meetpunt := Meetpunt^.Volgende;
-			end;
-			Wissel := EersteWissel(Core);
-			while assigned(Wissel) do begin
-				if Wissel^.RijwegOnderdeel = ActieveRijweg then
-					Wissel^.RijwegOnderdeel := nil;
-				Wissel := VolgendeWissel(Wissel);
-			end;
+			DeclaimRijweg(ActieveRijweg);
+
 			// En vervolgens kunnen we de rijweg opruimen.
 			tmpActieveRijweg := ActieveRijweg^.Volgende;
 			DeleteActieveRijweg(Core, ActieveRijweg);
@@ -1138,12 +1279,17 @@ begin
 			// Kijken of alle meetpunten vrij zijn
 			if wisselsgoed and ErlaubnisGoed then begin
 				meetpuntenvrij := true;
+				meetpuntenrozok := true;
 				MeetpuntLijst := Rijweg^.Meetpunten;
 				while assigned(MeetpuntLijst) do begin
 					// Bezet vanwege aanwezigheid trein?
-					if MeetpuntLijst^.Meetpunt^.bezet then
-						meetpuntenvrij := false
-					else begin
+					if MeetpuntLijst^.Meetpunt^.bezet then begin
+						meetpuntenvrij := false;
+						// Bij een bezet meetpunt houden we meteen op. Het zou immers
+						// kunnen zijn dat we een rijweg naar bezet spoor instellen,
+						// dan moeten we niet na de al aanwezige trein verder claimen.
+						break;
+					end else begin
 						if not assigned(MeetpuntLijst^.Meetpunt^.RijwegOnderdeel) then begin
 							// Meetpunt is vrij. Claim het.
 							MeetpuntLijst^.Meetpunt^.RijwegOnderdeel := ActieveRijweg;
@@ -1159,17 +1305,33 @@ begin
 							end;
 						end else
 							// Bezet vanwege geclaimd door andere rijweg?
-							if (MeetpuntLijst^.Meetpunt^.RijwegOnderdeel <> ActieveRijweg) then
+							if (MeetpuntLijst^.Meetpunt^.RijwegOnderdeel <> ActieveRijweg) then begin
+								// Dan zijn de meetpunten niet vrij
 								meetpuntenvrij := false;
+								// Of rijden op zicht kan, hangt ervan af of die andere
+								// rijweg al vrijgereden is.
+								// Deze check is in elke situatie correct. Was de oude
+								// rijweg in dezelfde richting, dan is de voorwaarde
+								// per definitie vervuld. Is de oude rijweg in
+								// tegenovergestelde richting, dan niet per definitie.
+								tmpActieveRijweg := MeetpuntLijst^.Meetpunt^.RijwegOnderdeel;
+								meetpuntenrozok := tmpActieveRijweg^.Pending = 3;
+								break;
+							end;
 					end;
 					MeetpuntLijst := MeetpuntLijst^.Volgende;
 				end;
-			end else
+			end else begin
 				meetpuntenvrij := false;
+				meetpuntenrozok := false;
+			end;
 
 			// Als in principe alles OK is gaan we naar de volgende pending-status.
-			if (meetpuntenvrij or ActieveRijweg^.ROZ) and wisselsgoed and ErlaubnisGoed then
+			if (meetpuntenvrij or (ActieveRijweg^.ROZ and meetpuntenrozok)) and
+				wisselsgoed and ErlaubnisGoed then begin
+            ControleerAankondigingKnipperen(ActieveRijweg^.Rijweg);
 				ActieveRijweg.Pending := 1;
+			end;
 		end;
 		if ActieveRijweg.Pending = 1 then begin
 			// De rijweg is klaar en vergrendeld. Alleen moeten de overwegen nog
@@ -1368,6 +1530,10 @@ begin
 		Tab^.Gleisplan.PaintSein(Rijweg^.Sein);
 		Tab := Tab^.Volgende;
 	end;
+
+	// Deactiveer knipperende aankondigingssecties die niet meer nodig zijn nu
+	// deze rijweg ingesteld wordt
+	DeactiveerVoorgaandeAankondiging(Rijweg);
 
 	// En de meetpunten een eerste keertje proberen te claimen
 	DoeActieveRijwegen;

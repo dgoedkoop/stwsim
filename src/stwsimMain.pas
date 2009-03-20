@@ -29,7 +29,7 @@ type
     BlinkTimer: TTimer;
 	 SpoorPopup: TPopupMenu;
 	 Actions: TActionList;
-    SimOpenen: TAction;
+	 SimOpenen: TAction;
 	 Afsluiten: TAction;
     TreinInterpose: TAction;
     TreinBellen: TAction;
@@ -44,7 +44,7 @@ type
 	 Verhinderrijwegoverwissel1: TMenuItem;
 	 Bestand1: TMenuItem;
 	 Help1: TMenuItem;
-    Afsluiten1: TMenuItem;
+	 Afsluiten1: TMenuItem;
 	 SchermenTab: TTabControl;
 	 OpenDialog: TOpenDialog;
 	 Info1: TMenuItem;
@@ -60,14 +60,14 @@ type
 	 NNormalerijweg1: TMenuItem;
     Rijweg1: TMenuItem;
     ROZRijwegnaarbezetspoor1: TMenuItem;
-    ARijwegmetautomatischeseinen1: TMenuItem;
+	 ARijwegmetautomatischeseinen1: TMenuItem;
     HRijwegherroepen1: TMenuItem;
     TelefoonShow: TAction;
     Broadcast: TAction;
     Hulpmiddelen1: TMenuItem;
     vannaarPanel: TPanel;
     vanVeld: TLabel;
-    naarVeld: TLabel;
+	 naarVeld: TLabel;
     Splitter1: TSplitter;
     tijdLabel: TLabel;
 	 Button1: TButton;
@@ -90,8 +90,8 @@ type
     ToonToolsAction: TAction;
     ToolsPanel: TPanel;
     SpeedButton1: TSpeedButton;
-    Label1: TLabel;
-    SpeedTrack: TTrackBar;
+	 Label1: TLabel;
+	 SpeedTrack: TTrackBar;
     Label2: TLabel;
     Label3: TLabel;
 	 Hulpmiddelentonen1: TMenuItem;
@@ -113,7 +113,7 @@ type
     GameSaveDialog: TSaveDialog;
     BitBtn3: TBitBtn;
     SGOpenen: TAction;
-    SGSave: TAction;
+	 SGSave: TAction;
     Spelopslaanals1: TMenuItem;
     Wisselreparatie: TAction;
 	 procedure FormCreate(Sender: TObject);
@@ -242,9 +242,10 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 {$R *.DFM}
 
 {$R clientRes.res}
+{$R xpthemes.res}
 
 const
-	MagicCode = 'StwSim Client Beta 6';
+	MagicCode = 'StwSim Client Beta 7';
 
 procedure TstwsimMainForm.DoeStapje;
 begin
@@ -355,7 +356,7 @@ begin
 	CloseFile(f);
 
 	BerekenAankondigingen(vCore);
-	RijwegLogica.ZetRijwegInactieveHokjesOm;
+	BerekenRijwegenNaarSeinen(vCore);
 
 	UpdateChg.Schermaantal := true;
 	UpdateChg.Schermen := true;
@@ -409,6 +410,7 @@ begin
 	Tab^.Gleisplan.ShowSeinen := ShowDetails;
 	Tab^.Gleisplan.ShowSeinWisselNummers := ShowDetails;
 	Tab^.Gleisplan.ShowInactieveRichtingen := false;
+	Tab^.Gleisplan.OnbekendeWisselsKnipperen := false;
 	Tab^.Gleisplan.Visible := true;
 	Tab^.Volgende := nil;
 	l := RijwegLogica.Tabs;
@@ -767,8 +769,8 @@ begin
 		stwscProcesplanForm.DoeStapje;
 		stwscProcesplanForm.UpdateLijst;
 
-{		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
-			SendMsg.SendTreinMsg(stwscTreinStatusForm.treinnr, 'tsr');}
+		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
+			vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr);
 	end;
 end;
 
@@ -1035,7 +1037,7 @@ procedure TstwsimMainForm.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
 	CanClose := Application.MessageBox('Weet u zeker dat u StwSim wilt afsluiten?',
-		'Afsluiten', MB_ICONQUESTION+MB_YESNO) = mrYes;
+		'Afsluiten', MB_ICONWARNING+MB_YESNO) = mrYes;
 end;
 
 procedure TstwsimMainForm.LaatProcesplanZienExecute(Sender: TObject);
@@ -1263,6 +1265,8 @@ begin
 end;
 
 procedure TstwsimMainForm.PauzeActionExecute(Sender: TObject);
+var
+	Tab: PTablist;
 begin
 	if not gestart then begin
 		// Initialiseren
@@ -1275,6 +1279,12 @@ begin
 		// UI updaten.
 		DienstOpen.Enabled := false;
 
+		Tab := RijwegLogica.Tabs;
+		while assigned(Tab) do begin
+			Tab^.Gleisplan.OnbekendeWisselsKnipperen := true;
+			Tab := Tab^.Volgende;
+		end;
+
 		gestart := true;
 	end;
 
@@ -1285,6 +1295,7 @@ begin
 	if pauze then
 		PauzePanel.BringToFront;
 	DoorspoelAction.Enabled := not pauze;
+   telBtn.Enabled := not pauze;
 	tijdLabel.Caption := TijdStr(GetTijd, false);
 end;
 

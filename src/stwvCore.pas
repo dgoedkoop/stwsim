@@ -65,12 +65,15 @@ function ZoekPrlRijweg(core: PvCore; van, naar: string; dwang: byte): PvPrlRijwe
 function AddActieveRijweg(core: PvCore; Rijweg: PvRijweg; ROZ, Auto: boolean): PvActieveRijwegLijst;
 procedure DeleteActieveRijweg(core: PvCore; ActieveRijweg: PvActieveRijwegLijst);
 
+procedure SaveKruisingHokje(var f: file; KruisingHokje: PvKruisingHokje);
 procedure SaveSein(var f: file; Sein: PvSein);
 procedure LoadSein(var f: file; core: PvCore; Sein: PvSein);
 procedure SaveRijweg(var f: file; Rijweg: PvRijweg);
 procedure LoadRijweg(var f: file; core: PvCore; Rijweg: PvRijweg);
 procedure SavePrlRijweg(var f: file; PrlRijweg: PvPrlRijweg);
 procedure LoadPrlRijweg(var f: file; core: PvCore; PrlRijweg: PvPrlRijweg);
+procedure SaveSubroute(var f: file; Subroute: PvSubroute);
+procedure LoadSubroute(var f: file; core: PvCore; Subroute: PvSubroute);
 
 procedure SaveWisselStatus(var f: file; Core: PvCore);
 procedure LoadWisselStatus(var f: file; Core: PvCore);
@@ -80,6 +83,7 @@ procedure SaveThings(Core: PvCore; var f: file);
 
 procedure BerekenAankondigingen(Core: PvCore);
 procedure BerekenOnbekendAanwezig(Groep: PvWisselGroep);
+procedure BerekenRijwegenNaarSeinen(Core: PvCore);
 
 implementation
 
@@ -189,6 +193,7 @@ begin
 	mp^.Aank_Spoor := '';
 	mp^.Aank_Erlaubnis := nil;
 	mp^.Aank_Erlaubnisstand := 0;
+	mp^.Knipperen := false;
 	mp^.registered := false;
 	mp^.bezet := false;
 	mp^.RijwegOnderdeel := nil;
@@ -624,6 +629,18 @@ begin
 	dispose(ActieveRijweg);
 end;
 
+procedure SaveKruisingHokje;
+begin
+	intwrite(f, KruisingHokje^.schermID);
+	intwrite(f, KruisingHokje^.x);
+	intwrite(f, KruisingHokje^.y);
+	boolwrite(f, KruisingHokje^.RechtsonderKruisRijweg);
+	if assigned(KruisingHokje^.Meetpunt) then
+		stringwrite(f, KruisingHokje^.Meetpunt^.meetpuntID)
+	else
+		stringwrite(f, '');
+end;
+
 procedure SaveSein;
 var
 	wat: char;
@@ -681,7 +698,6 @@ var
 	wat: char;
 	Meetpunt: PvMeetpuntLijst;
 	Stand: PvWisselstand;
-	InactiefHokje: PvInactiefHokje;
 	KruisingHokje: PvKruisingHokje;
 begin
 	stringwrite(f, Rijweg^.Naar);
@@ -727,14 +743,7 @@ begin
 	KruisingHokje := Rijweg^.KruisingHokjes;
 	while assigned(KruisingHokje) do begin
 		blockwrite(f, wat, sizeof(wat));
-		intwrite(f, KruisingHokje^.schermID);
-		intwrite(f, KruisingHokje^.x);
-		intwrite(f, KruisingHokje^.y);
-		boolwrite(f, KruisingHokje^.RechtsonderKruisRijweg);
-		if assigned(KruisingHokje^.Meetpunt) then
-			stringwrite(f, KruisingHokje^.Meetpunt^.meetpuntID)
-		else
-			stringwrite(f, '');
+		SaveKruisingHokje(f, KruisingHokje);
 		KruisingHokje := KruisingHokje^.Volgende;
 	end;
 	wat := 'p';
@@ -779,14 +788,6 @@ begin
 				stringread(f, wisselnaam);
 				boolread(f, rechtdoor);
 				RijwegVoegWisselToe(Rijweg, ZoekWissel(Core, wisselnaam), rechtdoor);
-			end;
-			'i': begin
-				intread(f, schermID);
-				intread(f, x);
-				intread(f, y);
-				stringread(f, meetpuntnaam);
-				RijwegVoegInactiefHokjeToe(Rijweg, schermID, x, y,
-					ZoekMeetpunt(core, meetpuntnaam));
 			end;
 			'k': begin
 				intread(f, schermID);
@@ -843,6 +844,100 @@ begin
 	end;
 end;
 
+procedure SaveSubroute;
+var
+	wat: char;
+	KruisingHokje: PvKruisingHokje;
+	InactiefHokje: PvInactiefHokje;
+	Stand: PvWisselStand;
+begin
+	stringwrite(f, Subroute^.Meetpunt^.meetpuntID);
+	wat := 'w';
+	Stand := Subroute^.Wisselstanden;
+	while assigned(Stand) do begin
+		blockwrite(f, wat, sizeof(wat));
+		stringwrite(f, Stand^.Wissel^.WisselID);
+		boolwrite(f, Stand^.Rechtdoor);
+		Stand := Stand^.volgende;
+	end;
+	wat := 'k';
+	KruisingHokje := Subroute^.KruisingHokjes;
+	while assigned(KruisingHokje) do begin
+		blockwrite(f, wat, sizeof(wat));
+		SaveKruisingHokje(f, KruisingHokje);
+		KruisingHokje := KruisingHokje^.Volgende;
+	end;
+	wat := 'i';
+	InactiefHokje := Subroute^.EersteHokje;
+	while assigned(InactiefHokje) do begin
+		blockwrite(f, wat, sizeof(wat));
+		intwrite(f, InactiefHokje^.schermID);
+		intwrite(f, InactiefHokje^.x);
+		intwrite(f, InactiefHokje^.y);
+		InactiefHokje := InactiefHokje^.Volgende;
+	end;
+	wat := 'p';
+	blockwrite(f, wat, sizeof(wat));
+end;
+
+procedure LoadSubroute;
+var
+	wat: char;
+	meetpuntid: string;
+
+	WisselStanden:			PvWisselStand;
+	NieuweWisselstand:	PvWisselStand;
+	WisselNaam:				String;
+	KruisingHokjes:		PvKruisingHokje;
+	NieuwKruisingHokje:	PvKruisingHokje;
+	MeetpuntNaam:			String;
+	InactieveHokjes:		PvInactiefHokje;
+	NieuwInactiefHokje:	PvInactiefHokje;
+begin
+	stringread(f, meetpuntID);
+
+	WisselStanden := nil;
+	KruisingHokjes := nil;
+	InactieveHokjes := nil;
+	repeat
+		blockread(f, wat, sizeof(wat));
+		case wat of
+			'w': begin
+				new(NieuweWisselStand);
+				NieuweWisselstand^.Volgende := WisselStanden;
+				WisselStanden := NieuweWisselstand;
+				stringread(f, wisselnaam);	NieuweWisselStand^.Wissel := ZoekWissel(Core, Wisselnaam);
+				boolread(f, NieuweWisselstand^.Rechtdoor);
+			end;
+			'k': begin
+				new(NieuwKruisingHokje);
+				NieuwKruisingHokje^.volgende := KruisingHokjes;
+				KruisingHokjes := NieuwKruisingHokje;
+				intread(f, NieuwKruisingHokje^.schermID);
+				intread(f, NieuwKruisingHokje^.x);
+				intread(f, NieuwKruisingHokje^.y);
+				boolread(f, NieuwKruisingHokje^.RechtsonderKruisRijweg);
+				stringread(f, meetpuntnaam); NieuwKruisingHokje^.Meetpunt := ZoekMeetpunt(Core, Meetpuntnaam);
+			end;
+			'i': begin
+				new(NieuwInactiefHokje);
+				NieuwInactiefHokje^.volgende := InactieveHokjes;
+				InactieveHokjes := NieuwInactiefHokje;
+				intread(f, NieuwInactiefHokje^.schermID);
+				intread(f, NieuwInactiefHokje^.x);
+				intread(f, NieuwInactiefHokje^.y);
+			end;
+			'p': // niks
+			else
+				halt;	// bork
+		end;
+	until wat = 'p';
+	Subroute^.Meetpunt := ZoekMeetpunt(Core, MeetpuntID);
+	Subroute^.Wisselstanden := WisselStanden;
+	Subroute^.KruisingHokjes := KruisingHokjes;
+	Subroute^.EersteHokje := InactieveHokjes;
+end;
+
 procedure LoadThings;
 var
 	s, wm, wg: string;
@@ -850,6 +945,7 @@ var
 	basisstandrechtdoor: boolean;
 	klaar: boolean;
 	Sein: PvSein;
+	Subroute: PvSubroute;
 	Rijweg: PvRijweg;
 	PrlRijweg: PvPrlRijweg;
 	Overweg: PvOverweg;
@@ -858,7 +954,7 @@ begin
 	klaar := false;
 	while not klaar do begin
 		blockread(f, t, sizeof(t));
-		if (t <> 'p') and (t <> 'r') and (t <> 'l') and (t <> 's') then
+		if not (t in ['p','r','l','s','q']) then
 			stringread(f, s);
 		case t of
 			'm': AddMeetpunt(core, s);
@@ -893,6 +989,12 @@ begin
 					end;
 				until t = 'p';
 			end;
+			'q': begin
+				New(Subroute);
+				Subroute^.Volgende := Core.vAlleSubroutes;
+				Core.vAlleSubroutes := Subroute;
+				LoadSubroute(f, Core, Subroute);
+			end;
 			'r': begin
 				Rijweg := NieuweRijweg(core);
 				LoadRijweg(f, Core, Rijweg);
@@ -918,6 +1020,7 @@ var
 	zw: PvWissel;
 	zo: PvOverweg;
 	zml: PvMeetpuntLijst;
+	zq: PvSubroute;
 	zr: PvRijweg;
 	zprlr: PvPrlRijweg;
 begin
@@ -987,6 +1090,13 @@ begin
 		blockwrite(f, t, sizeof(t));
 		zo := zo^.Volgende;
 	end;
+	t := 'q';
+	zq := core.vAlleSubroutes;
+	while assigned(zq) do begin
+		blockwrite(f, t, sizeof(t));
+		SaveSubroute(f, zq);
+		zq := zq^.Volgende;
+	end;
 	t := 'r';
 	zr := core.vAlleRijwegen;
 	while assigned(zr) do begin
@@ -1039,6 +1149,26 @@ begin
 		Wissel := ZoekWissel(Core, WisselID);
 		byteread(f, wensstandnr);
 		Wissel^.WensStand := NrStand(wensstandnr);
+	end;
+end;
+
+procedure BerekenRijwegenNaarSeinen;
+var
+	Sein		: PvSein;
+	Rijweg	: PvRijweg;
+begin
+	Sein := Core^.vAlleSeinen;
+	while assigned(Sein) do begin
+		Rijweg := Core^.vAlleRijwegen;
+		Sein^.RijwegenNaarSeinBestaan := false;
+		while assigned(Rijweg) do begin
+			if Rijweg^.NaarSein = Sein then begin
+				Sein^.RijwegenNaarSeinBestaan := true;
+				break;
+			end;
+			Rijweg := Rijweg^.Volgende;
+		end;
+		Sein := Sein^.Volgende;
 	end;
 end;
 

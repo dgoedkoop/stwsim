@@ -20,7 +20,7 @@ object stwseMain: TstwseMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 261
+    Top = 253
     Width = 994
     Height = 3
     Cursor = crVSplit
@@ -30,14 +30,14 @@ object stwseMain: TstwseMain
     Left = 0
     Top = 0
     Width = 994
-    Height = 261
+    Height = 253
     Align = alClient
     TabOrder = 0
     OnChange = SchermenTabChange
   end
   object bottomPanel: TPanel
     Left = 0
-    Top = 264
+    Top = 256
     Width = 994
     Height = 237
     Align = alBottom
@@ -48,7 +48,7 @@ object stwseMain: TstwseMain
       Top = 0
       Width = 825
       Height = 237
-      ActivePage = algTab
+      ActivePage = rijwegTab
       Align = alClient
       Constraints.MinHeight = 193
       TabOrder = 0
@@ -2195,10 +2195,10 @@ object stwseMain: TstwseMain
           TabOrder = 1
           object Label18: TLabel
             Left = 8
-            Top = 16
-            Width = 154
+            Top = 96
+            Width = 158
             Height = 13
-            Caption = 'Geselecteerde rijweg bestaat uit:'
+            Caption = 'Overige elementen van de rijweg:'
           end
           object Label19: TLabel
             Left = 248
@@ -2407,7 +2407,7 @@ object stwseMain: TstwseMain
             Top = 64
             Width = 57
             Height = 21
-            GroupIndex = 3
+            GroupIndex = 2
             Caption = 'Wijzigen'
             OnClick = triggerChgButClick
           end
@@ -2417,6 +2417,13 @@ object stwseMain: TstwseMain
             Width = 36
             Height = 13
             Caption = 'Trigger:'
+          end
+          object Label8: TLabel
+            Left = 8
+            Top = 16
+            Width = 51
+            Height = 13
+            Caption = 'Subroutes:'
           end
           object rijwegVanEdit: TEdit
             Left = 304
@@ -2450,9 +2457,9 @@ object stwseMain: TstwseMain
           end
           object rijwegBestaatUit: TListBox
             Left = 8
-            Top = 32
+            Top = 112
             Width = 233
-            Height = 121
+            Height = 41
             TabStop = False
             ItemHeight = 13
             ParentColor = True
@@ -2516,6 +2523,49 @@ object stwseMain: TstwseMain
             Caption = 'Onbeveiligd spoor'
             TabOrder = 9
             OnClick = onbevCheckClick
+          end
+          object RijwegSubroutes: TListBox
+            Left = 8
+            Top = 32
+            Width = 201
+            Height = 57
+            ItemHeight = 13
+            TabOrder = 10
+            OnClick = RijwegSubroutesClick
+          end
+          object SubrouteUp: TBitBtn
+            Left = 216
+            Top = 32
+            Width = 23
+            Height = 23
+            TabOrder = 11
+            OnClick = SubrouteUpClick
+            Glyph.Data = {
+              F6000000424DF600000000000000760000002800000010000000100000000100
+              0400000000008000000000000000000000001000000000000000000000000000
+              8000008000000080800080000000800080008080000080808000C0C0C0000000
+              FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00DDDDDDDDDDDD
+              DDDDDDDDD000000DDDDDDDDDD0FFFF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0D
+              DDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0D
+              DDDDDD0000FBBF0000DDDD0FFFFBBFFFF0DDDDD0FFBBBBFF0DDDDDDD0FFBBFF0
+              DDDDDDDDD0FFFF0DDDDDDDDDDD0FF0DDDDDDDDDDDDD00DDDDDDD}
+          end
+          object SubrouteDown: TBitBtn
+            Left = 216
+            Top = 64
+            Width = 23
+            Height = 23
+            TabOrder = 12
+            OnClick = SubrouteDownClick
+            Glyph.Data = {
+              F6000000424DF600000000000000760000002800000010000000100000000100
+              0400000000008000000000000000000000001000000000000000000000000000
+              8000008000000080800080000000800080008080000080808000C0C0C0000000
+              FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00DDDDDDD00DDD
+              DDDDDDDDDD0FF0DDDDDDDDDDD0FFFF0DDDDDDDDD0FFBBFF0DDDDDDD0FFBBBBFF
+              0DDDDD0FFFFBBFFFF0DDDD0000FBBF0000DDDDDDD0FBBF0DDDDDDDDDD0FBBF0D
+              DDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0D
+              DDDDDDDDD0FFFF0DDDDDDDDDD000000DDDDDDDDDDDDDDDDDDDDD}
           end
         end
       end
@@ -2747,6 +2797,12 @@ object stwseMain: TstwseMain
     DefaultExt = 'sss'
     Filter = 'StwSim Server Simulatie|*.sss'
     Left = 144
+    Top = 40
+  end
+  object BlinkTimer: TTimer
+    Interval = 150
+    OnTimer = BlinkTimerTimer
+    Left = 176
     Top = 40
   end
 end

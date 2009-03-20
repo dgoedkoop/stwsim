@@ -9,8 +9,12 @@ Instellen van een rijweg:
 	niet alle wissels goed liggen, inclusief de gekoppelde wissels.
 3. Het sein kan niet op groen worden gezet (en ook niet op geel-knipper) als de
 	bijbehorende rijrichting niet kan worden geclaimd.
-4. Het sein kan niet op groen worden gezet (maar wel op geel-knipper) als
-	niet alle meetpunten vrij zijn die bij de rijweg behoren.
+4. Het sein kan niet op groen worden gezet (maar misschien wel op geel-knipper) als
+	niet alle meetpunten die bij de rijweg behoren vrij zijn en niet door een
+	andere rijweg zijn geclaimd.
+5. Het sein kan niet op geel-knipper worden gezet (en ook niet op groen) als het
+	eerste meetpunt dat bezet is of door een andere rijweg is geclaimd, niet bezet
+	is maar wel door een andere rijweg is geclaimd.
 
 Herroepen van een rijweg:
 1. Een rijweg blijft enige tijd (120 seconden) vergrendeld als de machinist

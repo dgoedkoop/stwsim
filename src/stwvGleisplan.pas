@@ -17,8 +17,11 @@ type
 		isseinen, isswnr: boolean;
 		isinactrichting: boolean;
 		blinkUit: boolean;
+		wisselblinkonbekend: boolean;
 		hokjes:		PvHokjesArray;
 		grimg: TPicture;
+		function GetWisselBlinkOnbekend: boolean;
+		procedure SetWisselBlinkOnbekend(waarde: boolean);
 		function GetMaxX: integer;
 		procedure SetMaxX(nmaxx: integer);
 		function GetMaxY: integer;
@@ -52,7 +55,8 @@ type
 		procedure PutLandschap(x,y: integer; grx,gry: integer);
 		procedure PutWissel(x,y: integer; grx,gry: integer; meetpunt: PvMeetpunt; wissel: PvWissel);
 		procedure MeetpuntGrensCorrectie(x,y: integer; var grx,gry: integer; meetpunt: PvMeetpunt);
-		procedure ResetMeetpunt(meetpunt: PvMeetpunt);
+		procedure MeetpuntResetInactief(meetpunt: PvMeetpunt);
+		procedure MeetpuntResetKruis(meetpunt: PvMeetpunt);
 		procedure PaintMeetpunt(meetpunt: PvMeetpunt);
 		procedure PaintWissel(wissel: PvWissel);
 		procedure PaintWisselGroep(Groep: PvWisselGroep);
@@ -68,6 +72,7 @@ type
 		procedure LoadInactieveEnKruisingHokjes(var f: file);
 	published
 		property KnipperGedoofd: boolean read GetBlinkUit write SetBlinkUit default false;
+		property OnbekendeWisselsKnipperen: boolean read GetWisselBlinkOnbekend write SetWisselBlinkOnbekend default true;
 		property MaxX: integer read GetMaxX write SetMaxX;
 		property MaxY: integer read GetMaxY write SetMaxY;
 		property ShowPointPositions: boolean read GetSPP write SetSPP default false;
@@ -163,6 +168,16 @@ begin
 	Constraints.MinHeight := (imaxy+1)*16;
 	Constraints.MaxHeight := Constraints.MinHeight;
 	Repaint;
+end;
+
+function TvGleisplan.GetWisselBlinkOnbekend;
+begin
+	result := wisselblinkonbekend;
+end;
+
+procedure TvGleisplan.SetWisselBlinkOnbekend;
+begin
+	wisselblinkonbekend := waarde;
 end;
 
 function TvGleisplan.GetSPP;
@@ -435,6 +450,12 @@ begin
 		end;
 		if ispp then
 			MeetpuntGrensCorrectie(x,y,grx, gry, Meetpunt);
+		if assigned(Meetpunt) and BlinkUit and not ispp and
+			not PvHokjeSpoor(Hokje.grdata)^.InactiefWegensRijweg then
+			if Meetpunt^.Knipperen then begin
+				grx := 0;
+				gry := 4;
+			end;
 		CopyPlaatje(x,y,grx,gry);
 	end else if Hokje.Soort = 3 then begin // SEIN
 		if isseinen then begin
@@ -479,20 +500,20 @@ begin
 		end;
 		// Wisselstand tonen
 		if ispp then
-			if not (PvHokjeWissel(Hokje.grdata)^.Wissel^.Stand = wsOnbekend) then begin
+			if PvHokjeWissel(Hokje.grdata)^.Wissel^.Stand <> wsOnbekend then begin
 				WisselShowStand := true;
 				WisselBlink := false;
 			end else begin
 				WisselShowStand := false;
-				WisselBlink := true;
+				WisselBlink := wisselblinkonbekend;
 			end
 		else
-			if not PvHokjeWissel(Hokje.grdata)^.Wissel^.Groep.OnbekendAanwezig then begin
+			if PvHokjeWissel(Hokje.grdata)^.Wissel^.Stand <> wsOnbekend then begin
 				WisselBlink := false;
 				WisselShowStand := assigned(PvHokjeWissel(Hokje.grdata)^.Wissel^.RijwegOnderdeel);
 			end else begin
 				WisselShowStand := false;
-				WisselBlink := true;
+				WisselBlink := wisselblinkonbekend;
 			end;
 
 		if WisselShowStand then begin
@@ -502,7 +523,12 @@ begin
 				grx := grx - 8
 		end;
 		if WisselBlink then
-			if blinkUit and (Wissel^.Groep^.OnbekendAanwezig) then begin
+			if blinkUit and (Wissel^.Stand = wsOnbekend) then begin
+				grx := 0;
+				gry := 4;
+			end;
+		if assigned(Meetpunt) and BlinkUit and not PvHokjeWissel(Hokje.grdata)^.InactiefWegensRijweg then
+			if Meetpunt^.Knipperen then begin
 				grx := 0;
 				gry := 4;
 			end;
@@ -550,13 +576,19 @@ begin
 	for x := 0 to imaxx do
 		for y := 0 to imaxy do begin
 			Hokje := Hokjes^[y*(imaxx+1)+x];
+			if Hokje.Soort = 1 then
+				if assigned(PvHokjeSpoor(Hokje.grdata)^.Meetpunt) then
+					if PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.Knipperen then
+						PaintHokje(x,y);
 			if Hokje.Soort = 3 then
 				if assigned(PvHokjeSein(Hokje.grdata)^.Sein) then
 					if PvHokjeSein(Hokje.grdata)^.Sein^.herroepen
 					or (PvHokjeSein(Hokje.grdata)^.Sein^.Stand_wens = 'gk' )then
 						PaintHokje(x,y);
 			if Hokje.Soort = 5 then
-				if PvHokjeWissel(Hokje.grdata)^.Wissel^.Groep^.OnbekendAanwezig then
+				if (PvHokjeWissel(Hokje.grdata)^.Wissel^.Stand = wsOnbekend) or
+					(assigned(PvHokjeWissel(Hokje.grdata)^.Wissel^.Meetpunt) and
+					PvHokjeWissel(Hokje.grdata)^.Wissel^.Meetpunt^.Knipperen) then
 					PaintHokje(x,y);
 		end;
 end;
@@ -717,7 +749,7 @@ begin
 	hokjes^[y*(imaxx+1)+x] := hokje;
 end;
 
-procedure TvGleisplan.ResetMeetpunt;
+procedure TvGleisplan.MeetpuntResetInactief;
 var
 	x,y: integer;
 	Hokje: TvHokje;
@@ -726,14 +758,25 @@ begin
 		for y := 0 to imaxy do begin
 			Hokje := Hokjes^[y*(imaxx+1)+x];
 			if Hokje.Soort = 1 then
-				if PvHokjeSpoor(Hokje.grdata)^.Meetpunt = Meetpunt then begin
+				if PvHokjeSpoor(Hokje.grdata)^.Meetpunt = Meetpunt then
 					PvHokjeSpoor(Hokje.grdata)^.InactiefWegensRijweg := false;
-					PvHokjeSpoor(Hokje.grdata)^.RechtsonderKruisRijweg := 0;
-				end;
 			if Hokje.Soort = 5 then
-				if PvHokjeWissel(Hokje.grdata)^.Meetpunt = Meetpunt then begin
+				if PvHokjeWissel(Hokje.grdata)^.Meetpunt = Meetpunt then
 					PvHokjeWissel(Hokje.grdata)^.InactiefWegensRijweg := false;
-				end;
+		end;
+end;
+
+procedure TvGleisplan.MeetpuntResetKruis;
+var
+	x,y: integer;
+	Hokje: TvHokje;
+begin
+	for x := 0 to imaxx do
+		for y := 0 to imaxy do begin
+			Hokje := Hokjes^[y*(imaxx+1)+x];
+			if Hokje.Soort = 1 then
+				if PvHokjeSpoor(Hokje.grdata)^.Meetpunt = Meetpunt then
+					PvHokjeSpoor(Hokje.grdata)^.RechtsonderKruisRijweg := 0;
 		end;
 end;
 

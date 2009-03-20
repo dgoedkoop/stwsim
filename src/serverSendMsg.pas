@@ -3,7 +3,7 @@ unit serverSendMsg;
 interface
 
 uses lists, stwpMeetpunt, stwpSeinen, stwpRails, stwpTreinen, stwpOverwegen,
-	stwsimComm;
+	stwsimComm, stwpDatatypes;
 
 const
 	LF = #$0A;
@@ -21,7 +21,16 @@ type
 		procedure SendWisselMsg(Wissel: PpWissel);
 		procedure SendSeinMsg(Sein: PpSein);
 		procedure SendOverwegMsg(Overweg: PpOverweg);
-		procedure SendMsgVanTrein(Trein: Pptrein; s: string);
+
+		procedure SendBel(van: PpTrein); overload;
+		procedure SendBel(van: string); overload;
+		procedure SendOpnemen(van: PpTrein); overload;
+		procedure SendOpnemen(van: string); overload;
+		procedure SendOphangen(van: PpTrein); overload;
+		procedure SendOphangen(van: string); overload;
+		procedure SendMsg(van: PpTrein; soort: TpMsgSoort; s: string); overload;
+		procedure SendMsg(van: string; soort: TpMsgSoort; s: string); overload;
+
 		procedure SendDefectSeinMsg(Sein: PpSein; seinbeeldDefect: TSeinbeeld);
 		procedure SendPlainString(s: string);
 	end;
@@ -71,12 +80,16 @@ procedure TpSendMsg.SendWisselMsg;
 begin
 	if not Wissel^.veranderd then exit;
 	Wissel^.Veranderd := false;
-	if Wissel^.stand_aftakkend <> Wissel^.nw_aftakkend then
-		SendPlainString('w:'+Wissel^.w_naam+',u')
-	else if Wissel^.stand_aftakkend then
-		SendPlainString('w:'+Wissel^.w_naam+',a')
+	case Wissel^.defect of
+	wdHeel:
+		case Wissel^.stand of
+		wsRechtdoor: SendPlainString('w:'+Wissel^.w_naam+',r');
+		wsAftakkend: SendPlainString('w:'+Wissel^.w_naam+',a');
+		wsOnbekend: SendPlainString('w:'+Wissel^.w_naam+',u')
+		end;
 	else
-		SendPlainString('w:'+Wissel^.w_naam+',r');
+		SendPlainString('w:'+Wissel^.w_naam+',u')
+	end;
 end;
 
 procedure TpSendMsg.SendSeinMsg;
@@ -104,13 +117,70 @@ begin
 		SendPlainString('o:'+Overweg^.Naam+',s');
 end;
 
-procedure TpSendMsg.SendMsgVanTrein;
+procedure TpSendMsg.SendBel(van: PpTrein);
 var
 	Meetpunt: PpMeetpunt;
 begin
-	Meetpunt := Trein^.pos_rail^.meetpunt;
+	Meetpunt := Van^.pos_rail^.meetpunt;
 	if not assigned(Meetpunt) then exit;
-	SendPlainString('mmsg:'+Trein^.Treinnummer+','+s);
+	SendPlainString('comm_bel:t,'+Van^.Treinnummer);
+end;
+
+procedure TpSendMsg.SendBel(van: string);
+begin
+	SendPlainString('comm_bel:r');
+end;
+
+procedure TpSendMsg.SendOpnemen(van: PpTrein);
+var
+	Meetpunt: PpMeetpunt;
+begin
+	Meetpunt := Van^.pos_rail^.meetpunt;
+	if not assigned(Meetpunt) then exit;
+	SendPlainString('comm_opn:t,'+Van^.Treinnummer);
+end;
+
+procedure TpSendMsg.SendOpnemen(van: string);
+begin
+	SendPlainString('comm_opn:r');
+end;
+
+procedure TpSendMsg.SendOphangen(van: PpTrein);
+var
+	Meetpunt: PpMeetpunt;
+begin
+	Meetpunt := Van^.pos_rail^.meetpunt;
+	if not assigned(Meetpunt) then exit;
+	SendPlainString('comm_oph:t,'+Van^.Treinnummer);
+end;
+
+procedure TpSendMsg.SendOphangen(van: string);
+begin
+	SendPlainString('comm_oph:r');
+end;
+
+procedure TpSendMsg.SendMsg(Van: PpTrein; soort: TpMsgSoort; s: string);
+var
+	Meetpunt: PpMeetpunt;
+begin
+	Meetpunt := Van^.pos_rail^.meetpunt;
+	if not assigned(Meetpunt) then exit;
+	case soort of
+	pmsStoptonend:	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',r,'+s);
+	pmsSTSpassage:	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',sts,'+s);
+	pmsVraagOK:		SendPlainString('comm_msg:t,'+Van^.Treinnummer+',ok,'+s);
+	pmsTreinOpdracht:		SendPlainString('comm_msg:t,'+Van^.Treinnummer+',tact,'+s);
+	pmsInfo:			SendPlainString('comm_msg:t,'+Van^.Treinnummer+',i,'+s);
+	end;
+end;
+
+procedure TpSendMsg.SendMsg(van: string; soort: TpMsgSoort; s: string);
+begin
+	case soort of
+	pmsMonteurOpdracht:	SendPlainString('comm_msg:r,mact,'+s);
+	pmsVraagOK:		SendPlainString('comm_msg:r,ok,'+s);
+	pmsInfo:			SendPlainString('comm_msg:r,i,'+s);
+	end;
 end;
 
 end.
