@@ -21,6 +21,7 @@ type
 		vAllePrlRijwegen:		PvPrlRijweg;
 		vAlleBinnenkomendeGesprekken:	PvBinnenkomendGesprek;
 		vAlleSubroutes:		PvSubroute;
+		vFlankbeveiliging:	PvFlankbeveiliging;
 		vScore:					TScoreInfo;
 		pauze:					boolean;
 		Tijd_u, Tijd_m, Tijd_s: integer;
@@ -56,6 +57,9 @@ procedure DeleteWissel(core: PvCore; naam: string);
 
 function EersteWissel(core: PvCore): PvWissel;
 function VolgendeWissel(wissel: PvWissel): PvWissel;
+
+function AddFlankbeveiliging(core: PvCore; onafhWissel: PvWissel; onafhStand: TWisselStand;
+	afhWissel: PvWissel; afhStand: TWisselStand; Soort: TWisselstandType): PvFlankbeveiliging;
 
 function NieuweRijweg(core: PvCore): PvRijweg;
 function ZoekRijweg(core: PvCore; van, naar: string): PvRijweg;
@@ -119,6 +123,7 @@ begin
 	Core^.vAlleOverwegen := nil;
 	Core^.vAlleSubroutes := nil;
 	Core^.vAlleBinnenkomendeGesprekken := nil;
+	Core^.vFlankbeveiliging := nil;
 end;
 
 function AddSubroute;
@@ -502,6 +507,28 @@ begin
 			result := Wissel^.Groep^.Volgende^.EersteWissel
 		else
 			result := nil;
+end;
+
+function AddFlankbeveiliging;
+var
+	f, l: PvFlankbeveiliging;
+begin
+	new(f);
+	f^.Soort := Soort;
+	f^.OnafhWissel := onafhWissel;
+	f^.OnafhStand := onafhStand;
+	f^.AfhWissel := afhWissel;
+	f^.AfhStand := afhStand;
+	f^.volgende := nil;
+	l := Core.vFlankbeveiliging;
+	if not assigned(l) then
+		Core.vFlankbeveiliging := f
+	else begin
+		while assigned(l^.volgende) do
+			l := l^.volgende;
+		l^.volgende := f;
+	end;
+	result := f;
 end;
 
 function NieuweRijweg;
@@ -938,8 +965,29 @@ begin
 	Subroute^.EersteHokje := InactieveHokjes;
 end;
 
+(* In gebruik zijnde kenletters:
+
+e = Erlaubnis = Rijrichting
+f = Flankbeveiliging = Eis-/Verzoekwissel
+l = Procesleiding-rijweg
+m = Meetpunt
+o = Overweg
+p = <Klaar>
+q = Subroute
+r = Rijweg
+s = Sein
+w = Wissel
+
+*)
+
 procedure LoadThings;
 var
+	// voor flankbeveiliging
+	onhwid, afhwid: string;
+	onhw, afhw: PvWissel;
+	onhs, afhs: byte;
+	evsoort: byte;
+	// rest
 	s, wm, wg: string;
 	t: char;
 	basisstandrechtdoor: boolean;
@@ -954,7 +1002,7 @@ begin
 	klaar := false;
 	while not klaar do begin
 		blockread(f, t, sizeof(t));
-		if not (t in ['p','r','l','s','q']) then
+		if not (t in ['p','r','l','s','q','f']) then
 			stringread(f, s);
 		case t of
 			'm': AddMeetpunt(core, s);
@@ -968,6 +1016,19 @@ begin
 				stringread(f, wg);
 				boolread(f, basisstandrechtdoor);
 				AddWissel(core, s, wm, wg, basisstandrechtdoor);
+			end;
+			'f': begin
+				byteread(f, evSoort);
+				stringread(f, onhwid);
+				byteread(f, onhs);
+				stringread(f, afhwid);
+				byteread(f, afhs);
+				onhw := ZoekWissel(core, onhwid);
+				afhw := ZoekWissel(core, afhwid);
+				if not assigned(onhw) then halt; // bork
+				if not assigned(afhw) then halt; // bork
+				AddFlankbeveiliging(core, onhw, NrStand(onhs), afhw, NrStand(afhs),
+					NrStandType(evSoort));
 			end;
 			'o': begin
 				Overweg := AddOverweg(core, s);
@@ -1018,6 +1079,7 @@ var
 	zs: PvSein;
 	zwg: PvWisselGroep;
 	zw: PvWissel;
+	zf: PvFlankbeveiliging;
 	zo: PvOverweg;
 	zml: PvMeetpuntLijst;
 	zq: PvSubroute;
@@ -1066,6 +1128,17 @@ begin
 			zw := zw^.volgende;
 		end;
 		zwg := zwg^.volgende;
+	end;
+	t := 'f';
+	zf := core.vFlankbeveiliging;
+	while assigned(zf) do begin
+		blockwrite(f, t, sizeof(t));
+		bytewrite(f, StandTypeNr(zf^.Soort));
+		stringwrite(f, zf^.OnafhWissel^.WisselID);
+		bytewrite(f, StandNr(zf^.OnafhStand));
+		stringwrite(f, zf^.AfhWissel^.WisselID);
+		bytewrite(f, StandNr(zf^.AfhStand));
+		zf := zf^.volgende;
 	end;
 	zo := core.vAlleOverwegen;
 	while assigned(zo) do begin

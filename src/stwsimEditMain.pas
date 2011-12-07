@@ -19,6 +19,7 @@ type
 		Erlaubnisse: boolean;
 		Seinen: boolean;
 		Wissels: boolean;
+		evWissels: boolean;
 		Overweg: boolean;
 		Overwegen: boolean;
 		Rijwegen: boolean;
@@ -46,13 +47,6 @@ type
     mtab: TTabSheet;
     ovTab: TTabSheet;
 	 wTab: TTabSheet;
-    Label3: TLabel;
-	 Label4: TLabel;
-	 wdBut: TButton;
-    wtBut: TButton;
-    wnEdit: TEdit;
-	 wList: TListBox;
-	 wmBox: TComboBox;
 	 gplTab: TTabSheet;
 	 tsBut: TButton;
 	 nsEdit: TEdit;
@@ -132,9 +126,6 @@ type
     Panel1: TPanel;
 	 eDownBut: TRadioButton;
 	 eUpBut: TRadioButton;
-	 wgBox: TComboBox;
-    Label28: TLabel;
-    basisRechtdoor: TCheckBox;
     SpeedButton40: TSpeedButton;
     SpeedButton41: TSpeedButton;
     textBox: TGroupBox;
@@ -244,6 +235,36 @@ type
     SubrouteUp: TBitBtn;
     SubrouteDown: TBitBtn;
     BlinkTimer: TTimer;
+    wGroup: TGroupBox;
+    wdBut: TButton;
+    wtBut: TButton;
+    basisRechtdoor: TCheckBox;
+    wmBox: TComboBox;
+    wgBox: TComboBox;
+    wnEdit: TEdit;
+    Label3: TLabel;
+    Label28: TLabel;
+    Label4: TLabel;
+    wList: TListBox;
+    evwGroup: TGroupBox;
+    onafhCombo: TComboBox;
+    afhCombo: TComboBox;
+    evwdBut: TButton;
+    evwtBut: TButton;
+    evwList: TListBox;
+    Label9: TLabel;
+    Label10: TLabel;
+    Label37: TLabel;
+    rechtschuincheck: TCheckBox;
+    Panel2: TPanel;
+    onafhRechtBox: TRadioButton;
+    onafhAftBox: TRadioButton;
+    Panel3: TPanel;
+    afhRechtBox: TRadioButton;
+    afhAftBox: TRadioButton;
+    Panel4: TPanel;
+    eisBox: TRadioButton;
+    verzoekBox: TRadioButton;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -352,6 +373,10 @@ type
 	 procedure SubrouteUpClick(Sender: TObject);
 	 procedure SubrouteDownClick(Sender: TObject);
 	 procedure BlinkTimerTimer(Sender: TObject);
+    procedure evwtButClick(Sender: TObject);
+    procedure onafhComboChange(Sender: TObject);
+    procedure afhComboChange(Sender: TObject);
+    procedure evwdButClick(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab: 	PTabList;
@@ -370,6 +395,8 @@ type
 		selErlaubnis:	PvErlaubnis;
 		selSein:			PvSein;
 		selWissel:		PvWissel;
+		selOnafhWissel:PvWissel;
+		selAfhWissel:	PvWissel;
 		selOverweg:		PvOverweg;
 		selRijweg:		PvRijweg;
 		selPrlRijweg:	PvPrlRijweg;
@@ -399,7 +426,7 @@ uses stwsimClientEditInfo;
 {$R *.DFM}
 
 const
-	MagicCode = 'StwSim Client Beta 7';
+	MagicCode = 'StwSim Client Beta 8';
 
 procedure TstwseMain.UpdateSubrouteUpDownCtls;
 begin
@@ -414,6 +441,7 @@ var
 	Sein:			PvSein;
 	WisselGroep:PvWisselGroep;
 	Wissel:		PvWissel;
+	evWissel:	PvFlankbeveiliging;
 	Tab:			PTablist;
 	Rijweg:		PvRijweg;
 	Erlaubnis:	PvErlaubnis;
@@ -423,6 +451,7 @@ var
 	PrlrDesc:	string;
 	sel: 			string;
 	wsk, wsl:	string;
+	evwDesc:		string;
 	i,j: 			integer;
 	Hokje:			TvHokje;
 	InactiefHokje:	PvInactiefHokje;
@@ -558,6 +587,14 @@ begin
 					wElBox.Items[i] := wsk
 				else
 					wElBox.Items.Add(wsk);
+				if onafhCombo.Items.Count-1 >= i then
+					onafhCombo.Items[i] := wsk
+				else
+					onafhCombo.Items.Add(wsk);
+				if afhCombo.Items.Count-1 >= i then
+					afhCombo.Items[i] := wsk
+				else
+					afhCombo.Items.Add(wsk);
 				i := i + 1;
 				Wissel := Wissel.Volgende;
 			end;
@@ -569,8 +606,47 @@ begin
 			wgBox.Items.Delete(wgBox.Items.Count-1);
 		while wElBox.Items.Count-1 >= i do
 			wElBox.Items.Delete(wElBox.Items.Count-1);
+		while onafhCombo.Items.Count-1 >= i do
+			onafhCombo.Items.Delete(onafhCombo.Items.Count-1);
+		while afhCombo.Items.Count-1 >= i do
+			afhCombo.Items.Delete(afhCombo.Items.Count-1);
 		selWissel := nil;
 		UpdateChg.Wissels := false;
+	end;
+	if UpdateChg.evWissels then begin
+		modified := true; Openen.Enabled := false;
+		i := 0;
+		evWissel := Core.vFlankbeveiliging;
+		while assigned(evWissel) do begin
+			// Tekst berekenen
+			evwDesc := evWissel^.OnafhWissel^.WisselID;
+			if evWissel^.OnafhStand = wsRechtdoor then
+				evwDesc := evwDesc + ' (r) '
+			else if evWissel^.OnafhStand = wsAftakkend then
+				evwDesc := evwDesc + ' (a) ';
+			if evWissel^.Soort = ftEis then
+				evwDesc := evwDesc + ' eist '
+			else if evWissel^.Soort = ftVerzoek then
+				evwDesc := evwDesc + ' verzoekt ';
+			evwDesc := evwDesc + evWissel^.AfhWissel^.WisselID;
+			if evWissel^.AfhStand = wsRechtdoor then
+				evwDesc := evwDesc + ' (r) '
+			else if evWissel^.AfhStand = wsAftakkend then
+				evwDesc := evwDesc + ' (a) ';
+			// En instellen
+			if evwList.Items.Count-1 >= i then
+				evwList.Items[i] := evwDesc
+			else
+				evwList.Items.Add(evwDesc);
+			evWissel := evWissel.Volgende;
+			i := i + 1;
+		end;
+		while evwList.Items.Count-1 >= i do
+			evwList.Items.Delete(evwList.Items.Count-1);
+
+		selOnafhWissel := nil;
+		selAfhWissel := nil;
+		UpdateChg.evWissels := false;
 	end;
 	if UpdateChg.Schermaantal then begin
 		modified := true; Openen.Enabled := false;
@@ -1034,6 +1110,7 @@ begin
 	UpdateChg.Meetpunten := false;
 	UpdateChg.Seinen := false;
 	UpdateChg.Wissels := false;
+	UpdateChg.evWissels := false;
 	UpdateChg.Schermaantal := false;
 	UpdateChg.Schermen := false;
 	UpdateControls;
@@ -1342,7 +1419,7 @@ begin
 					ep := 1
 				else
 					ep := 0;
-				Gleisplan^.PutWissel(gselx,gsely,p_gix,p_giy+ep, selWissel^.Meetpunt, selWissel);
+				Gleisplan^.PutWissel(gselx,gsely,p_gix,p_giy+ep, selWissel^.Meetpunt, selWissel, rechtschuincheck.checked);
 				Gleisplan^.PaintHokje(gselx, gsely);
 			end;
 		6: begin		// Plaats rijrichting-driehoekje
@@ -1939,25 +2016,26 @@ begin
 				GetScherm(schermID).Gleisplan.LoadPlan(f);
 			end;
 		until schermID = 0;
+
+		UpdateChg.Infra := true;
+		UpdateChg.Meetpunten := true;
+		UpdateChg.Erlaubnisse := true;
+		UpdateChg.Seinen := true;
+		UpdateChg.Wissels := true;
+		UpdateChg.evWissels := true;
+		UpdateChg.Overweg := true;
+		UpdateChg.Overwegen := true;
+		UpdateChg.Schermaantal := true;
+		UpdateChg.Schermen := true;
+		UpdateChg.Rijwegen := true;
+		UpdateChg.Rijweg := true;
+		UpdateChg.PrlRijwegen := true;
+		UpdateChg.PrlRijweg := true;
+		UpdateControls;
+
+		modified := false;
+		Openen.Enabled := false;
 	end;
-
-	UpdateChg.Infra := true;
-	UpdateChg.Meetpunten := true;
-	UpdateChg.Erlaubnisse := true;
-	UpdateChg.Seinen := true;
-	UpdateChg.Wissels := true;
-	UpdateChg.Overweg := true;
-	UpdateChg.Overwegen := true;
-	UpdateChg.Schermaantal := true;
-	UpdateChg.Schermen := true;
-	UpdateChg.Rijwegen := true;
-	UpdateChg.Rijweg := true;
-	UpdateChg.PrlRijwegen := true;
-	UpdateChg.PrlRijweg := true;
-	UpdateControls;
-
-	modified := false;
-	Openen.Enabled := false;
 end;
 
 procedure TstwseMain.exitActExecute(Sender: TObject);
@@ -2723,6 +2801,119 @@ procedure TstwseMain.BlinkTimerTimer(Sender: TObject);
 begin
 	if assigned(VisibleTab) then
 		VisibleTab^.Gleisplan.KnipperGedoofd := not VisibleTab^.Gleisplan.KnipperGedoofd;
+end;
+
+procedure TstwseMain.evwtButClick(Sender: TObject);
+var
+	evStand:		PvFlankbeveiliging;
+	found:		boolean;
+	onafhStand:	TWisselStand;
+	afhStand:	TWisselStand;
+	soort:		TWisselstandType;
+begin
+	onafhStand := wsOnbekend;
+	afhStand := wsOnbekend;
+
+	if onafhRechtBox.Checked then onafhStand := wsRechtdoor
+	else if onafhAftBox.Checked then onafhStand := wsAftakkend;
+	if afhRechtBox.Checked then afhStand := wsRechtdoor
+	else if afhAftBox.Checked then afhStand := wsAftakkend;
+
+	if eisBox.Checked then
+		soort := ftEis
+	else if verzoekBox.Checked then
+		soort := ftVerzoek
+	else begin
+		Application.MessageBox('Er is niet ingevuld of dit een eiswissel of verzoekwissel is.','Foutmelding',MB_ICONEXCLAMATION);
+		exit;
+	end;
+
+	if not assigned(selOnafhWissel) then begin
+		Application.MessageBox('Er is geen onafhankelijke wissel ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+		exit;
+	end;
+	if onafhStand = wsOnbekend then begin
+		Application.MessageBox('Er is geen onafhankelijke wisselstand ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+		exit;
+	end;
+	if not assigned(selAfhWissel) then begin
+		Application.MessageBox('Er is geen afhankelijke wissel ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+		exit;
+	end;
+	if afhStand = wsOnbekend then begin
+		Application.MessageBox('Er is geen afhankelijke wisselstand ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+		exit;
+	end;
+
+	found := false;
+	evStand := Core.vFlankbeveiliging;
+	while assigned(evStand) do begin
+		if ((evStand^.OnafhWissel^.WisselID = selOnafhWissel^.WisselID) and
+			(evStand^.AfhWissel^.WisselID = selAfhWissel^.WisselID) and (
+			(evStand^.OnafhStand = onafhStand) or
+			(evStand^.AfhStand = afhStand)
+			)) then
+			found := true;
+		evStand := evStand^.Volgende;
+	end;
+	if found then begin
+		Application.MessageBox('Voor deze combinatie is al een eis ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+		exit;
+	end;
+
+	AddFlankbeveiliging(@Core, selOnafhWissel, onafhStand, selAfhWissel, afhStand, soort);
+
+	onafhCombo.ItemIndex := -1;
+	onafhRechtBox.Checked := true;
+	afhCombo.ItemIndex := -1;
+	afhRechtBox.Checked := true;
+	eisBox.Checked := true;
+	UpdateChg.evWissels := true;
+	UpdateControls;
+end;
+
+procedure TstwseMain.onafhComboChange(Sender: TObject);
+var
+	i: integer;
+begin
+	selOnafhWissel := EersteWissel(@Core);
+	for i := 1 to onafhCombo.ItemIndex do
+		selOnafhWissel := VolgendeWissel(selOnafhWissel);
+end;
+
+procedure TstwseMain.afhComboChange(Sender: TObject);
+var
+	i: integer;
+begin
+	selAfhWissel := EersteWissel(@Core);
+	for i := 1 to afhCombo.ItemIndex do
+		selAfhWissel := VolgendeWissel(selAfhWissel);
+end;
+
+procedure TstwseMain.evwdButClick(Sender: TObject);
+var
+	vEvWissel:		PvFlankbeveiliging;
+	EvWissel:		PvFlankbeveiliging;
+	i, j: integer;
+begin
+	for i := evwList.Items.Count-1 downto 0 do
+		if evwList.Selected[i] then begin
+			vEvWissel := nil;
+			EvWissel := Core.vFlankbeveiliging;
+			for j := 0 to i-1 do begin
+				vEvWissel := EvWissel;
+				EvWissel := EvWissel.Volgende;
+			end;
+
+			if assigned(vEvWissel) then
+				vEvWissel.Volgende := EvWissel.Volgende
+			else
+				Core.vFlankbeveiliging := EvWissel.Volgende;
+
+			dispose(evWissel);
+		end;
+	UpdateChg.evWissels := true;
+	UpdateControls;
 end;
 
 end.

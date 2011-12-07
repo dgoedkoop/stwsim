@@ -97,8 +97,12 @@ begin
 	if not assigned(Subroute) then
 		Subroute := RijwegLogica.CreateSubrouteFrom(Meetpunt);
 
-	if not assigned(Subroute) then
-		Application.MessageBox('Interne fout: subroute niet gevonden, maar kon ook niet gemaakt worden?','Fout',0);
+	// Als niet gevonden werd en ook niet gemaakt kan worden, dan komt dat
+	// doordat de subroute geen wissels of kruisingen zou hebben en dus totaal
+	// nutteloos zou zijn.
+
+//	if not assigned(Subroute) then
+//		Application.MessageBox('Interne fout: subroute niet gevonden, maar kon ook niet gemaakt worden?','Fout',0);
 
 	result := subroute;
 end;

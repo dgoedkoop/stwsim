@@ -10,6 +10,7 @@ uses lists, stwpCore, serverSendMsg, stwpSeinen, stwpMeetpunt,
 const
 	LF = #$0A;
 	serverversie = '0.3';
+	unknowntrainerror = 'unknown train';
 
 type
 	PpReadMsg = ^TpReadMsg;
@@ -265,10 +266,8 @@ begin
 					not tmpErlaubnis^.voorvergendeld) then begin
 					// We gaan een rijrichting claimen. We stellen hem in en
 					// vergrendelen deze.
-					tmpErlaubnis^.veranderd := tmpErlaubnis^.richting <> standnr;
-					tmpErlaubnis^.richting := standnr;
+					Core.StelErlaubnisIn(tmpErlaubnis, standnr);
 					tmpErlaubnis^.voorvergendeld := true;
-					tmpErlaubnis^.vergrendeld := true;
 					SendOK
 				end else
 					SendError('direction can not be changed like this now.')
@@ -282,7 +281,7 @@ begin
 					if Core.ErlaubnisVrij(tmpErlaubnis) then begin
 						tmpErlaubnis^.richting := tmpErlaubnis^.standaardrichting;
 						tmpErlaubnis^.vergrendeld := false;
-						tmpErlaubnis^.veranderd := true;
+						tmpErlaubnis^.r_veranderd := true;
 					end;
 					SendOK
 				end else
@@ -366,7 +365,7 @@ begin
 			end;
 			SendMsg.SendPlainString('smsg:--');
 		end else
-			SendError('unknown train.');
+			SendError(unknowntrainerror+'.');
 	end else if cmd = 'comm_bel' then begin
 		SplitOff(tail, wat, nummer);
 		if Wat = 't' then begin
@@ -377,7 +376,7 @@ begin
 				Gesprek^.tekstXsoort := pmsTreinOpdracht;
 				SendOK
 			end else
-				SendError('unknown train.');
+				SendError(unknowntrainerror+'.');
 		end else if Wat = 'r' then begin
 			Gesprek := Core.NieuwTelefoongesprek(Core.pMonteur, tgtGebeldWorden, true);
 			Gesprek^.tekstX := 'Met de storingsdienst. Waarmee kan ik u van dienst zijn?';
@@ -397,7 +396,7 @@ begin
 				end else
 					SendError('unknown conversation.')
 			end else
-				SendError('unknown train.');
+				SendError(unknowntrainerror+'.');
 		end else	if Wat = 'r' then begin
 			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
 			if assigned(Gesprek) then begin
@@ -420,7 +419,7 @@ begin
 				end else
 					SendError('unknown conversation.')
 			end else
-				SendError('unknown train.');
+				SendError(unknowntrainerror+'.');
 		end else	if Wat = 'r' then begin
 			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
 			if assigned(Gesprek) then begin
@@ -538,7 +537,7 @@ begin
 				else
 					SendError('unknown conversation.')
 			end else
-				SendError('unknown train.');
+				SendError(unknowntrainerror+'.');
 		end else if Wat = 'r' then begin
 			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
 			if assigned(Gesprek) then

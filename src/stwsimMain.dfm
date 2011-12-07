@@ -72,6 +72,7 @@ object stwsimMainForm: TstwsimMainForm
         Height = 25
         Action = TelefoonShow
         Anchors = [akRight, akBottom]
+        Enabled = False
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11

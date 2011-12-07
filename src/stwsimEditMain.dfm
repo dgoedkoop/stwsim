@@ -1,7 +1,7 @@
 object stwseMain: TstwseMain
-  Left = 22
+  Left = 5
   Top = 173
-  Width = 1002
+  Width = 1019
   Height = 547
   Caption = 'StwSim Editor'
   Color = clBtnFace
@@ -21,7 +21,7 @@ object stwseMain: TstwseMain
   object Splitter1: TSplitter
     Left = 0
     Top = 253
-    Width = 994
+    Width = 1011
     Height = 3
     Cursor = crVSplit
     Align = alBottom
@@ -29,7 +29,7 @@ object stwseMain: TstwseMain
   object SchermenTab: TTabControl
     Left = 0
     Top = 0
-    Width = 994
+    Width = 1011
     Height = 253
     Align = alClient
     TabOrder = 0
@@ -38,7 +38,7 @@ object stwseMain: TstwseMain
   object bottomPanel: TPanel
     Left = 0
     Top = 256
-    Width = 994
+    Width = 1011
     Height = 237
     Align = alBottom
     BevelOuter = bvNone
@@ -46,9 +46,9 @@ object stwseMain: TstwseMain
     object editPC: TPageControl
       Left = 0
       Top = 0
-      Width = 825
+      Width = 842
       Height = 237
-      ActivePage = rijwegTab
+      ActivePage = wTab
       Align = alClient
       Constraints.MinHeight = 193
       TabOrder = 0
@@ -208,91 +208,254 @@ object stwseMain: TstwseMain
       object wTab: TTabSheet
         Caption = 'Wissels'
         ImageIndex = 2
-        object Label3: TLabel
-          Left = 200
-          Top = 12
-          Width = 14
-          Height = 13
-          Caption = 'ID:'
-        end
-        object Label4: TLabel
-          Left = 200
-          Top = 60
-          Width = 89
-          Height = 13
-          Caption = 'Treindetectie-punt:'
-        end
-        object Label28: TLabel
-          Left = 200
-          Top = 36
-          Width = 61
-          Height = 13
-          Caption = 'Wisselgroep:'
-        end
-        object wdBut: TButton
-          Left = 344
-          Top = 120
-          Width = 75
-          Height = 25
-          Caption = 'Verwijderen'
+        object wGroup: TGroupBox
+          Left = 0
+          Top = 0
+          Width = 425
+          Height = 209
+          Caption = 'Wissels'
           TabOrder = 0
-          OnClick = wdButClick
+          object Label3: TLabel
+            Left = 200
+            Top = 20
+            Width = 14
+            Height = 13
+            Caption = 'ID:'
+          end
+          object Label28: TLabel
+            Left = 200
+            Top = 44
+            Width = 61
+            Height = 13
+            Caption = 'Wisselgroep:'
+          end
+          object Label4: TLabel
+            Left = 200
+            Top = 68
+            Width = 89
+            Height = 13
+            Caption = 'Treindetectie-punt:'
+          end
+          object Label37: TLabel
+            Left = 200
+            Top = 92
+            Width = 91
+            Height = 13
+            Caption = 'Basisstand is recht:'
+          end
+          object wdBut: TButton
+            Left = 342
+            Top = 144
+            Width = 75
+            Height = 25
+            Caption = 'Verwijderen'
+            TabOrder = 0
+            OnClick = wdButClick
+          end
+          object wtBut: TButton
+            Left = 342
+            Top = 112
+            Width = 75
+            Height = 25
+            Caption = 'Toevoegen'
+            Default = True
+            TabOrder = 1
+            OnClick = wtButClick
+          end
+          object basisRechtdoor: TCheckBox
+            Left = 296
+            Top = 88
+            Width = 121
+            Height = 17
+            Checked = True
+            State = cbChecked
+            TabOrder = 2
+          end
+          object wmBox: TComboBox
+            Left = 296
+            Top = 64
+            Width = 121
+            Height = 21
+            Style = csDropDownList
+            ItemHeight = 13
+            TabOrder = 3
+          end
+          object wgBox: TComboBox
+            Left = 296
+            Top = 40
+            Width = 121
+            Height = 21
+            ItemHeight = 13
+            TabOrder = 4
+            Items.Strings = (
+              '')
+          end
+          object wnEdit: TEdit
+            Left = 296
+            Top = 16
+            Width = 121
+            Height = 21
+            TabOrder = 5
+            OnChange = wnEditChange
+          end
+          object wList: TListBox
+            Left = 8
+            Top = 16
+            Width = 185
+            Height = 185
+            Anchors = [akLeft, akTop, akBottom]
+            ItemHeight = 13
+            TabOrder = 6
+          end
         end
-        object wtBut: TButton
-          Left = 344
-          Top = 88
-          Width = 75
-          Height = 25
-          Caption = 'Toevoegen'
-          Default = True
+        object evwGroup: TGroupBox
+          Left = 432
+          Top = 0
+          Width = 361
+          Height = 209
+          Caption = 'Eis- en verzoekwissels'
           TabOrder = 1
-          OnClick = wtButClick
-        end
-        object wnEdit: TEdit
-          Left = 296
-          Top = 8
-          Width = 121
-          Height = 21
-          TabOrder = 2
-          OnChange = wnEditChange
-        end
-        object wList: TListBox
-          Left = 8
-          Top = 8
-          Width = 185
-          Height = 197
-          Anchors = [akLeft, akTop, akBottom]
-          ItemHeight = 13
-          TabOrder = 3
-        end
-        object wmBox: TComboBox
-          Left = 296
-          Top = 56
-          Width = 121
-          Height = 21
-          Style = csDropDownList
-          ItemHeight = 13
-          TabOrder = 4
-        end
-        object wgBox: TComboBox
-          Left = 296
-          Top = 32
-          Width = 121
-          Height = 21
-          ItemHeight = 13
-          TabOrder = 5
-          Items.Strings = (
-            '')
-        end
-        object basisRechtdoor: TCheckBox
-          Left = 424
-          Top = 32
-          Width = 137
-          Height = 17
-          Caption = 'Basisstand is rechtdoor'
-          Checked = True
-          State = cbChecked
-          TabOrder = 6
+          object Label9: TLabel
+            Left = 136
+            Top = 20
+            Width = 57
+            Height = 13
+            Caption = 'Deze stand:'
+          end
+          object Label10: TLabel
+            Left = 136
+            Top = 68
+            Width = 61
+            Height = 13
+            Caption = 'Vereist deze:'
+          end
+          object onafhCombo: TComboBox
+            Left = 208
+            Top = 16
+            Width = 145
+            Height = 21
+            Style = csDropDownList
+            ItemHeight = 13
+            TabOrder = 0
+            OnChange = onafhComboChange
+          end
+          object afhCombo: TComboBox
+            Left = 208
+            Top = 64
+            Width = 145
+            Height = 21
+            Style = csDropDownList
+            ItemHeight = 13
+            TabOrder = 1
+            OnChange = afhComboChange
+          end
+          object evwdBut: TButton
+            Left = 278
+            Top = 176
+            Width = 75
+            Height = 25
+            Caption = 'Verwijderen'
+            TabOrder = 2
+            OnClick = evwdButClick
+          end
+          object evwtBut: TButton
+            Left = 278
+            Top = 144
+            Width = 75
+            Height = 25
+            Caption = 'Toevoegen'
+            Default = True
+            TabOrder = 3
+            OnClick = evwtButClick
+          end
+          object evwList: TListBox
+            Left = 8
+            Top = 16
+            Width = 121
+            Height = 185
+            Anchors = [akLeft, akTop, akBottom]
+            ItemHeight = 13
+            MultiSelect = True
+            TabOrder = 4
+          end
+          object Panel2: TPanel
+            Left = 208
+            Top = 40
+            Width = 145
+            Height = 21
+            BevelOuter = bvNone
+            TabOrder = 5
+            object onafhRechtBox: TRadioButton
+              Left = 0
+              Top = 0
+              Width = 57
+              Height = 17
+              Caption = 'Recht'
+              Checked = True
+              TabOrder = 0
+              TabStop = True
+            end
+            object onafhAftBox: TRadioButton
+              Left = 64
+              Top = 0
+              Width = 73
+              Height = 17
+              Caption = 'Aftakkend'
+              TabOrder = 1
+            end
+          end
+          object Panel3: TPanel
+            Left = 208
+            Top = 88
+            Width = 145
+            Height = 21
+            BevelOuter = bvNone
+            TabOrder = 6
+            object afhRechtBox: TRadioButton
+              Left = 0
+              Top = 0
+              Width = 57
+              Height = 17
+              Caption = 'Recht'
+              Checked = True
+              TabOrder = 0
+              TabStop = True
+            end
+            object afhAftBox: TRadioButton
+              Left = 64
+              Top = 0
+              Width = 73
+              Height = 17
+              Caption = 'Aftakkend'
+              TabOrder = 1
+            end
+          end
+          object Panel4: TPanel
+            Left = 208
+            Top = 112
+            Width = 145
+            Height = 21
+            BevelOuter = bvNone
+            TabOrder = 7
+            object eisBox: TRadioButton
+              Left = 0
+              Top = 0
+              Width = 57
+              Height = 17
+              Caption = 'Eis'
+              Checked = True
+              TabOrder = 0
+              TabStop = True
+            end
+            object verzoekBox: TRadioButton
+              Left = 64
+              Top = 0
+              Width = 73
+              Height = 17
+              Caption = 'Verzoek'
+              TabOrder = 1
+            end
+          end
         end
       end
       object ovTab: TTabSheet
@@ -1995,7 +2158,7 @@ object stwseMain: TstwseMain
           object lenEdit: TSpinEdit
             Left = 616
             Top = 176
-            Width = 97
+            Width = 41
             Height = 22
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clBlack
@@ -2041,35 +2204,35 @@ object stwseMain: TstwseMain
             OnChange = eElBoxChange
           end
           object Panel1: TPanel
-            Left = 568
-            Top = 96
-            Width = 65
-            Height = 41
+            Left = 560
+            Top = 108
+            Width = 113
+            Height = 25
             BevelOuter = bvNone
             ParentColor = True
             TabOrder = 8
-            object eDownBut: TRadioButton
-              Left = 0
-              Top = 0
-              Width = 65
-              Height = 17
-              Caption = 'Down'
-              TabOrder = 0
-            end
             object eUpBut: TRadioButton
               Left = 0
-              Top = 24
-              Width = 65
+              Top = 0
+              Width = 49
               Height = 17
               Caption = 'Up'
               Checked = True
               TabOrder = 1
               TabStop = True
             end
+            object eDownBut: TRadioButton
+              Left = 48
+              Top = 0
+              Width = 65
+              Height = 17
+              Caption = 'Down'
+              TabOrder = 0
+            end
           end
           object textBox: TGroupBox
-            Left = 656
-            Top = 32
+            Left = 680
+            Top = 64
             Width = 145
             Height = 137
             Caption = 'Opties voor tekst:'
@@ -2139,6 +2302,14 @@ object stwseMain: TstwseMain
                 'Geel'
                 'Felwit')
             end
+          end
+          object rechtschuincheck: TCheckBox
+            Left = 560
+            Top = 82
+            Width = 97
+            Height = 17
+            Caption = 'Recht is schuin'
+            TabOrder = 10
           end
         end
       end
@@ -2701,7 +2872,7 @@ object stwseMain: TstwseMain
       end
     end
     object infoBox: TGroupBox
-      Left = 825
+      Left = 842
       Top = 0
       Width = 169
       Height = 237

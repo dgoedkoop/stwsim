@@ -16,12 +16,11 @@ type
 	TvSendMsg = class
 	private
 		Returned: TvReturned;
-		function SendRawStr(s: string): TvReturned;
+		function SendRawStr(s: string; displayError: boolean): TvReturned;
 	public
 		// Dit MOET ingesteld worden:
 		SimComm:	TStringComm;
 		procedure SendString(s: string);
-		procedure SendWisselChg(Wissel: PvWissel);
 		procedure SendWissel(Wissel: PvWissel; Stand: TWisselStand);
 		procedure SendSetSein(Sein: PvSein; stand: string);
 		procedure SendSetOverweg(Overweg: PvOverweg; gesloten: boolean);
@@ -32,7 +31,7 @@ type
 		procedure SendOphangen(naar: TvMessageWie);
 		procedure SendMsg(naar: TvMessageWie; msg: string);
 
-		procedure SendGetTreinStatus(treinnr: string);
+		function SendGetTreinStatus(treinnr: string): TvReturned;
 		procedure SendRichting(Erlaubnis: PvErlaubnis; richting: byte; hoe: RichtingWat);
 		procedure SendBroadcast;
 		procedure SendGetScore;
@@ -57,62 +56,42 @@ begin
 	repeat
 		Application.HandleMessage
 	until Returned.status in [rsOK, rsError];
-	if Returned.Status = rsError then
+	if (Returned.Status = rsError) and DisplayError then
 		Application.MessageBox(pchar('Fout opgetreden: '+Returned.msg), 'Fout', 0);
 	result := Returned;
 end;
 
 procedure TvSendMsg.SendString;
 begin
-	SendRawStr(s);
-end;
-
-procedure TvSendMsg.SendWisselChg;
-begin
-	if Wissel^.WensStand = wsRechtdoor then
-		SendWissel(Wissel, wsAftakkend)
-	else
-		SendWissel(Wissel, wsRechtdoor);
+	SendRawStr(s,true);
 end;
 
 procedure TvSendMsg.SendWissel;
-var
-	basisstand: boolean;
-	tmpWissel: PvWissel;
 begin
 	// Als we niks hoeven te doen, hoeven we niks te doen.
 	if Wissel^.WensStand = Stand then exit;	// Staat al goed of wordt goedgezet
-	// En DOEN! We zetten de hele wisselgroep om.
-	basisstand := ((Stand = wsRechtdoor) = Wissel^.BasisstandRecht);
-	tmpWissel := Wissel^.Groep^.EersteWissel;
-	while assigned(tmpWissel) do begin
-		if tmpWissel^.BasisstandRecht = basisstand then
-			tmpWissel^.WensStand := wsRechtdoor
-		else
-			tmpWissel^.WensStand := wsAftakkend;
-		if tmpWissel^.Stand <> tmpWissel^.WensStand then begin
-			if tmpWissel^.WensStand = wsRechtdoor then
-				SendRawStr('w:'+tmpWissel^.WisselID+',r')
-			else
-				SendRawStr('w:'+tmpWissel^.WisselID+',a');
-		end;
-		tmpWissel := tmpWissel^.Volgende;
-	end;
+
+	// Wissel omzetten
+	Wissel^.WensStand := Stand;
+	if Wissel^.WensStand = wsRechtdoor then
+		SendRawStr('w:'+Wissel^.WisselID+',r',true)
+	else
+		SendRawStr('w:'+Wissel^.WisselID+',a',true);
 end;
 
 procedure TvSendMsg.SendSetSein;
 begin
 	Sein^.Stand_wens := stand;
-	SendRawStr('s:'+Sein^.Naam+','+Sein^.Stand_wens)
+	SendRawStr('s:'+Sein^.Naam+','+Sein^.Stand_wens,true)
 end;
 
 procedure TvSendMsg.SendSetOverweg;
 begin
 	Overweg^.Gesloten_Wens := Gesloten;
 	if Gesloten then
-		SendRawStr('o:'+Overweg^.Naam+',s')
+		SendRawStr('o:'+Overweg^.Naam+',s',true)
 	else
-		SendRawStr('o:'+Overweg^.Naam+',o');
+		SendRawStr('o:'+Overweg^.Naam+',o',true);
 end;
 
 procedure TvSendMsg.SendRichting;
@@ -121,62 +100,64 @@ var
 begin
 	str(richting, richtingstr);
 	if (hoe = rwClaim) then
-		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',c,'+richtingstr)
+		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',c,'+richtingstr,true)
 	else if (hoe = rwRelease) then
-		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',r,'+richtingstr)
+		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',r,'+richtingstr,true)
 end;
 
 procedure TvSendMsg.SendSetTreinnr;
 begin
-	SendRawStr('m:'+Meetpunt^.meetpuntID+','+treinnr)
+	SendRawStr('m:'+Meetpunt^.meetpuntID+','+treinnr,true)
 end;
 
 procedure TvSendMsg.SendBel;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_bel:r');
+		SendRawStr('comm_bel:r',true);
 	if naar.wat = 't' then
-		SendRawStr('comm_bel:t,'+naar.ID);
+		SendRawStr('comm_bel:t,'+naar.ID,true);
 end;
 
 procedure TvSendMsg.SendOpnemen;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_opn:r');
+		SendRawStr('comm_opn:r',true);
 	if naar.wat = 't' then
-		SendRawStr('comm_opn:t,'+naar.ID);
+		SendRawStr('comm_opn:t,'+naar.ID,true);
 end;
 
 procedure TvSendMsg.SendMsg;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_msg:r,'+msg);
+		SendRawStr('comm_msg:r,'+msg,true);
 	if naar.wat = 't' then
-		SendRawStr('comm_msg:t,'+naar.ID+','+msg);
+		SendRawStr('comm_msg:t,'+naar.ID+','+msg,true);
 end;
 
 procedure TvSendMsg.SendOphangen;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_oph:r');
+		SendRawStr('comm_oph:r',true);
 	if naar.wat = 't' then
-		SendRawStr('comm_oph:t,'+naar.ID);
+		SendRawStr('comm_oph:t,'+naar.ID,true);
 end;
 
-procedure TvSendMsg.SendGetTreinStatus;
+function TvSendMsg.SendGetTreinStatus;
 begin
+	result.status := rsOK;
+	result.msg := '';
 	if treinnr = '' then exit;
-	SendRawStr('tsr:'+Treinnr);
+	result := SendRawStr('tsr:'+Treinnr,false);
 end;
 
 procedure TvSendMsg.SendBroadcast;
 begin
-	SendRawStr('bc');
+	SendRawStr('bc',true);
 end;
 
 procedure TvSendMsg.SendGetScore;
 begin
-	SendRawStr('score');
+	SendRawStr('score',true);
 end;
 
 end.

@@ -245,7 +245,7 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 {$R xpthemes.res}
 
 const
-	MagicCode = 'StwSim Client Beta 7';
+	MagicCode = 'StwSim Client Beta 8';
 
 procedure TstwsimMainForm.DoeStapje;
 begin
@@ -499,7 +499,7 @@ begin
 			TreinBellen.Enabled := false;
 		end;
 		if assigned(selWissel) then begin
-			WisselSwitch.Enabled := WisselKanOmgezet(selWissel);
+			WisselSwitch.Enabled := WisselKanOmgezet(selWissel, vCore.vFlankbeveiliging);
 			WisselBedienVerh.Enabled := true;
 			WisselBedienVerh.Checked := selWissel^.Groep^.bedienverh;
 			WisselRijwegVerh.Enabled := true;
@@ -770,7 +770,8 @@ begin
 		stwscProcesplanForm.UpdateLijst;
 
 		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
-			vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr);
+			if vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr).status <> rsOK then
+         	stwscTreinStatusForm.ModalResult := mrOK;
 	end;
 end;
 
@@ -808,10 +809,25 @@ begin
 end;
 
 procedure TstwsimMainForm.WisselSwitchExecute(Sender: TObject);
+var
+	StandenLijst, tmpStand: PWisselstandLijst;
+	Stand: TWisselStand;
 begin
 	if assigned(selWissel) then
-		if WisselKanOmgezet(selWissel) then
-			vSendMsg.SendWisselChg(selWissel);
+		if WisselKanOmgezet(selWissel, vCore.vFlankbeveiliging) then begin
+			if selWissel^.WensStand = wsRechtdoor then
+				Stand := wsAftakkend
+			else
+				Stand := wsRechtdoor;
+			StandenLijst := WisselstandenLijstBereken(selWissel, Stand,
+				vCore.vFlankbeveiliging, nil, true);
+			tmpStand := StandenLijst;
+			while assigned(tmpStand) do begin
+				vSendMsg.SendWissel(tmpStand^.Wissel, tmpStand^.Stand);
+				tmpStand := tmpStand^.Volgende;
+			end;
+			WisselstandenLijstDispose(StandenLijst);
+		end;
 end;
 
 procedure tstwsimMainForm.GleisplanMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -903,12 +919,17 @@ begin
 end;
 
 procedure TstwsimMainForm.TreinStatusExecute(Sender: TObject);
+var
+	resultaat: TvReturned;
 begin
 	if assigned(selMeetpunt) then begin
 		stwscTreinStatusForm.Treinnr := selMeetpunt^.treinnummer;
 		stwscTreinStatusForm.Wissen;
-		vSendMsg.SendGetTreinStatus(selMeetpunt^.treinnummer);
-		stwscTreinStatusForm.ShowModal;
+		resultaat := vSendMsg.SendGetTreinStatus(selMeetpunt^.treinnummer);
+		if resultaat.status = rsOK then
+			stwscTreinStatusForm.ShowModal
+		else if ((resultaat.status = rsError) and (resultaat.msg = unknowntrainerror+'.')) then
+			Application.MessageBox(pchar('Trein '+selMeetpunt^.treinnummer+' is niet bekend.'), 'Fout', 0);
 	end;
 end;
 

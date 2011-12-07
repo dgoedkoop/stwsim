@@ -8,6 +8,7 @@ uses lists, stwvCore, clientSendMsg, stwvMeetpunt, stwvSeinen,
 const
 	LF = #$0A;
 	clientversie = '0.3';
+	unknowntrainerror = 'unknown train';
 
 type
 	TSeinbeeld = (sbGroen, sbGeel, sbRood);

@@ -53,7 +53,7 @@ type
 		procedure PutSeinDriehoekje(x,y: integer; Sein: PvSein);
 		procedure PutErlaubnis(x,y: integer; grx,gry: integer; Erlaubnis: PvErlaubnis; ActiefStand: byte);
 		procedure PutLandschap(x,y: integer; grx,gry: integer);
-		procedure PutWissel(x,y: integer; grx,gry: integer; meetpunt: PvMeetpunt; wissel: PvWissel);
+		procedure PutWissel(x,y: integer; grx,gry: integer; meetpunt: PvMeetpunt; wissel: PvWissel; schuinisrecht: boolean);
 		procedure MeetpuntGrensCorrectie(x,y: integer; var grx,gry: integer; meetpunt: PvMeetpunt);
 		procedure MeetpuntResetInactief(meetpunt: PvMeetpunt);
 		procedure MeetpuntResetKruis(meetpunt: PvMeetpunt);
@@ -517,9 +517,9 @@ begin
 			end;
 
 		if WisselShowStand then begin
-			if Wissel^.Stand = wsRechtdoor then
+			if (Wissel^.Stand = wsRechtdoor) xor PvHokjeWissel(Hokje.grdata)^.SchuinIsRecht then
 				grx := 0;
-			if Wissel^.Stand = wsAftakkend then
+			if (Wissel^.Stand = wsAftakkend) xor PvHokjeWissel(Hokje.grdata)^.SchuinIsRecht then
 				grx := grx - 8
 		end;
 		if WisselBlink then
@@ -539,7 +539,8 @@ begin
 		Erlaubnis := PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis;
 		ErlaubnisActive := false;
 		if assigned(Erlaubnis) then
-			if Erlaubnis^.richting = PvHokjeErlaubnis(Hokje.grdata)^.ActiefStand then
+			if (Erlaubnis^.richting = PvHokjeErlaubnis(Hokje.grdata)^.ActiefStand) or
+				(Erlaubnis^.richting = 4) then
 				ErlaubnisActive := true;
 		if ErlaubnisActive then
 			grx := grx - 2
@@ -733,6 +734,7 @@ begin
 	PvHokjeWissel(Hokje.grdata)^.Meetpunt := meetpunt;
 	PvHokjeWissel(Hokje.grdata)^.Wissel := wissel;
 	PvHokjeWissel(Hokje.grdata)^.InactiefWegensRijweg := false;
+	PvHokjeWissel(Hokje.grdata)^.SchuinIsRecht := schuinisrecht;
 	hokjes^[y*(imaxx+1)+x] := hokje;
 end;
 
@@ -962,6 +964,7 @@ begin
 			blockwrite(f, y, sizeof(y));
 			blockwrite(f, grx, sizeof(grx));
 			blockwrite(f, gry, sizeof(gry));
+			boolwrite(f, PvHokjeWissel(hokje.grdata)^.SchuinIsRecht);
 			if not assigned(PvHokjeWissel(hokje.grdata)^.Wissel) then halt; // bork
 			if not assigned(PvHokjeWissel(hokje.grdata)^.Meetpunt) then halt; // bork
 			wisselnaam := PvHokjeWissel(hokje.grdata)^.Wissel^.WisselID;
@@ -1018,6 +1021,7 @@ var
 	positie: byte;
 	maxlen: byte;
 	klaar: boolean;
+	schuinisrecht: boolean;
 begin
 	klaar := false;
 	while not klaar do begin
@@ -1079,9 +1083,10 @@ begin
 				blockread(f, y, sizeof(y));
 				blockread(f, grx, sizeof(grx));
 				blockread(f, gry, sizeof(gry));
+				boolread(f, schuinisrecht);
 				stringread(f, meetpuntnaam);
 				stringread(f, wisselnaam);
-				PutWissel(x,y,grx,gry,ZoekMeetpunt(core, meetpuntnaam), ZoekWissel(Core,Wisselnaam));
+				PutWissel(x,y,grx,gry,ZoekMeetpunt(core, meetpuntnaam), ZoekWissel(Core,Wisselnaam), schuinisrecht);
 			end;
 			'd': begin		// DYNDATA
 				blockread(f, x, sizeof(x));

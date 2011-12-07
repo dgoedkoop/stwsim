@@ -55,6 +55,7 @@ type
 		InactiefWegensRijweg: boolean;
 										// Niet bezet tonen omdat een rijweg is ingesteld
 										// die niet langs dit vakje komt.
+		SchuinIsRecht: boolean;	// Als de rechte stand op het scherm diagonaal loopt.
 		Wissel:	 PvWissel;
 	end;
 

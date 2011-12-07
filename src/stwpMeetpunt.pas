@@ -19,6 +19,7 @@ type
 		Elektrif: boolean;			// Geëlektrificieerd?
 		Treinnaam:	string;			// Toch maar wel hier bijhouden.
 		ZichtbaarLijst:	PpRaillijst;	// Wordt éénmalig bijgewerkt.
+		rijrichting:	byte;			// 0=geen, 1=up, 2=down (voor vrije banen)
 		// Defecten
 		defect:		boolean;
 
@@ -52,14 +53,16 @@ type
 		Meetpunten:	PpMeetpuntLijst;
 		standaardrichting:	byte;	// 0=geen, 1=up, 2=down
 		// Dynamische informatie
-		richting:				byte;	// 0=geen, 1=up, 2=down
+		richting:				byte;	// 0=geen, 1=up, 2=down, 3=beide
 		vergrendeld:		boolean;	// Voorvergrendeld of bezet.
 		voorvergendeld:	boolean;	// Een voorvergrendelde Erlaubnis kan niet
 											// gewijzigd worden, ook niet als de meetpunten
 											// vrij zijn.
+		bezet: boolean;				// Geaggregeerd gegeven van een vrije baan
 		// Overige
 		check:		boolean;
-		veranderd:	boolean;
+		r_veranderd:	boolean;
+		b_veranderd:	boolean;
 		vanwies:		PpRegLijst;
 		// Intern
 		volgende:	PpErlaubnis;
@@ -109,9 +112,14 @@ begin
 		Bezet := true;
 
 	if bezet <> oudebezet then begin
+		// Dan zijn we veranderd...
 		veranderd := true;
+		// Moeten we eene evt. Erlaubnis opnieuw berekenen
 		if assigned(Erlaubnis) then
 			Erlaubnis^.check := true;
+		// Als het meetpunt vrij is moeten we de rijrichting resetten
+		if not bezet then
+			rijrichting := 0;
 	end;
 end;
 

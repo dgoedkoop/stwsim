@@ -330,6 +330,28 @@ CHANGELOG:
   rijweg in tegengestelde richting het sein is afgereden. De trein op die rijweg
   hoeft niet meer de laatste sectie van de betreffende rijweg te bezetten.
 
+2 juli 2009:
+- Fix: geen crash meer als voor een trein een wissel ligt die wordt omgezet.
+
+8 juli 2010:
+- ROZ-rijweg naar spoor met andere rijweg in tegengestelde richting werkt nu
+  realistisch: ROZ-rijweg wordt geactiveerd zodra laatste sectie van de andere
+  rijweg is bezet gemeld.
+
+9 juli 2010:
+- Enkelspoor- en dubbelenkelspoorbeveiliging realistischer gemaakt.
+- Rijrichting kan nu ook als meta-meetpunt voor de hele vrije baan werken.
+
+6 december 2011:
+- Fix: Geen stortvloed meer aan foutmeldingen 'unknown train' als je een TNV-nummer
+  een van niet bestaande trein aanklikt
+- Fix: Geen crash meer als een trein zichzelf probeert te hernummeren in een trein
+  waarvoor geen dienstregeling beschikbaar is
+
+7 december 2011:
+- Eiswissels en verzoekwissels (en daarbij de hele wissellogica geherprogrammeerd)
+- Op het scherm kan een wissel in rechte stand nu ook juist schuin worden weergegeven
+
 BERICHTEN AAN DE MACHINIST:
 
 - Rijd langzaam door het eerstvolgende rode sein

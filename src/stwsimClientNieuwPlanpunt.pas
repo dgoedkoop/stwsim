@@ -69,7 +69,7 @@ begin
 	loskTreinnrEdit.Text := '';
 	loskKerenCheck.Checked := false;
 	nieuwnrEdit.Text := '';
-	ActiveControl := okBut;
+	ActiveControl := invStationEdit;
 end;
 
 end.

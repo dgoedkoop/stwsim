@@ -98,7 +98,7 @@ object stwsceInfoForm: TstwsceInfoForm
       Font.Style = []
       Lines.Strings = (
         'StwSim Editor'
-        'Copyright © 2007, 2008, 2009, Daan Goedkoop. '
+        'Copyright © 2007-2011, Daan Goedkoop. '
         'Alle rechten voorbehouden.'
         ''
         'StwSim Editor mag gratis gebruikt worden voor '

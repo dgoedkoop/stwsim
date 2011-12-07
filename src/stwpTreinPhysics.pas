@@ -726,7 +726,8 @@ begin
 		if assigned(Trein^.StationModusPlanpunt) then begin
 			if not Trein^.StationModusPlanpunt^.spc_gedaan then begin
 				ActiesAfhandelen(Trein);
-				Trein^.StationModusPlanpunt^.spc_gedaan := true;
+				if assigned(Trein^.StationModusPlanpunt) then
+					Trein^.StationModusPlanpunt^.spc_gedaan := true;
 			end;
 			ControleerVertrektijd(Trein);
 		end;

@@ -17,6 +17,7 @@ type
 		pAlleMeetpunten: 		PpMeetpunt;
 		SimComm: TStringComm;
 		procedure SendMeetpuntMsg(Meetpunt: PpMeetpunt);
+		procedure SendErlaubnisAlsMeetpuntMsg(Erlaubnis: PpErlaubnis);
 		procedure SendErlaubnisMsg(Erlaubnis: PpErlaubnis);
 		procedure SendWisselMsg(Wissel: PpWissel);
 		procedure SendSeinMsg(Sein: PpSein);
@@ -63,12 +64,22 @@ begin
 		SendPlainString('m:'+Meetpunt^.Naam+',b,'+Meetpunt^.Treinnaam);
 end;
 
+procedure TpSendMsg.SendErlaubnisAlsMeetpuntMsg;
+begin
+	if not Erlaubnis^.b_veranderd then exit;
+	Erlaubnis^.b_Veranderd := false;
+	if not Erlaubnis^.bezet then
+		SendPlainString('m:'+Erlaubnis^.Naam+',v')
+	else
+		SendPlainString('m:'+Erlaubnis^.Naam+',b');
+end;
+
 procedure TpSendMsg.SendErlaubnisMsg;
 var
 	richtingstr: string;
 begin
-	if not Erlaubnis^.veranderd then exit;
-	Erlaubnis^.Veranderd := false;
+	if not Erlaubnis^.r_veranderd then exit;
+	Erlaubnis^.r_Veranderd := false;
 	str(Erlaubnis^.richting, richtingstr);
 	if Erlaubnis^.vergrendeld then
 		SendPlainString('e:'+Erlaubnis^.Naam+','+richtingstr+',j')

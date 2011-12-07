@@ -1264,9 +1264,9 @@ begin
 					end;
 				end;
 				if WisselStand^.Rechtdoor then
-					wisselsgoed := wisselsgoed and WisselsLiggenGoed(WisselStand^.Wissel, wsRechtdoor)
+					wisselsgoed := wisselsgoed and WisselsLiggenGoed(WisselStand^.Wissel, wsRechtdoor, Core.vFlankbeveiliging)
 				else
-					wisselsgoed := wisselsgoed and WisselsLiggenGoed(WisselStand^.Wissel, wsAftakkend);
+					wisselsgoed := wisselsgoed and WisselsLiggenGoed(WisselStand^.Wissel, wsAftakkend, Core.vFlankbeveiliging);
 				WisselStand := WisselStand^.Volgende;
 			end;
 
@@ -1284,11 +1284,11 @@ begin
 				while assigned(MeetpuntLijst) do begin
 					// Bezet vanwege aanwezigheid trein?
 					if MeetpuntLijst^.Meetpunt^.bezet then begin
+						// Dan is het meetpunt niet vrij,
 						meetpuntenvrij := false;
-						// Bij een bezet meetpunt houden we meteen op. Het zou immers
-						// kunnen zijn dat we een rijweg naar bezet spoor instellen,
-						// dan moeten we niet na de al aanwezige trein verder claimen.
-						break;
+						// maar eventueel kunnen we wel een ROZ-rijweg instellen.
+						// Tenminste, als het meetpunt ook echt terecht bezet is.
+						meetpuntenrozok := meetpuntenrozok and (not MeetpuntLijst^.Meetpunt^.OnterechtBezet);
 					end else begin
 						if not assigned(MeetpuntLijst^.Meetpunt^.RijwegOnderdeel) then begin
 							// Meetpunt is vrij. Claim het.
@@ -1304,19 +1304,11 @@ begin
 								Tab := Tab^.Volgende;
 							end;
 						end else
-							// Bezet vanwege geclaimd door andere rijweg?
+							// Vrij, maar geclaimd door andere rijweg?
 							if (MeetpuntLijst^.Meetpunt^.RijwegOnderdeel <> ActieveRijweg) then begin
-								// Dan zijn de meetpunten niet vrij
+								// Dan zijn de meetpunten niet vrij en is ROZ ook niet okee!
 								meetpuntenvrij := false;
-								// Of rijden op zicht kan, hangt ervan af of die andere
-								// rijweg al vrijgereden is.
-								// Deze check is in elke situatie correct. Was de oude
-								// rijweg in dezelfde richting, dan is de voorwaarde
-								// per definitie vervuld. Is de oude rijweg in
-								// tegenovergestelde richting, dan niet per definitie.
-								tmpActieveRijweg := MeetpuntLijst^.Meetpunt^.RijwegOnderdeel;
-								meetpuntenrozok := tmpActieveRijweg^.Pending = 3;
-								break;
+								meetpuntenrozok := false;
 							end;
 					end;
 					MeetpuntLijst := MeetpuntLijst^.Volgende;
@@ -1329,7 +1321,7 @@ begin
 			// Als in principe alles OK is gaan we naar de volgende pending-status.
 			if (meetpuntenvrij or (ActieveRijweg^.ROZ and meetpuntenrozok)) and
 				wisselsgoed and ErlaubnisGoed then begin
-            ControleerAankondigingKnipperen(ActieveRijweg^.Rijweg);
+				ControleerAankondigingKnipperen(ActieveRijweg^.Rijweg);
 				ActieveRijweg.Pending := 1;
 			end;
 		end;
@@ -1456,7 +1448,7 @@ begin
 	end;
 
 	// Eerst eens kijken of deze rijweg echt ingesteld kan worden
-	if not RijwegKan(Rijweg, ROZ) then begin
+	if not RijwegKan(Rijweg, ROZ, Core.vFlankbeveiliging) then begin
 		case RijwegKanWaaromNiet of
 		4: Log.Log('Deze rijweg gaat naar onbeveiligd spoor.');
 		else
@@ -1506,18 +1498,48 @@ var
 	Wissel: PvWisselstand;
 	ActieveRijweg: PvActieveRijwegLijst;
 	Tab:	  PTablist;
+	Stand: TWisselStand;
+	tmpStand: PWisselstandLijst;
+	StandenLijst: PWisselstandLijst;
+	StandenLijstEind: PWisselstandLijst;
+	ExtraLijst: PWisselstandLijst;
 begin
 	ActieveRijweg := AddActieveRijweg(Core, Rijweg, ROZ, Auto);
 
 	// Zet de wissels goed
+	Standenlijst := nil;
+	StandenLijstEind := nil;
 	Wissel := Rijweg^.Wisselstanden;
 	while assigned(Wissel) do begin
 		if Wissel^.Rechtdoor then
-			SendMsg.SendWissel(Wissel^.Wissel, wsRechtdoor)
+			Stand := wsRechtdoor
 		else
-			SendMsg.SendWissel(Wissel^.Wissel, wsAftakkend);
+			Stand := wsAftakkend;
+		// Dan kijken of alle wissels in de goede stand kunnen.
+		ExtraLijst := WisselstandenLijstBereken(Wissel^.Wissel, Stand, Core^.vFlankbeveiliging, StandenLijst, true);
+		if assigned(ExtraLijst) then begin
+			if assigned(StandenLijstEind) then
+				StandenLijstEind^.Volgende := ExtraLijst
+			else begin
+				StandenLijst := ExtraLijst;
+				StandenLijstEind := StandenLijst;
+			end;
+			while assigned(StandenLijstEind^.Volgende) do
+				StandenLijstEind := StandenLijstEind^.Volgende;
+		end else begin
+			// dit zou eigenlijk niet voor mogen komen.
+			WisselstandenLijstDispose(ExtraLijst);
+		end;
+
 		Wissel := Wissel^.volgende;
 	end;
+
+	tmpStand := StandenLijst;
+	while assigned(tmpStand) do begin
+		SendMsg.SendWissel(tmpStand^.Wissel,tmpStand^.Stand);
+		tmpStand := tmpStand^.Volgende;
+	end;
+	WisselstandenLijstDispose(StandenLijst);
 
 	// Claim de rijrichting
 	if assigned(Rijweg^.Erlaubnis) then
@@ -1554,7 +1576,7 @@ begin
 		KanInstellen := true;
 		RijwegLijst := PrlRijweg^.Rijwegen;
 		while assigned(RijwegLijst) do begin
-			KanInstellen := KanInstellen and RijwegKan(RijwegLijst^.Rijweg, ROZ) and
+			KanInstellen := KanInstellen and RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
 														RijwegVrij(RijwegLijst^.Rijweg);
 			RijwegLijst := RijwegLijst^.Volgende;
 		end;
@@ -1576,7 +1598,7 @@ begin
 		LaatstIngesteldeRijweg := nil;
 		RijwegLijst := PrlRijweg^.Rijwegen;
 		while assigned(RijwegLijst) do begin
-			if RijwegKan(RijwegLijst^.Rijweg, ROZ) and
+			if RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
 				(RijwegVrij(RijwegLijst^.Rijweg) or
 				 (ROZ and not assigned(RijwegLijst^.Volgende))) then begin
 				if ROZ and not assigned(RijwegLijst^.Volgende) then

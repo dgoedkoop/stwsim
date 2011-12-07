@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.2';
+	SaveIOMagic			= 'STWSIMSAVE.3';
 
 	tps					= 10;
 
@@ -141,6 +141,8 @@ type
 		procedure DoeMeetpuntDefect(Meetpunt: PpMeetpunt);
 
 		function CalcSeinbeeld(Sein: PpSein): TSeinbeeld;
+
+		procedure StelErlaubnisIn(Erlaubnis: PpErlaubnis; stand: byte);
 
 		// Wat functies voor eenmalig intern gebruik
 		procedure DoeSein(Sein: PpSein);
@@ -686,10 +688,11 @@ begin
 		end;
 		if Basisafstand > maxafstand then exit;	// Dan is het zinloos.
 		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
-		if tmpAchteruit then
-			tmpPos := tmpRail^.Lengte
-		else
-			tmpPos := 0;
+		if assigned(tmpRail) then
+			if tmpAchteruit then
+				tmpPos := tmpRail^.Lengte
+			else
+				tmpPos := 0;
 	until not assigned(tmpRail);
 end;
 
@@ -731,6 +734,34 @@ begin
 		inc(ScoreInfo.VertragingVerminderd, -vertragingsverschil);
 end;
 
+procedure TpCore.StelErlaubnisIn;
+var
+	Meetpunt: PpMeetpuntLijst;
+begin
+	If Erlaubnis^.standaardrichting > 0 then begin
+		// Dubbelspoor met beveiligd links rijden: harde erlaubnis
+		Erlaubnis^.richting := stand;
+		Erlaubnis^.vergrendeld := true;
+		Erlaubnis^.r_veranderd := true;
+	end else begin
+		// Enkelspoor of dubbelenkelspoor: zachte erlaubnis
+		// Dat we hier zijn betekent dat hetzij alle meetpunten vrij zijn, of
+		// hetzij dat alle treinen op de vrije baan éénduidig de juiste kant op
+		// bewegen.
+		// Hoe dan ook, het betekent dat we alle meetpunten met onze richting
+		// mogen vastleggen. Eigenlijk zou alleen de eerste al genoeg zijn, maar
+		// omdat we niet weten welke dat is doen we ze allemaal maar.
+		Meetpunt := Erlaubnis^.Meetpunten;
+		while assigned(Meetpunt) do begin
+			Meetpunt^.Meetpunt^.rijrichting := stand;
+			Meetpunt := Meetpunt^.Volgende;
+		end;
+		// En vergrendelen.
+		Erlaubnis^.check := true;
+		Erlaubnis^.vergrendeld := true;
+	end;
+end;
+
 procedure TpCore.ScorePerrongebruik;
 begin
 	if correct then
@@ -744,6 +775,7 @@ var
 	Sein2: PpSein;
 	SporenTotVolgendSeinLijst, tmpRail: PpRaillijst;
 	VolgendSein: PpSein;
+	VolgendeMeetpunt: PpMeetpunt;
 	MaxSnelheid: integer;
 	RailsBezet: boolean;
 	ErlaubnisOK: boolean;
@@ -753,8 +785,6 @@ var
 	VorigeSeinbeeld: TSeinbeeld;
 	H_terugoprood:	boolean;
 	tmpNaam: string;
-	tmpConn: PpRailConn;
-	tmpRail2: PpRail;
 	// Defecten
 	Seinbeeld:	TSeinbeeld;
 begin
@@ -774,6 +804,13 @@ begin
 		else
 			Sein^.V_Adviessnelheid := 0;
 	end;
+
+	// Sowieso eerst maar eens e.e.a. opzoeken.
+	ZoekVolgendHoofdsein(Sein^.Plaats, VolgendSein, false);
+	if assigned(VolgendSein) then
+		VolgendeMeetpunt := VolgendSein^.B_Meetpunt
+	else
+		VolgendeMeetpunt := nil;
 
 	// Zowel voor een autosein als voor een bediend sein moeten we de snelheid
 	// weten die na het sein gereden mag worden.
@@ -804,17 +841,28 @@ begin
 			if PpErlaubnis(Sein^.A_Erlaubnis)^.richting = Sein^.A_Erlaubnisstand then
 				// De Erlaubnis staat op de goede stand -> OK
 				ErlaubnisOK := true
-			else if PpErlaubnis(Sein^.A_Erlaubnis)^.richting = 0 then begin
-				// De Erlaubnis staat op de neutrale stand.
+			else if PpErlaubnis(Sein^.A_Erlaubnis)^.standaardrichting = 0 then begin
+				// Dit is een (dubbel-)enkelspoorbeveiliging.
 				// Het sein kan sowieso pas op groen als het spoor erachter vrij is.
 				// Als het volgende sein een bediend sein is, is dat genoeg.
+				// Als er een rijrichting is gedefinieerd, dan is dat ook
+				// doorslaggevend.
 				// Als het volgende sein ook een autosein is, moet dat sein echter
 				// ook op groen staan.
-				ZoekVolgendHoofdsein(Sein^.Plaats, VolgendSein, false);
-				if assigned(VolgendSein) and VolgendSein^.Autosein then
-					ErlaubnisOK := VolgendSein^.H_Maxsnelheid <> 0
+				if not assigned(VolgendSein) or (not VolgendSein^.Autosein) then
+					// Als het een bediend sein is, dan is het goed.
+					ErlaubnisOK := true
+				else if assigned(VolgendSein) and (VolgendeMeetpunt.rijrichting = Sein^.A_Erlaubnisstand) then
+					// Als de rijrichting goed is, dan is het ook goed.
+					ErlaubnisOK := true
+				else if assigned(VolgendSein) and VolgendSein^.AutoSein and
+					(VolgendeMeetpunt.rijrichting = 0) and
+					(VolgendSein^.H_Maxsnelheid <> 0) then
+					// Rijrichting niet gedefinieerd, maar volgende autosein is groen
+					// dan is het ook goed.
+					ErlaubnisOK := true
 				else
-					ErlaubnisOK := true;
+					ErlaubnisOK := false;
 			end else
 				// De Erlaubnis staat op de verkeerde stand -> NIET OK
 				ErlaubnisOK := false;
@@ -835,30 +883,34 @@ begin
 		// We moeten dus het nummer mee-verplaatsen. Daarvoor moeten we twee
 		// meetpunten vinden: die vóór het sein en die na het sein.
 		// Het meetpunt ná het sein is simpel: dat is 'Meetpunt'.
-		if H_terugoprood then begin
+		Meetpunt := Sein^.B_Meetpunt;
+		if H_terugoprood and Meetpunt^.Bezet then begin
 			// Oude meetpunt: treinnaam wissen
-			Meetpunt := Sein^.B_Meetpunt;
 			tmpNaam := Meetpunt^.Treinnaam;
 			Meetpunt^.Treinnaam := '';
 			Meetpunt^.veranderd := true;
-			// Nieuwe meetpunt zoeken!
-			tmpConn := Sein^.Plaats;
-			ZoekVolgendHoofdsein(tmpConn, Sein2, false);
-			if assigned(Sein2) then begin
-				tmpConn := Sein2^.Plaats;
-				tmprail2 := tmpConn^.VanRail;
-
+			if assigned(VolgendeMeetpunt) then begin
 				// Nieuwe meetpunt: treinnaam registreren.
-				Meetpunt := tmpRail2^.Meetpunt;
-				if (copy(tmpNaam,1,1)<>'*') or (copy(Meetpunt^.Treinnaam,1,1)='*') then
+				if (copy(tmpNaam,1,1)<>'*') or (copy(VolgendeMeetpunt^.Treinnaam,1,1)='*') then begin
 					if tmpNaam <> '' then
-						Meetpunt^.Treinnaam := tmpNaam
+						VolgendeMeetpunt^.Treinnaam := tmpNaam
 					else
-						if (Meetpunt^.Treinnaam = '') or (copy(Meetpunt^.Treinnaam,1,1)='*') then
-							Meetpunt^.Treinnaam := Sternummer;
+						if (VolgendeMeetpunt^.Treinnaam = '') or (copy(VolgendeMeetpunt^.Treinnaam,1,1)='*') then
+							VolgendeMeetpunt^.Treinnaam := Sternummer;
+					VolgendeMeetpunt^.veranderd := true;
+				end;
+				// Indien nodig een rijrichting instellen.
+				if VolgendeMeetpunt^.rijrichting = 0 then begin
+					ZoekVolgendHoofdsein(VolgendSein^.Plaats, Sein2, false);
+					if (not assigned(Sein2)) or (not Sein2^.Autosein) or (Sein2^.H_Maxsnelheid > 0) then
+						VolgendeMeetpunt^.rijrichting := Sein^.A_Erlaubnisstand;
+				end;
 			end;
-			Meetpunt^.veranderd := true;
 		end;
+		// En ook nog eventjes rijrichtingen doorgeven.
+		if (PpMeetpunt(Sein^.B_Meetpunt)^.rijrichting = Sein^.A_Erlaubnisstand)
+			and assigned(VolgendeMeetpunt) and (VolgendeMeetpunt^.rijrichting = 0) then
+			VolgendeMeetpunt^.rijrichting := Sein^.A_Erlaubnisstand;
 	end;
 	// De stand van een bediend sein moeten we eventueel aanpassen.
 	if Sein^.Bediend then begin
@@ -960,15 +1012,46 @@ begin
 end;
 
 procedure TpCore.DoeErlaubnis;
+var
+	vrij: boolean;
+	Meetpunt: PpMeetpuntLijst;
+	richting: byte;
 begin
 	if not Erlaubnis^.check then exit;
+	vrij := ErlaubnisVrij(Erlaubnis);
 	if Erlaubnis^.vergrendeld then begin
-		if ErlaubnisVrij(Erlaubnis) and (not Erlaubnis^.voorvergendeld) then begin
+		if vrij and (not Erlaubnis^.voorvergendeld) then begin
 			// Erlaubnis weer vrijgeven
 			Erlaubnis^.richting := Erlaubnis^.standaardrichting;
 			Erlaubnis^.vergrendeld := false;
-			Erlaubnis^.veranderd := true;
+			Erlaubnis^.r_veranderd := true;
 		end;
+	end;
+	if (not vrij) and (not Erlaubnis^.Vergrendeld) then begin
+		Erlaubnis^.Vergrendeld := true;
+		Erlaubnis^.r_veranderd := true;
+	end;
+	// Geaggregeerde rijrichting bijwerken
+	if Erlaubnis^.standaardrichting = 0 then begin
+		richting := 0;
+		Meetpunt := Erlaubnis^.Meetpunten;
+		while assigned(Meetpunt) do begin
+			if Meetpunt^.Meetpunt^.rijrichting <> 0 then
+				if richting = 0 then
+					richting := Meetpunt^.Meetpunt^.rijrichting
+				else if richting <> Meetpunt^.Meetpunt^.rijrichting then
+					richting := 4;
+			Meetpunt := Meetpunt^.Volgende;
+		end;
+		if Erlaubnis^.richting <> richting then begin
+			Erlaubnis^.richting := richting;
+			Erlaubnis^.r_veranderd := true; 
+		end;
+	end;
+	// Geaggregeerde bezet-status bijwerken
+	if Erlaubnis^.bezet = vrij then begin
+		Erlaubnis^.bezet := not vrij;
+		Erlaubnis^.b_veranderd := true;
 	end;
 end;
 
@@ -1112,12 +1195,9 @@ begin
 
 			// Erlaubnis eventueel claimen.
 			tmpErlaubnis := ZoekErlaubnis(Plaats^.erlaubnis);
-			if assigned(tmpErlaubnis) then begin
+			if assigned(tmpErlaubnis) then
 				// Checks hebben we eerder al gedaan!
-				tmpErlaubnis^.richting := Plaats^.erlaubnisstand;
-				tmpErlaubnis^.vergrendeld := true;
-				tmpErlaubnis^.veranderd := true;
-			end;
+				StelErlaubnisIn(tmpErlaubnis, Plaats^.erlaubnisstand);
 
 			// Treinnummer instellen
 			if VerschijnItem^.Treinnummer <> '' then begin
@@ -1571,6 +1651,7 @@ begin
 						tmpMeetpunt^.veranderd := true;
 						tmpMeetpunt^.volgende := pAlleMeetpunten;
 						tmpMeetpunt^.Erlaubnis := nil;
+						tmpMeetpunt^.rijrichting := 0;
 						pAlleMeetpunten := tmpMeetpunt;
 					end;
 				2:	tmpMeetpunt^.Naam := waarde;
@@ -1599,7 +1680,9 @@ begin
 					tmpErlaubnis^.naam := waarde;
 					tmpErlaubnis^.volgende := pAlleErlaubnisse;
 					tmpErlaubnis^.vanwies := nil;
-					tmpErlaubnis^.veranderd := true;
+					tmpErlaubnis^.r_veranderd := true;
+					tmpErlaubnis^.b_veranderd := true;
+					tmpErlaubnis^.bezet := false;
 					tmpErlaubnis^.voorvergendeld := false;
 					tmpErlaubnis^.vergrendeld := false;
 					pAlleErlaubnisse := tmpErlaubnis;
@@ -1878,6 +1961,7 @@ begin
 		stringwrite(f, Meetpunt^.Naam);
 		stringwrite(f, Meetpunt^.Treinnaam);
 		boolwrite  (f, Meetpunt^.Defect);
+		bytewrite  (f, Meetpunt^.rijrichting);
 		Meetpunt := Meetpunt^.Volgende;
 	end;
 
@@ -1967,6 +2051,7 @@ begin
 		stringread(f, MeetpuntNaam);	Meetpunt := ZoekMeetpunt(MeetpuntNaam);
 		stringread(f, Meetpunt^.Treinnaam);
 		boolread  (f, Meetpunt^.Defect);
+		byteread  (f, Meetpunt^.rijrichting);
 	end;
 
 	intread(f, ErlaubnisCount);
@@ -1975,7 +2060,7 @@ begin
 		byteread  (f, Erlaubnis^.richting);
 		boolread  (f, Erlaubnis^.vergrendeld);
 		boolread  (f, Erlaubnis^.voorvergendeld);
-		Erlaubnis^.Veranderd := true;
+		Erlaubnis^.r_veranderd := true;
 	end;
 
 	intread(f, SeinenCount);
@@ -2110,10 +2195,26 @@ end;
 procedure TpCore.DoeMeetpunten;
 var
 	Meetpunt: PpMeetpunt;
+	EneSein, AndereSein: PpSein;
 begin
 	Meetpunt := pAlleMeetpunten;
 	while assigned(Meetpunt) do begin
+		// Laat een meetpunt zichzelf updaten
 		Meetpunt^.Update(pAlleTreinen);
+		// Als er uit het niets patsboem een trein op een vrije baan met
+		// enkelspoorbeveiliging staat, dan moeten we een rijrichting gokken.
+		if Meetpunt^.veranderd and Meetpunt^.bezet and assigned(Meetpunt^.Erlaubnis) and
+			(Meetpunt^.rijrichting = 0) then begin
+			ZoekVolgendHoofdsein(Meetpunt^.Rail^.Volgende, EneSein, true);
+			ZoekVolgendHoofdsein(Meetpunt^.Rail^.Vorige, AndereSein, true);
+			if assigned(EneSein) and assigned(AndereSein) and
+				EneSein^.Autosein and AndereSein^.Autosein then
+				// We weten het niet.
+			else if assigned(EneSein) and EneSein^.Autosein then
+				Meetpunt^.rijrichting := EneSein^.A_Erlaubnisstand
+			else if assigned(AndereSein) and AndereSein^.Autosein then
+				Meetpunt^.rijrichting := AndereSein^.A_Erlaubnisstand;
+		end;
 		Meetpunt := Meetpunt^.Volgende;
 	end;
 end;
@@ -2193,6 +2294,7 @@ begin
 	while assigned(Erlaubnis) do begin
 		DoeErlaubnis(Erlaubnis);
 		SendMsg^.SendErlaubnisMsg(Erlaubnis);
+		SendMsg^.SendErlaubnisAlsMeetpuntMsg(Erlaubnis);
 		Erlaubnis := Erlaubnis^.Volgende;
 	end;
 

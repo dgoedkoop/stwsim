@@ -53,7 +53,9 @@ uses
   stwsimclientTelefoonBel in 'stwsimclientTelefoonBel.pas' {stwscTelefoonBelForm},
   stwvMisc in 'stwvMisc.pas',
   stwvRijwegen in 'stwvRijwegen.pas',
-  stwvSporen in 'stwvSporen.pas';
+  stwvSporen in 'stwvSporen.pas',
+  stwvTNV in 'stwvTNV.pas',
+  stwvGleisplan in 'stwvGleisplan.pas';
 
 {$R *.RES}
 
