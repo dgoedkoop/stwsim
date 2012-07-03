@@ -471,16 +471,17 @@ begin
 					end;
 				end;
 				end;
-				if assigned(HokjeMeetpunt) then begin
-					new(NieuwKruisingHokje);
-					NieuwKruisingHokje^.schermID := Tab^.ID;
-					NieuwKruisingHokje^.x := x;
-					NieuwKruisingHokje^.y := y;
-					NieuwKruisingHokje^.Meetpunt := HokjeMeetpunt;
-					NieuwKruisingHokje^.RechtsonderKruisRijweg := rechtsonderkruis = 1;
-					NieuwKruisingHokje^.volgende := KruisingHokjes;
-					KruisingHokjes := NieuwKruisingHokje;
-				end;
+				if assigned(HokjeMeetpunt) then
+					if HokjeMeetpunt = Meetpunt then begin
+						new(NieuwKruisingHokje);
+						NieuwKruisingHokje^.schermID := Tab^.ID;
+						NieuwKruisingHokje^.x := x;
+						NieuwKruisingHokje^.y := y;
+						NieuwKruisingHokje^.Meetpunt := HokjeMeetpunt;
+						NieuwKruisingHokje^.RechtsonderKruisRijweg := rechtsonderkruis = 1;
+						NieuwKruisingHokje^.volgende := KruisingHokjes;
+						KruisingHokjes := NieuwKruisingHokje;
+					end;
 			end;
 		Tab := Tab^.Volgende;
 	end;
@@ -915,7 +916,13 @@ begin
 		if assigned(NaarMeetpunt) then begin
 			if TreinNr = '' then
 				TreinNr := Sternummer;
-			SendMsg.SendSetTreinnr(NaarMeetpunt, Treinnr);
+			if (copy(TreinNr,1,1)<>'*') or (copy(NaarMeetpunt^.treinnummer,1,1)='*') or
+				(NaarMeetpunt^.treinnummer = '') then
+				if TreinNr <> '' then
+					SendMsg.SendSetTreinnr(NaarMeetpunt, Treinnr)
+				else
+					if (NaarMeetpunt^.treinnummer = '') or (copy(NaarMeetpunt^.treinnummer,1,1)='*') then
+						SendMsg.SendSetTreinnr(NaarMeetpunt, Sternummer);
 		end;
 		// Stel de pending-status in
 		ActieveRijweg^.Pending := 3;

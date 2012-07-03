@@ -419,6 +419,11 @@ CHANGELOG:
   En in de editor worden onnodig geworden subroutes nu gewist.
 - Fix: Enkelspoorbeveiliging werkte sinds 0.2.0.21 niet meer correct met twee
   treinen op dezelfde vrije baan; opgelost.
+- Fix: Sternummers verdwijnen nu niet meer bij verplaatsing langs de vrije baan,
+  en bij verplaatsingen via rijwegen hebben nu gewone treinnummers ook voorrang
+  boven sternummers, net als bij de vrije baan al het geval was.
+- Fix: Verschijnen op onbeveiligd spoor werkt nu gewoon niet, ipv. dat het
+  mogelijk een nulpointer-verwijzing veroorzaakt.
 
 BERICHTEN AAN DE MACHINIST:
 
