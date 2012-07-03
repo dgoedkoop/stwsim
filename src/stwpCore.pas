@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.4';
+	SaveIOMagic			= 'STWSIMSAVE.5';
 
 	tps					= 10;
 
@@ -39,7 +39,7 @@ const
 	storingsdienstnaam				= 'Storingsdienst';
 
 	meetpuntdefectbijtreinkans		= 1/1500;
-	seindefectkans						= 1/400;
+	seindefectkans						= {1/400}0;
 	seindefectmintijd					= 10;
 	seindefectmaxtijd					= 20;
 
@@ -80,6 +80,7 @@ type
 		pAlleMeetpunten:		PpMeetpunt;
 		pAlleErlaubnisse:		PpErlaubnis;
 		pAlleSeinen:			PpSein;
+		pAlleSeinBeperkingen:PpSeinBeperking;
 		pAlleWissels:			PpWissel;
 		pAlleVerschijnpunten:PpVerschijnPunt;
 		pAlleVerdwijnpunten:	PpVerdwijnPunt;
@@ -152,8 +153,10 @@ type
 		procedure DoeWisselDefect(Wissel: PpWissel; magechtdefect: boolean);
 
 		function CalcSeinbeeld(Sein: PpSein): TSeinbeeld;
+		function CalcBeperking(Vansein, Naarsein: PpSein): integer;
 
 		procedure StelErlaubnisIn(Erlaubnis: PpErlaubnis; stand: byte);
+		procedure GeefErlaubnisVrij(Erlaubnis: PpErlaubnis);
 
 		// Wat functies voor eenmalig intern gebruik
 		procedure DoeSein(Sein: PpSein);
@@ -191,6 +194,7 @@ begin
 	pAlleMeetpunten		:= nil;
 	pAlleErlaubnisse		:= nil;
 	pAlleSeinen				:= nil;
+	pAlleSeinBeperkingen := nil;
 	pAlleWissels			:= nil;
 	pAlleVerschijnpunten	:= nil;
 	pAlleVerdwijnpunten	:= nil;
@@ -305,6 +309,27 @@ begin
 			result := sbGeel
 		else
 			result := sbGroen;
+	end;
+end;
+
+function TpCore.CalcBeperking;
+var
+	tmpSeinBeperking: PpSeinBeperking;
+begin
+	result := -1;
+	tmpSeinBeperking := pAlleSeinBeperkingen;
+	// Voor de verduidelijking van het onderstaande:
+	// Per combinatie kunnen meerdere beperkingen van toepassing zijn.
+	// Bijv. 40 -> 0 en 120 -> 60, om maar wat te noemen. Het is dan uiteraard
+	// de bedoeling dat de meest restrictieve beperking die van toepassing is
+	// gebruikt wordt.
+	while assigned(tmpSeinBeperking) do begin
+		if (Vansein = tmpSeinBeperking^.Vansein) and
+			(Naarsein = tmpSeinBeperking^.Naarsein) and
+			(Naarsein^.H_Maxsnelheid <= tmpSeinBeperking^.Triggersnelheid) and
+			((tmpSeinBeperking^.Beperking < result) or (result = -1)) then
+			result := tmpSeinBeperking^.Beperking;
+		tmpSeinBeperking := tmpSeinBeperking^.volgende;
 	end;
 end;
 
@@ -835,6 +860,36 @@ begin
 	end;
 end;
 
+procedure TpCore.GeefErlaubnisVrij;
+var
+	Meetpunt: PpMeetpuntLijst;
+begin
+	// We geven een reeds geclaimde rijrichting vrij. In ieder
+	// geval heffen we de vergrendeling op.
+	Erlaubnis^.voorvergendeld := false;
+	// Is de rijrichting helemaal vrij, dan kan hij meteen worden
+	// vrijgegeven.
+	if ErlaubnisVrij(Erlaubnis) then
+		if Erlaubnis^.standaardrichting > 0 then begin
+			// Dubbelspoor met beveiligd links rijden: harde erlaubnis
+			Erlaubnis^.richting := Erlaubnis^.standaardrichting;
+			Erlaubnis^.vergrendeld := false;
+			Erlaubnis^.r_veranderd := true;
+		end else begin
+			// Enkelspoor of dubbelenkelspoor: zachte erlaubnis
+			// Dat we hier zijn betekent dat hetzij alle meetpunten vrij zijn.
+			// Dan mogen we de rijrichting van al die meetpunten resetten.
+			Meetpunt := Erlaubnis^.Meetpunten;
+			while assigned(Meetpunt) do begin
+				Meetpunt^.Meetpunt^.rijrichting := 0;
+				Meetpunt := Meetpunt^.Volgende;
+			end;
+			// En vergrendelen.
+			Erlaubnis^.vergrendeld := false;
+			Erlaubnis^.check := true;
+		end;
+end;
+
 procedure TpCore.ScorePerrongebruik;
 begin
 	if correct then
@@ -850,6 +905,7 @@ var
 	VolgendSein: PpSein;
 	VolgendeMeetpunt: PpMeetpunt;
 	MaxSnelheid: integer;
+	Beperking: integer;
 	RailsBezet: boolean;
 	ErlaubnisOK: boolean;
 	Meetpunt: PpMeetpunt;
@@ -909,44 +965,41 @@ begin
 			end;
 			tmpRail := tmpRail^.volgende;
 		end;
+
+		Meetpunt := Sein^.B_Meetpunt;
+
 		// Rijrichting controleren
 		if assigned(Sein^.A_Erlaubnis) then begin
 			if PpErlaubnis(Sein^.A_Erlaubnis)^.richting = Sein^.A_Erlaubnisstand then
-				// De Erlaubnis staat op de goede stand -> OK
+				// De Erlaubnis voor de hele vrije baan staat op de goede stand -> OK
 				ErlaubnisOK := true
 			else if PpErlaubnis(Sein^.A_Erlaubnis)^.standaardrichting = 0 then begin
 				// Dit is een (dubbel-)enkelspoorbeveiliging.
-				// Het sein kan sowieso pas op groen als het spoor erachter vrij is.
-				// Als het volgende sein een bediend sein is, is dat genoeg.
-				// Als er een rijrichting is gedefinieerd, dan is dat ook
-				// doorslaggevend.
-				// Als het volgende sein ook een autosein is, moet dat sein echter
-				// ook op groen staan.
-				if not assigned(VolgendSein) or (not VolgendSein^.Autosein) then
-					// Als het een bediend sein is, dan is het goed.
-					ErlaubnisOK := true
-				else if assigned(VolgendSein) and (VolgendeMeetpunt.rijrichting = Sein^.A_Erlaubnisstand) then
-					// Als de rijrichting goed is, dan is het ook goed.
-					ErlaubnisOK := true
-				else if assigned(VolgendSein) and VolgendSein^.AutoSein and
-					(VolgendeMeetpunt.rijrichting = 0) and
-					(VolgendSein^.H_Maxsnelheid <> 0) then
-					// Rijrichting niet gedefinieerd, maar volgende autosein is groen
-					// dan is het ook goed.
-					ErlaubnisOK := true
-				else
-					ErlaubnisOK := false;
+				// Het werkt eigenlijk heel simpel. In de meetpunten wordt de
+				// rijrichting opgeslagen, die plant zichzelf ook vanzelf voort.
+				// Wij moeten dus alleen checken of dit sein overeenkomt met de
+				// rijrichting van de meetpunten voor en na dit sein.
+				ErlaubnisOK := Meetpunt^.rijrichting = Sein^.A_Erlaubnisstand;
+				if assigned(VolgendeMeetpunt) then
+					ErlaubnisOK := ErlaubnisOK and (VolgendeMeetpunt^.rijrichting = Sein^.A_Erlaubnisstand);
 			end else
 				// De Erlaubnis staat op de verkeerde stand -> NIET OK
 				ErlaubnisOK := false;
 		end else
 			// Dit sein heeft geen Erlaubnis -> OK
 			ErlaubnisOK := true;
+
 		// SEINBEELD INSTELLEN
-		if (not RailsBezet) and ErlaubnisOK then
-			// Yo! Spoor vrij!
-			Sein^.H_Maxsnelheid := MaxSnelheid
-		else
+		if (not RailsBezet) and ErlaubnisOK then begin
+			// Yo! Spoor vrij! Sein op groen!
+			Sein^.H_Maxsnelheid := MaxSnelheid;
+			// Bij een (dubbel-)enkelspoorbeveiliging moeten we de rijrichting
+			// laten voortplanten.
+			if assigned(Sein^.A_Erlaubnis) and assigned(VolgendeMeetpunt) then
+				if (Meetpunt^.rijrichting = Sein^.A_Erlaubnisstand) and
+					(VolgendeMeetpunt^.Erlaubnis = Sein^.A_Erlaubnis) then
+						VolgendeMeetpunt^.rijrichting := Meetpunt^.rijrichting;
+		end else
 			if Sein^.H_Maxsnelheid <> 0 then begin
 				Sein^.H_Maxsnelheid := 0;
 				if RailsBezet then
@@ -955,8 +1008,6 @@ begin
 		// Het sein is terug op rood gesprongen. Er is dus een trein gepasseerd.
 		// We moeten dus het nummer mee-verplaatsen. Daarvoor moeten we twee
 		// meetpunten vinden: die vóór het sein en die na het sein.
-		// Het meetpunt ná het sein is simpel: dat is 'Meetpunt'.
-		Meetpunt := Sein^.B_Meetpunt;
 		if H_terugoprood and Meetpunt^.Bezet then begin
 			// Oude meetpunt: treinnaam wissen
 			tmpNaam := Meetpunt^.Treinnaam;
@@ -1011,6 +1062,11 @@ begin
 			end;
 		end;
 	end;
+
+	// Beperking checken
+	Beperking := CalcBeperking(Sein, VolgendSein);
+	if (Beperking > -1) and (Sein^.H_Maxsnelheid > Beperking) then
+		Sein^.H_Maxsnelheid := Beperking;
 
 	// Defecten eventueel oplossen
 	if Sein^.groendefect and (GetTijd > Sein^.groendefecttot) then
@@ -1258,8 +1314,15 @@ begin
 			if (tmpTrein^.Modus = tmStilstaan) then
 				tmpTrein^.StationModusPlanpunt := tmpTrein^.GetVolgendRijplanpunt;
 
+			tmpTrein^.CalcBezetteRails;
+
 			// Snelheid instellen. Niet te snel.
-			tmpTrein^.ZieVoorsein(tmpSein);
+			// Niet te snel houdt in dat we niet harder mogen rijden dan het
+			// eerstvolgende sein aangeeft.
+			if (VolgendSeinSnelheid > 0) then
+				tmpTrein^.V_Adviessnelheid := VolgendSeinSnelheid
+			else
+				tmpTrein^.V_Adviessnelheid := RemwegSnelheid;
 			if (Plaats^.startsnelheid <= VolgendSeinSnelheid) then
 				tmpTrein^.snelheid := Plaats^.startsnelheid
 			else
@@ -1357,6 +1420,8 @@ var
 	// Seinen
 	tmpSein: PpSein;
 	tmpMeetpunt: PpMeetpunt;
+	// Seinbeperking
+	tmpSeinBeperking: PpSeinBeperking;
 	// Erlaubnis
 	tmpErlaubnis: PpErlaubnis;
 	tmpMeetpuntLijst: PpMeetpuntLijst;
@@ -1382,6 +1447,7 @@ begin
 	f2 := false;
 	f3 := false;
 	tmpSein := nil;
+	tmpSeinBeperking := nil;
 	tmpMeetpunt := nil;
 	tmpVerschijnpunt := nil;
 	tmpVerdwijnpunt := nil;
@@ -1655,7 +1721,7 @@ begin
 						if not assigned(rail2) then
 							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 						if rail2 <> tmpConn1.recht then
-							begin Leesfout_melding := 'Sein dient niet op een wissel geplaatst te worden.'; exit end;
+							begin Leesfout_melding := 'Genoemde sporen zitten niet (of niet recht) aan elkaar bevestigd.'; exit end;
 					end;
 				4: begin
 						if (waarde='e') or (waarde='E') then begin
@@ -1700,12 +1766,47 @@ begin
 					end;
 				12: tmpSein^.Haltevoorsein := (waarde = 'j') or (waarde = 'J');
 				13: if waarde <> '-' then begin
-						tmpSein^.Perronpunt := true;
+						if tmpSein^.Haltevoorsein then
+							begin Leesfout_melding := 'Bij een stationsaankondiging hoort geen perronnummer.'; exit end;
 						tmpSein^.Perronnummer := waarde;
-					end else
-						tmpSein^.Perronpunt := false;
-				14: if waarde <> '-' then
+					end;
+				14: if waarde <> '-' then begin
 						tmpSein^.Stationsnaam := waarde;
+						if not tmpSein^.Haltevoorsein then
+							tmpSein^.Perronpunt := true
+						else
+							tmpSein^.Perronpunt := false
+					end;
+				else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'b' then begin	// SEINBEPERKING!
+				case index of
+				1: begin
+						new(tmpSeinBeperking);
+						tmpSeinBeperking^.volgende := pAlleSeinBeperkingen;
+						pAlleSeinBeperkingen := tmpSeinBeperking;
+						tmpSein := ZoekSein(waarde);
+						if not assigned(tmpSein) then
+							begin Leesfout_melding := 'Sein '+waarde+' niet gevonden.'; exit end;
+						tmpSeinBeperking^.Vansein := tmpSein;
+					end;
+				2: begin
+						val(waarde, tmpSeinBeperking^.Beperking, code);
+						if code <> 0 then
+							begin Leesfout_melding := 'Beperking is geen getal (km/u).'; exit end;
+					end;
+				3: begin
+						tmpSein := ZoekSein(waarde);
+						if not assigned(tmpSein) then
+							begin Leesfout_melding := 'Sein '+waarde+' niet gevonden.'; exit end;
+						tmpSeinBeperking^.Naarsein := tmpSein;
+					end;
+				4: begin
+						val(waarde, tmpSeinBeperking^.Triggersnelheid, code);
+						if code <> 0 then
+							begin Leesfout_melding := 'Triggersnelheid van doelsein is geen getal (km/u).'; exit end;
+					end;
 				else
 					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;

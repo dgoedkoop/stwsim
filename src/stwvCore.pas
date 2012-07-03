@@ -34,6 +34,8 @@ procedure vCore_Create(core: PvCore);
 
 function AddSubroute(core: PvCore; Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
 	KruisingHokjes: PvKruisingHokje; InactieveHokjes: PvInactiefHokje): PvSubroute;
+function ControleerDubbelSubroute(core: PvCore; Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
+	KruisingHokjes: PvKruisingHokje): boolean;
 
 procedure AddBinnenkomendGesprek(core: PvCore; metwie: TvMessageWie);
 procedure DeleteBinnenkomendGesprek(core: PvCore; metwie: TvMessageWie);
@@ -131,6 +133,7 @@ var
 	tmpSubroute: PvSubroute;
 begin
 	new(tmpSubroute);
+	tmpSubroute^.Ingebruik := false;
 	tmpSubroute^.Meetpunt := Meetpunt;
 	tmpSubroute^.Wisselstanden := Wisselstanden;
 	tmpSubroute^.KruisingHokjes := KruisingHokjes;
@@ -139,6 +142,45 @@ begin
 	Core^.vAlleSubroutes := tmpSubroute;
 	result := tmpSubroute;
 end;
+
+function ControleerDubbelSubroute;
+var
+	Subroute:	PvSubroute;
+	OK:					boolean;
+begin
+	result := false;
+
+	// Als er geen inactieve hokjes (kunnen) zijn hoeven we ook niks toe te
+	// voegen.
+	if not assigned(Wisselstanden) and not assigned(Kruisinghokjes) then begin
+		result := true;
+		exit;
+	end;
+
+	Subroute := Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
+		// We gaan ervan uit dat dit een duplicaat is.
+		OK := true;
+
+		if Subroute^.Meetpunt <> Meetpunt then
+			OK := false;
+
+		if OK then
+			OK := OK and CmpWisselstanden(Subroute^.Wisselstanden, Wisselstanden);
+
+		if OK then
+			OK := OK and CmpKruisingHokjes(Subroute^.KruisingHokjes, KruisingHokjes);
+
+		// OK?
+		if OK then begin
+			result := true;
+			exit;
+		end;
+
+		Subroute := Subroute^.Volgende;
+	end;
+end;
+
 
 procedure AddBinnenkomendGesprek;
 var
@@ -924,6 +966,7 @@ var
 begin
 	stringread(f, meetpuntID);
 
+	Subroute^.Ingebruik := false;
 	WisselStanden := nil;
 	KruisingHokjes := nil;
 	InactieveHokjes := nil;
@@ -1053,9 +1096,9 @@ begin
 			end;
 			'q': begin
 				New(Subroute);
+				LoadSubroute(f, Core, Subroute);
 				Subroute^.Volgende := Core.vAlleSubroutes;
 				Core.vAlleSubroutes := Subroute;
-				LoadSubroute(f, Core, Subroute);
 			end;
 			'r': begin
 				Rijweg := NieuweRijweg(core);
@@ -1167,8 +1210,10 @@ begin
 	t := 'q';
 	zq := core.vAlleSubroutes;
 	while assigned(zq) do begin
-		blockwrite(f, t, sizeof(t));
-		SaveSubroute(f, zq);
+		if zq^.Ingebruik then begin
+			blockwrite(f, t, sizeof(t));
+			SaveSubroute(f, zq);
+		end;
 		zq := zq^.Volgende;
 	end;
 	t := 'r';
@@ -1254,11 +1299,24 @@ var
 	Aank_Erlaubnis			: PvErlaubnis;
 	Aank_Erlaubnisstand	: byte;
 	Aank_Meetpunt			: PvMeetpunt;
+	BestaatRijwegNaarSein: boolean;
 begin
 	Sein := Core^.vAlleSeinen;
 	while assigned(Sein) do begin
-		if length(Sein^.Van)>=2 then
-			if (Sein^.Van[1] = 'r') and (Sein^.Van[2] in ['A'..'Z','a'..'z']) and
+		// Als er een rijweg naar dit sein bestaat, dan is het geen aankondiging
+		// langs de vrije baan.
+		BestaatRijwegNaarSein := false;
+		Rijweg := Core^.vAlleRijwegen;
+		while assigned(Rijweg) do begin
+			if (not assigned(Rijweg^.Erlaubnis)) and
+				(Rijweg^.NaarTNVMeetpunt = Sein^.VanTNVMeetpunt) then begin
+				BestaatRijwegNaarSein := true;
+				break;
+			end;
+			Rijweg := Rijweg^.Volgende;
+		end;
+		if (not BestaatRijwegNaarSein) and (length(Sein^.Van)>=2) then
+			if (Sein^.Van[1] = 'r') {and (Sein^.Van[2] in ['A'..'Z','a'..'z'])} and
 				// We hebben een mogelijk punt van aankondiging. Eerst even kijken
 				// om welk punt het nu precies gaat
 				assigned(Sein^.VanTNVMeetpunt) then begin

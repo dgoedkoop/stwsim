@@ -36,6 +36,9 @@ type
 		KruisingHokjes:	PvKruisingHokje;
 		// En welke hokjes zijn dan nu precies inactief?
 		EersteHokje:		PvInactiefHokje;
+		// Voor de editor - om te registreren dat een subroute overbodig is en
+		// dus niet opgeslagen hoeft te worden.
+		Ingebruik:				boolean;
 
 		Volgende:			PvSubroute;
 	end;
@@ -126,8 +129,8 @@ function RijwegWisselstandVereist(Rijweg: PvRijweg; Wissel: PvWissel): byte;
 procedure DisposePrlRijweg(PrlRijweg: PvPrlRijweg);
 procedure PrlRijwegVoegRijwegToe(PrlRijweg: PvPrlRijweg; Rijweg: PvRijweg);
 
-function CmpWisselstanden(Wisselstanden1, Wisselstanden2: PvWisselstand; strikt: boolean): boolean;
-function CmpKruisingHokjes(Hokjes1, Hokjes2: PvKruisingHokje; strikt: boolean): boolean;
+function CmpWisselstanden(Wisselstanden1, Wisselstanden2: PvWisselstand): boolean;
+function CmpKruisingHokjes(Hokjes1, Hokjes2: PvKruisingHokje): boolean;
 
 implementation
 
@@ -138,8 +141,12 @@ var
 	i: byte;
 begin
 	result := true;
+
+	// Dit controleert of, voor zover de wisselstandenlijsten elkaar overlappen,
+	// de bijbehorende standen ook overeenkomen.
 	WisselStand1 := Wisselstanden1;
 	while assigned(Wisselstand1) do begin
+		gevonden := false;
 		Wisselstand2 := Wisselstanden2;
 		while assigned(Wisselstand2) do begin
 			if (Wisselstand1^.Wissel = Wisselstand2^.Wissel) and
@@ -150,36 +157,41 @@ begin
 			end;
 			Wisselstand2 := Wisselstand2^.Volgende;
 		end;
+		if not gevonden then begin
+			result := false;
+			exit
+		end;
 		Wisselstand1 := Wisselstand1^.Volgende;
 	end;
-	
+
+	// Nu controleren we nog, of niet op de ene lijst iets staat wat op de
+	// andere ontbreekt.
 	Wisselstand1 := nil; Wisselstand2 := nil;
-	if strikt then
-		for i := 1 to 2 do begin
-			case i of
-			1: Wisselstand1 := Wisselstanden1;
-			2: Wisselstand1 := Wisselstanden2;
-			end;
-			while assigned(Wisselstand1) do begin
-				gevonden := false;
-				case i of
-				1: Wisselstand2 := Wisselstanden2;
-				2: Wisselstand2 := Wisselstanden1;
-				end;
-				while assigned(Wisselstand2) do begin
-					if (Wisselstand1^.Wissel = Wisselstand2^.Wissel) then begin
-						gevonden := true;
-						break;
-					end;
-					Wisselstand2 := Wisselstand2^.Volgende;
-				end;
-				if not gevonden then begin
-					result := false;
-					exit;
-				end;
-				Wisselstand1 := Wisselstand1^.Volgende;
-			end;
+	for i := 1 to 2 do begin
+		case i of
+		1: Wisselstand1 := Wisselstanden1;
+		2: Wisselstand1 := Wisselstanden2;
 		end;
+		while assigned(Wisselstand1) do begin
+			gevonden := false;
+			case i of
+			1: Wisselstand2 := Wisselstanden2;
+			2: Wisselstand2 := Wisselstanden1;
+			end;
+			while assigned(Wisselstand2) do begin
+				if (Wisselstand1^.Wissel = Wisselstand2^.Wissel) then begin
+					gevonden := true;
+					break;
+				end;
+				Wisselstand2 := Wisselstand2^.Volgende;
+			end;
+			if not gevonden then begin
+				result := false;
+				exit;
+			end;
+			Wisselstand1 := Wisselstand1^.Volgende;
+		end;
+	end;
 end;
 
 function CmpKruisingHokjes;
@@ -189,6 +201,9 @@ var
 	i: byte;
 begin
 	result := true;
+
+	// Dit controleert of, voor zover de kruisinghokjeslijsten elkaar overlappen,
+	// de bijbehorende standen ook overeenkomen.
 	KruisingHokje1 := Hokjes1;
 	while assigned(KruisingHokje1) do begin
 		KruisingHokje2 := Hokjes2;
@@ -206,35 +221,36 @@ begin
 		KruisingHokje1 := KruisingHokje1^.Volgende;
 	end;
 
+	// Nu controleren we nog, of niet op de ene lijst iets staat wat op de
+	// andere ontbreekt.
 	KruisingHokje1 := nil; KruisingHokje2 := nil;
-	if strikt then
-		for i := 1 to 2 do begin
-			case i of
-			1: KruisingHokje1 := Hokjes1;
-			2: KruisingHokje1 := Hokjes2;
-			end;
-			while assigned(KruisingHokje1) do begin
-				gevonden := false;
-				case i of
-				1: KruisingHokje2 := Hokjes2;
-				2: KruisingHokje2 := Hokjes1;
-				end;
-				while assigned(KruisingHokje2) do begin
-					if (KruisingHokje1^.schermID = KruisingHokje2^.schermID) and
-						(KruisingHokje1^.x = KruisingHokje2^.x) and
-						(KruisingHokje1^.y = KruisingHokje2^.y) then begin
-						gevonden := true;
-						break;
-					end;
-					KruisingHokje2 := KruisingHokje2^.Volgende;
-				end;
-				if not gevonden then begin
-					result := false;
-					exit;
-				end;
-				KruisingHokje1 := KruisingHokje1^.Volgende;
-			end;
+	for i := 1 to 2 do begin
+		case i of
+		1: KruisingHokje1 := Hokjes1;
+		2: KruisingHokje1 := Hokjes2;
 		end;
+		while assigned(KruisingHokje1) do begin
+			gevonden := false;
+			case i of
+			1: KruisingHokje2 := Hokjes2;
+			2: KruisingHokje2 := Hokjes1;
+			end;
+			while assigned(KruisingHokje2) do begin
+				if (KruisingHokje1^.schermID = KruisingHokje2^.schermID) and
+					(KruisingHokje1^.x = KruisingHokje2^.x) and
+					(KruisingHokje1^.y = KruisingHokje2^.y) then begin
+					gevonden := true;
+					break;
+				end;
+				KruisingHokje2 := KruisingHokje2^.Volgende;
+			end;
+			if not gevonden then begin
+				result := false;
+				exit;
+			end;
+			KruisingHokje1 := KruisingHokje1^.Volgende;
+		end;
+	end;
 end;
 
 procedure DisposeRijweg;

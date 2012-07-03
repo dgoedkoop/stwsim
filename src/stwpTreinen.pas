@@ -59,6 +59,7 @@ type
 		defecttot			: integer;
 
 		doorroodgereden:		boolean;
+		doorroodgereden_sein:string;
 		doorroodopdracht:		boolean;
 		doorroodverderrijden:boolean;
 
@@ -93,10 +94,11 @@ type
 		vorigeaankomstvertraging: integer;
 		vertraging:		integer;	// Vertraging in minuten
 
-		huidigemaxsnelheid:	integer;	// Huidige max. snelheid in km/u. Sein.
-
 		bezetterails:	  		PpRailLijst;
 
+		baanvaksnelheid:		integer;	// Baanvaksnelheid
+
+		huidigemaxsnelheid:	integer;	// Huidige max. snelheid in km/u. Sein.
 		// Het volgende is nodig omdat een snelheidsverhoging pas geldt wanneer
 		// de hele trein het snelheidsverhogingspunt voorbij is gereden.
 		vorigemaxsnelheid:	integer;	// Vorige max. snelheid
@@ -122,7 +124,7 @@ type
 		Procedure ZoekEinde(var GevRail: PpRail; var GevAchteruit: boolean;
 			var GevPos: double);
 
-		procedure NieuweMaxsnelheid(snelheid: integer);
+		procedure NieuweMaxsnelheid(snelheid: integer; steltbaanvaksnelheidin: boolean);
 
 		procedure ZieVoorsein(Sein: PpSein);
 
@@ -256,6 +258,7 @@ begin
 	bytewrite (f, Ord(Trein^.modus));
 	intwrite (f, Trein^.vorigeaankomstvertraging);
 	intwrite (f, Trein^.vertraging);
+	intwrite (f, Trein^.baanvaksnelheid);
 	intwrite (f, Trein^.huidigemaxsnelheid);
 	intwrite (f, Trein^.vorigemaxsnelheid);
 	doublewrite(f, Trein^.afstandsindsvorige);
@@ -296,6 +299,7 @@ begin
 	byteread (f, modus); Trein^.modus := TpTreinModus(Modus);
 	intread (f, Trein^.vorigeaankomstvertraging);
 	intread (f, Trein^.vertraging);
+	intread (f, Trein^.baanvaksnelheid);
 	intread (f, Trein^.huidigemaxsnelheid);
 	intread (f, Trein^.vorigemaxsnelheid);
 	doubleread(f, Trein^.afstandsindsvorige);
@@ -361,6 +365,7 @@ begin
 	vertraging := 0;
 	vorigemaxsnelheid := -1;
 	huidigemaxsnelheid := -1;
+	baanvaksnelheid := -1;
 	B_Adviessnelheid := -1;
 	V_Adviessnelheid := -1;
 	S_Adviessnelheid := -1;
@@ -645,9 +650,27 @@ end;
 
 procedure TpTrein.NieuweMaxsnelheid;
 begin
-	vorigemaxsnelheid := huidigemaxsnelheid;
-	afstandsindsvorige := 0;
-	huidigemaxsnelheid := snelheid;
+	if not steltbaanvaksnelheidin then begin
+		// Niks te doen? Dan niks doen.
+		if (snelheid = huidigemaxsnelheid) or
+			((snelheid >= baanvaksnelheid) and (huidigemaxsnelheid = baanvaksnelheid) and
+			 (baanvaksnelheid > -1)) then
+			exit;
+		vorigemaxsnelheid := huidigemaxsnelheid;
+		afstandsindsvorige := 0;
+		if (snelheid <= baanvaksnelheid) or (baanvaksnelheid = -1) then
+			huidigemaxsnelheid := snelheid
+		else
+			huidigemaxsnelheid := baanvaksnelheid;
+	end else begin
+		if (huidigemaxsnelheid <> snelheid) then begin
+			vorigemaxsnelheid := huidigemaxsnelheid;
+			afstandsindsvorige := 0;
+			huidigemaxsnelheid := snelheid
+		end;
+		if snelheid <> baanvaksnelheid then;
+			baanvaksnelheid := snelheid;
+	end;
 end;
 
 procedure TpTrein.ZieVoorsein;
@@ -661,7 +684,7 @@ begin
 		if (NieuweAdviessnelheid < V_Adviessnelheid) or
 			((V_Adviessnelheid = -1) and
 			 (NieuweAdviessnelheid >= 0)) then
-			if (NieuweAdviessnelheid > RemwegSnelheid) then
+			if (NieuweAdviessnelheid > 0) then
 				V_Adviessnelheid := NieuweAdviessnelheid
 			else
 				V_Adviessnelheid := RemwegSnelheid;
@@ -671,7 +694,7 @@ begin
 		if (NieuweAdviessnelheid < B_Adviessnelheid) or
 			((B_Adviessnelheid = -1) and
 			 (NieuweAdviessnelheid >= 0)) then
-			if (NieuweAdviessnelheid > RemwegSnelheid) then
+			if (NieuweAdviessnelheid > 0) then
 				B_Adviessnelheid := NieuweAdviessnelheid
 			else
 				B_Adviessnelheid := RemwegSnelheid;

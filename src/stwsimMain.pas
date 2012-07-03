@@ -114,6 +114,7 @@ type
     Spelopslaanals1: TMenuItem;
     Wisselreparatie: TAction;
     invoerEdit: TEdit;
+    RijwegVoerin: TAction;
 	 procedure FormCreate(Sender: TObject);
 	 procedure TijdTimerTimer(Sender: TObject);
 	 procedure SimOpenenExecute(Sender: TObject);
@@ -157,7 +158,7 @@ type
     procedure invoerEditChange(Sender: TObject);
     procedure invoerEditEnter(Sender: TObject);
     procedure invoerEditExit(Sender: TObject);
-    procedure voerInButClick(Sender: TObject);
+    procedure RijwegVoerinExecute(Sender: TObject);
 	private
 		// Belangrijkste
 		pCore:		PpCore;
@@ -484,8 +485,8 @@ begin
 		UpdateChg.Schermen := false;
 	end;
 	if UpdateChg.Vannaar then begin
-		voerInBut.Enabled := (invoerEdit.Text<>'');
-		cancelBut.Enabled := (invoerEdit.Text<>'');
+		RijwegVoerin.Enabled := (invoerEdit.Text<>'');
+		RijwegHo.Enabled := (invoerEdit.Text<>'');
 		UpdateChg.Vannaar := false;
 	end;
 	if UpdateChg.Menus then begin
@@ -960,9 +961,10 @@ end;
 
 procedure TstwsimMainForm.RijwegNormaalExecute(Sender: TObject);
 begin
-	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
-		invoerEdit.Text := invoerEdit.Text + ' ';
-	invoerEdit.Text := invoerEdit.Text+'n';
+	if invoerEdit.Text = '' then exit;
+	if invoerEdit.Text[1] <> ' ' then
+		invoerEdit.Text := ' '+invoerEdit.Text;
+	invoerEdit.Text := 'n'+invoerEdit.Text;
 	RijwegLogica.VoerStringUit(invoerEdit.Text);
 	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
@@ -971,9 +973,10 @@ end;
 
 procedure TstwsimMainForm.RijwegROZExecute(Sender: TObject);
 begin
-	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
-		invoerEdit.Text := invoerEdit.Text + ' ';
-	invoerEdit.Text := invoerEdit.Text+'roz';
+	if invoerEdit.Text = '' then exit;
+	if invoerEdit.Text[1] <> ' ' then
+		invoerEdit.Text := ' '+invoerEdit.Text;
+	invoerEdit.Text := 'roz'+invoerEdit.Text;
 	RijwegLogica.VoerStringUit(invoerEdit.Text);
 	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
@@ -982,9 +985,10 @@ end;
 
 procedure TstwsimMainForm.RijwegAutoExecute(Sender: TObject);
 begin
-	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
-		invoerEdit.Text := invoerEdit.Text + ' ';
-	invoerEdit.Text := invoerEdit.Text+'a';
+	if invoerEdit.Text = '' then exit;
+	if invoerEdit.Text[1] <> ' ' then
+		invoerEdit.Text := ' '+invoerEdit.Text;
+	invoerEdit.Text := 'a'+invoerEdit.Text;
 	RijwegLogica.VoerStringUit(invoerEdit.Text);
 	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
@@ -993,9 +997,10 @@ end;
 
 procedure TstwsimMainForm.RijwegCancelExecute(Sender: TObject);
 begin
-	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
-		invoerEdit.Text := invoerEdit.Text + ' ';
-	invoerEdit.Text := invoerEdit.Text+'h';
+	if invoerEdit.Text = '' then exit;
+	if invoerEdit.Text[1] <> ' ' then
+		invoerEdit.Text := ' '+invoerEdit.Text;
+	invoerEdit.Text := 'h'+invoerEdit.Text;
 	RijwegLogica.VoerStringUit(invoerEdit.Text);
 	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
@@ -1300,6 +1305,7 @@ begin
 			SetTijd(PCore.StartTijd);
 			TimeSet := true;
 		end;
+		Randomize;
 
 		// UI updaten.
 		DienstOpen.Enabled := false;
@@ -1327,8 +1333,14 @@ begin
 	RijwegNormaal.Enabled := not Pauze;
 	RijwegROZ.Enabled := not Pauze;
 	RijwegAuto.Enabled := not Pauze;
-	RijwegHo.Enabled := not Pauze;
 	invoerEdit.Enabled := not Pauze;
+	if Pauze then begin
+		RijwegVoerin.Enabled := false;
+		RijwegHo.Enabled := false
+	end else begin
+		UpdateChg.Vannaar := true;
+		UpdateControls;
+	end;
 
 	tijdLabel.Caption := TijdStr(GetTijd, false);
 end;
@@ -1422,7 +1434,7 @@ begin
 	cancelBut.Cancel := false;
 end;
 
-procedure TstwsimMainForm.voerInButClick(Sender: TObject);
+procedure TstwsimMainForm.RijwegVoerinExecute(Sender: TObject);
 begin
 	RijwegLogica.VoerStringUit(invoerEdit.Text);
 	invoerEdit.Text := '';

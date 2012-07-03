@@ -61,8 +61,8 @@ type
 		bezet: boolean;				// Geaggregeerd gegeven van een vrije baan
 		// Overige
 		check:		boolean;
-		r_veranderd:	boolean;
-		b_veranderd:	boolean;
+		r_veranderd:	boolean;    // Is de richting veranderd?
+		b_veranderd:	boolean;		// Is de bezet-status veranderd?
 		vanwies:		PpRegLijst;
 		// Intern
 		volgende:	PpErlaubnis;

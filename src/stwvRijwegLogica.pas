@@ -30,8 +30,6 @@ type
 		function RijwegVrij(Rijweg: PvRijweg): boolean;
 		function RijwegAlActief(Rijweg: PvRijweg): boolean;
 		procedure DoeKruisHokjes(Meetpunt: PvMeetpunt; Rijweg: PvRijweg);
-		function ControleerDubbelSubroute(Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
-			KruisingHokjes: PvKruisingHokje; strikt: boolean): boolean;
 		function ControleerTerecht(Meetpunt: PvMeetpunt): boolean;
 		procedure SetMeetpuntKnipperen(Meetpunt: PvMeetpunt; waarde: boolean);
 		procedure SetAankondigingKnipperen(Rijweg: PvRijweg; waarde: boolean);
@@ -281,44 +279,9 @@ begin
 			result := result and (Meetpunt^.bezet <> zoekMeetpunt^.Volgende^.Meetpunt^.bezet);
 end;
 
-function TRijwegLogica.ControleerDubbelSubroute;
-var
-	Subroute:	PvSubroute;
-	OK:					boolean;
-begin
-	result := false;
-
-	// Als er geen inactieve hokjes (kunnen) zijn hoeven we ook niks toe te
-	// voegen.
-	if not assigned(Wisselstanden) and not assigned(Kruisinghokjes) then begin
-		result := true;
-		exit;
-	end;
-
-	Subroute := Core.vAlleSubroutes;
-	while assigned(Subroute) do begin
-		// We gaan ervan uit dat dit een duplicaat is.
-		OK := true;
-
-		if Subroute^.Meetpunt <> Meetpunt then
-			OK := false;
-
-		if OK then
-			OK := OK and CmpWisselstanden(Subroute^.Wisselstanden, Wisselstanden, strikt);
-
-		if OK then
-			OK := OK and CmpKruisingHokjes(Subroute^.KruisingHokjes, KruisingHokjes, strikt);
-
-		// OK?
-		if OK then begin
-			result := true;
-			exit;
-		end;
-
-		Subroute := Subroute^.Volgende;
-	end;
-end;
-
+// strikt = false: zoekt de beste match
+// strikt = true: retourneert 'false' als zelfs de beste match niet goed genoeg
+//                is, zodat de editor een nieuwe subroute kan creëren.
 function TRijwegLogica.ZoekSubroute;
 var
 	Tab:					PTablist;
@@ -333,10 +296,15 @@ var
 	x,y:					integer;
 	HokjeMeetpunt:		PvMeetpunt;
 	rechtsonderkruis:	integer;
+	// Beste match onthouden
+	Score:				integer;
+	Bestescore:			integer;
 begin
 	result := nil;
+	Bestescore := -1;
 	Subroute := Core.vAlleSubroutes;
 	while assigned(Subroute) do begin
+		Score := 0;
 		OK := true;
 		// Meetpunt controleren
 		if Subroute^.Meetpunt <> Meetpunt then
@@ -349,6 +317,7 @@ begin
 					OK := OK and (Wisselstand^.Wissel^.Stand = wsRechtdoor)
 				else
 					OK := OK and (Wisselstand^.Wissel^.Stand = wsAftakkend);
+				inc(Score);
 				Wisselstand := Wisselstand^.Volgende;
 			end;
 		end;
@@ -361,10 +330,17 @@ begin
 					if KruisingHokje.schermID = Tab^.ID then begin
 						Hokje := Tab^.Gleisplan.GetHokje(KruisingHokje.x, KruisingHokje.y);
 						case Hokje.Soort of
-						1: if KruisingHokje.RechtsonderKruisRijweg then
-								OK := OK and (PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg = 1)
-							else
-								OK := OK and (PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg = 2);
+						1: begin
+								if KruisingHokje.RechtsonderKruisRijweg then
+									OK := OK and (PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg = 1)
+								else
+									OK := OK and (PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg = 2);
+								inc(Score);
+							end;
+						else
+							// Deze subroute heeft een kruisinghokje, maar op die plek
+							// is helemaal geen correct spoor! Dat kan nooit goed zijn.
+							OK := false;
 						end;
 					end;
 					Tab := Tab^.Volgende;
@@ -438,10 +414,9 @@ begin
 			end;
 		end;
 		// OK?
-		if OK then begin
-			result := Subroute;
-			exit;
-		end;
+		// Subroute in result zetten.
+		if OK and (Score > Bestescore) then
+				result := Subroute;
 
 		Subroute := Subroute^.Volgende;
 	end;
@@ -516,7 +491,7 @@ begin
 	// We gaan een nieuwe subroute maken, dus inactieve hokjes zijn er nog niet.
 
 	// Nu hebben we alles => toevoegen
-	if not ControleerDubbelSubroute(Meetpunt, WisselStanden, KruisingHokjes, true) then
+	if not ControleerDubbelSubroute(Core, Meetpunt, WisselStanden, KruisingHokjes) then
 		result := AddSubroute(Core, Meetpunt, WisselStanden, KruisingHokjes, nil);
 end;
 
@@ -829,6 +804,7 @@ var
 begin
 	Subroute := ZoekSubroute(Meetpunt, strikt);
 	if assigned(Subroute) then begin
+		Subroute^.Ingebruik := true;
 		// Deze hokjes markeren
 		InactiefHokje := Subroute^.EersteHokje;
 		while assigned(InactiefHokje) do begin
@@ -1692,29 +1668,17 @@ var
 	// Voor wisseldingen omdat daar geen eigen functie voor bestaat
 	wissel: PvWissel;
 
-	function rpos(substr, str: string): integer;
-	var
-		i: integer;
-	begin
-		result := 0;
-		for i := length(str)-length(substr)+1 downto 1 do
-			if copy(str, i, length(substr)) = substr then begin
-				result := i;
-				exit
-			end
-	end;
-
 begin
 	new(tmpstr);
 	gesplitst := tmpstr;
 	tmpstr^.s := opdracht;
 	tmpstr^.v := nil;
 	count := 1;
-	p := rpos(' ', tmpstr^.s);
+	p := pos(' ', tmpstr^.s);
 	while p>0 do begin
 		new(tmpstr^.v);
-		tmpstr^.v.s := copy(tmpstr^.s, 1, p-1);
-		tmpstr^.s := copy(tmpstr^.s, p+1, length(tmpstr^.s)-p{-1});
+		tmpstr^.v.s := copy(tmpstr^.s, p+1, length(tmpstr^.s)-p{-1});
+		tmpstr^.s := copy(tmpstr^.s, 1, p-1);
 		p := pos(' ', tmpstr^.v^.s);
 		tmpstr := tmpstr^.v;
 		tmpstr^.v := nil;
@@ -1722,19 +1686,19 @@ begin
 	end;
 	if gesplitst^.s = 'n' then begin
 		if count = 3 then
-			DoeRijweg('r'+gesplitst^.v.v.s,'r'+gesplitst^.v.s,false,false)
+			DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,false,false)
 		else
 			Log.Log('Verkeerd aantal argumenten opgegeven.');
 	end else
 	if gesplitst^.s = 'roz' then begin
 		if count = 3 then
-			DoeRijweg('r'+gesplitst^.v.v.s,'r'+gesplitst^.v.s,true,false)
+			DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,true,false)
 		else
 			Log.Log('Verkeerd aantal argumenten opgegeven.');
 	end else
 	if gesplitst^.s = 'a' then begin
 		if count = 3 then
-			DoeRijweg('r'+gesplitst^.v.v.s,'r'+gesplitst^.v.s,false,true)
+			DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,false,true)
 		else
 			Log.Log('Verkeerd aantal argumenten opgegeven.');
 	end else

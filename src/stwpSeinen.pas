@@ -51,6 +51,15 @@ type
 		volgende:			PpSein;
 	end;
 
+	PpSeinBeperking = ^TpSeinBeperking;
+	TpSeinBeperking = record
+		Vansein:				PpSein;
+		Beperking:			integer;	// Maximum snelheid
+		Naarsein:			PpSein;
+		Triggersnelheid:	integer; // Geen beperking als naarsein >= triggersnelheid.
+		volgende:			PpSeinBeperking;
+	end;
+
 function IsHoofdsein(Sein: PpSein): boolean;
 
 implementation

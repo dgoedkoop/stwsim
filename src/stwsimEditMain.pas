@@ -54,7 +54,7 @@ type
 	 nsBut: TButton;
     reTab: TTabSheet;
     knoppenPanel: TPanel;
-    SpeedButton12: TSpeedButton;
+	 SpeedButton12: TSpeedButton;
 	 SpeedButton11: TSpeedButton;
 	 SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
@@ -82,7 +82,7 @@ type
     SpeedButton20: TSpeedButton;
 	 SpeedButton21: TSpeedButton;
 	 SpeedButton22: TSpeedButton;
-    Label15: TLabel;
+	 Label15: TLabel;
     Label16: TLabel;
     Label17: TLabel;
     mElBox: TComboBox;
@@ -110,7 +110,7 @@ type
     drawNiks: TSpeedButton;
 	 SpeedButton26: TSpeedButton;
     SpeedButton27: TSpeedButton;
-    SpeedButton28: TSpeedButton;
+	 SpeedButton28: TSpeedButton;
     SpeedButton29: TSpeedButton;
     Label22: TLabel;
     Label23: TLabel;
@@ -138,7 +138,7 @@ type
     SpeedButton14: TSpeedButton;
 	 tsLast: TCheckBox;
     rijwegeditbox: TGroupBox;
-    Label18: TLabel;
+	 Label18: TLabel;
 	 Label19: TLabel;
     Label20: TLabel;
 	 rijwegVanWijzig: TSpeedButton;
@@ -166,7 +166,7 @@ type
     prlreditbox: TGroupBox;
 	 Label29: TLabel;
     prlSpoorLijst: TListBox;
-    AddPrlSpoorBut: TSpeedButton;
+	 AddPrlSpoorBut: TSpeedButton;
 	 RmPrlSpoorBut: TSpeedButton;
     Label31: TLabel;
 	 DwangEdit: TEdit;
@@ -222,7 +222,7 @@ type
     naarseinWisBut: TSpeedButton;
     triggerDelBut: TSpeedButton;
     triggerChgBut: TSpeedButton;
-    triggerEdit: TEdit;
+	 triggerEdit: TEdit;
     Label30: TLabel;
     onbevCheck: TCheckBox;
     InfraOpenDialog: TOpenDialog;
@@ -250,7 +250,7 @@ type
     onafhCombo: TComboBox;
     afhCombo: TComboBox;
     evwdBut: TButton;
-    evwtBut: TButton;
+	 evwtBut: TButton;
     evwList: TListBox;
     Label9: TLabel;
     Label10: TLabel;
@@ -265,6 +265,8 @@ type
     Panel4: TPanel;
     eisBox: TRadioButton;
     verzoekBox: TRadioButton;
+    DetailsWeergeven: TAction;
+    Detailsweergeven1: TMenuItem;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -304,7 +306,7 @@ type
     procedure SpeedButton21Click(Sender: TObject);
 	 procedure SpeedButton20Click(Sender: TObject);
     procedure SpeedButton19Click(Sender: TObject);
-    procedure OpslaanAlsExecute(Sender: TObject);
+	 procedure OpslaanAlsExecute(Sender: TObject);
 	 procedure OpenenExecute(Sender: TObject);
     procedure exitActExecute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -360,7 +362,7 @@ type
 	 procedure SpeedButton42Click(Sender: TObject);
     procedure detailsOnClick(Sender: TObject);
     procedure detailsOffClick(Sender: TObject);
-    procedure tnvvanwisClick(Sender: TObject);
+	 procedure tnvvanwisClick(Sender: TObject);
     procedure tnvnaarwisClick(Sender: TObject);
 	 procedure tnvvanwijzigClick(Sender: TObject);
     procedure tnvnaarwijzigClick(Sender: TObject);
@@ -377,6 +379,7 @@ type
     procedure onafhComboChange(Sender: TObject);
     procedure afhComboChange(Sender: TObject);
     procedure evwdButClick(Sender: TObject);
+    procedure DetailsWeergevenExecute(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab: 	PTabList;
@@ -385,6 +388,7 @@ type
 		UpdateChg:		TUpdateChg;
 		Modified: 		boolean;
 		FTreinnrWeergeven: boolean;
+		FDetailsWeergeven: boolean;
 		p_mode:			integer;
 		p_gix,
 		p_giy:			integer;
@@ -406,6 +410,7 @@ type
 		Infrastructuur:	TStringList;
 		procedure UpdateSubrouteUpDownCtls;
 		procedure UpdateControls;
+		procedure GeefRijwegWeer(Rijweg: PvRijweg; paint: boolean);
 		procedure SwapSubroutes(eersteIdx, tweedeIdx: integer);
 		// waar: -1=eind, 0=begin, 1=na het eerste scherm, ...
 		procedure AddScherm(ID: integer; titel: string; waar: integer; details: boolean);
@@ -434,6 +439,95 @@ begin
 	SubrouteUp.Enabled := RijwegSubroutes.ItemIndex >= 1;
 	SubrouteDown.Enabled := (RijwegSubroutes.ItemIndex >= 0) and
 									(RijwegSubroutes.ItemIndex <= RijwegSubroutes.Items.Count-2);
+end;
+
+procedure TstwseMain.GeefRijwegWeer;
+var
+	Tab: PTabList;
+	KruisingHokje:	PvKruisingHokje;
+	Hokje:			TvHokje;
+	rWissel:		PvWisselstand;
+	Wissel:		PvWissel;
+	rMeetpunt:	PvMeetpuntLijst;
+	Meetpunt:	PvMeetpunt;
+begin
+	// Deze functie wordt ook opgeroepen bij het opslaan, om ongebruikte
+	// subroutes te detecteren. We hoeven de rijweg dus weliswaar alleen op de
+	// zichtbare tab weer te geven, maar we moeten ook voor alle andere tabs
+	// de benodigde elementen goed instellen. De meeste elementen (wissels,
+	// meetpunten etc.) zijn daarbij niet tab-afhankelijk, maar de kruising-
+	// hokjes wel!
+	// Verder is het dus heel belangrijk dat RijwegLogica.DoeHokjes wordt
+	// aangeroepen (bij het tekenen van het meetpunt), want daardoor worden de
+	// juiste subroutes als in gebruik zijnde gemarkeerd.
+
+	Tab := RijwegLogica.Tabs;
+	while assigned(Tab) do begin
+		WisRijwegenVanPlan(Tab^.Gleisplan, paint);
+		Tab := Tab^.Volgende;
+	end;
+
+	if not assigned(Rijweg) then exit;
+
+	Tab := RijwegLogica.Tabs;
+	while assigned(Tab) do begin
+		KruisingHokje := Rijweg.KruisingHokjes;
+		while assigned(KruisingHokje) do begin
+			if KruisingHokje.schermID = Tab^.ID then begin
+				Hokje := Tab^.Gleisplan.GetHokje(KruisingHokje.x, KruisingHokje.y);
+				case Hokje.Soort of
+					1: if KruisingHokje.RechtsonderKruisRijweg then
+							PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg := 1
+						else
+							PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg := 2;
+				end;
+			end;
+			KruisingHokje := KruisingHokje.Volgende;
+		end;
+		Tab := Tab^.Volgende;
+	end;
+	rWissel := Rijweg.Wisselstanden;
+	while assigned(rWissel) do begin
+		Wissel := rWissel^.Wissel;
+		Wissel^.RijwegOnderdeel := Rijweg;
+		if rWissel^.Rechtdoor then
+			Wissel^.Stand := wsRechtdoor
+		else
+			Wissel^.Stand := wsAftakkend;
+		if paint then
+			VisibleTab^.Gleisplan.PaintWissel(Wissel);
+		rWissel := rWissel^.volgende;
+	end;
+	rMeetpunt := Rijweg.Meetpunten;
+	while assigned(rMeetpunt) do begin
+		Meetpunt := rMeetpunt^.Meetpunt;
+		Meetpunt^.RijwegOnderdeel := Rijweg;
+		RijwegLogica.DoeHokjes(Meetpunt, true);
+		if paint then
+			VisibleTab^.Gleisplan.PaintMeetpunt(Meetpunt);
+		rMeetpunt := rMeetpunt^.volgende;
+	end;
+	if assigned(Rijweg^.Sein) then begin
+		Rijweg^.Sein^.Stand := 'g';
+		Rijweg^.Sein^.RijwegOnderdeel := Rijweg;
+		if paint then
+			VisibleTab^.Gleisplan.PaintSein(Rijweg^.Sein);
+	end;
+	if assigned(Rijweg^.Erlaubnis) then begin
+		Rijweg^.Erlaubnis^.richting := Rijweg^.Erlaubnisstand;
+		if paint then
+			VisibleTab^.Gleisplan.PaintErlaubnis(Rijweg^.Erlaubnis);
+	end;
+	if assigned(Rijweg^.Sein) then begin
+		rMeetpunt := Rijweg^.Sein^.HerroepMeetpunten;
+		while assigned(rMeetpunt) do begin
+			Meetpunt := rMeetpunt^.Meetpunt;
+			Meetpunt^.bezet := true;
+			if paint then
+				VisibleTab^.Gleisplan.PaintMeetpunt(Meetpunt);
+			rMeetpunt := rMeetpunt^.volgende;
+		end;
+	end;
 end;
 
 procedure TstwseMain.UpdateControls;
@@ -717,6 +811,7 @@ begin
 		Tab := FirstTab;
 		while assigned(Tab) do begin
 			Tab^.Gleisplan.LaatAlleTreinnrPosZien := FTreinnrWeergeven;
+			Tab^.Gleisplan.ShowPointPositions := FDetailsWeergeven;
 			Tab^.Gleisplan.Repaint;
 			Tab := Tab.Volgende;
 		end;
@@ -743,63 +838,9 @@ begin
 		UpdateChg.Rijwegen := false;
 	end;
 	if UpdateChg.Rijweg then begin
-		WisRijwegenVanPlan(VisibleTab^.Gleisplan);
-
 		Rijweg := selRijweg;
 
-		if assigned(Rijweg) and assigned(VisibleTab^.Gleisplan) then begin
-			// En deze rijweg weergeven.
-			KruisingHokje := Rijweg.KruisingHokjes;
-			while assigned(KruisingHokje) do begin
-				if KruisingHokje.schermID = VisibleTab^.ID then begin
-					Hokje := VisibleTab^.Gleisplan.GetHokje(KruisingHokje.x, KruisingHokje.y);
-					case Hokje.Soort of
-						1: if KruisingHokje.RechtsonderKruisRijweg then
-								PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg := 1
-							else
-								PvHokjeSpoor(Hokje.grdata).RechtsonderKruisRijweg := 2;
-					end;
-				end;
-				KruisingHokje := KruisingHokje.Volgende;
-			end;
-			rWissel := Rijweg.Wisselstanden;
-			while assigned(rWissel) do begin
-				Wissel := rWissel^.Wissel;
-				Wissel^.RijwegOnderdeel := Rijweg;
-				if rWissel^.Rechtdoor then
-					Wissel^.Stand := wsRechtdoor
-				else
-					Wissel^.Stand := wsAftakkend;
-				VisibleTab^.Gleisplan.PaintWissel(Wissel);
-				rWissel := rWissel^.volgende;
-			end;
-			rMeetpunt := Rijweg.Meetpunten;
-			while assigned(rMeetpunt) do begin
-				Meetpunt := rMeetpunt^.Meetpunt;
-				Meetpunt^.RijwegOnderdeel := Rijweg;
-				RijwegLogica.DoeHokjes(Meetpunt, true);
-				VisibleTab^.Gleisplan.PaintMeetpunt(Meetpunt);
-				rMeetpunt := rMeetpunt^.volgende;
-			end;
-			if assigned(Rijweg^.Sein) then begin
-				Rijweg^.Sein^.Stand := 'g';
-				Rijweg^.Sein^.RijwegOnderdeel := Rijweg;
-				VisibleTab^.Gleisplan.PaintSein(Rijweg^.Sein);
-			end;
-			if assigned(Rijweg^.Erlaubnis) then begin
-				Rijweg^.Erlaubnis^.richting := Rijweg^.Erlaubnisstand;
-				VisibleTab^.Gleisplan.PaintErlaubnis(Rijweg^.Erlaubnis);
-			end;
-			if assigned(Rijweg^.Sein) then begin
-				rMeetpunt := Rijweg^.Sein^.HerroepMeetpunten;
-				while assigned(rMeetpunt) do begin
-					Meetpunt := rMeetpunt^.Meetpunt;
-					Meetpunt^.bezet := true;
-					VisibleTab^.Gleisplan.PaintMeetpunt(Meetpunt);
-					rMeetpunt := rMeetpunt^.volgende;
-				end;
-			end;
-		end;
+		GeefRijwegWeer(Rijweg, true);
 
 		RijwegSubroutes.Items.Clear;
 		RijwegBestaatUit.Items.Clear;
@@ -1115,6 +1156,7 @@ begin
 	RijwegLogica := TRijwegLogica.Create;
 	RijwegLogica.Core := @Core;
 	FTreinnrWeergeven := true;
+	FDetailsWeergeven := false;
 	UpdateChg.Infra := true;
 	UpdateChg.Meetpunten := false;
 	UpdateChg.Seinen := false;
@@ -1956,7 +1998,7 @@ begin
 	TreinnrWeergeven.Checked := not TreinnrWeergeven.Checked;
 	FTreinnrWeergeven := TreinnrWeergeven.Checked;
 	UpdateChg.Schermen := true;
-   UpdateControls;
+	UpdateControls;
 end;
 
 procedure TstwseMain.SpeedButton22Click(Sender: TObject);
@@ -2738,11 +2780,30 @@ var
 	schermID: integer;
 	details: boolean;
 	Tab:			PTablist;
+	Rijweg: 	 	PvRijweg;
+	Subroute: 	PvSubroute;
 begin
 	if filename = '' then begin
 		OpslaanAlsExecute(Sender);
 		exit;
 	end;
+
+	// Voor we gaan opslaan, moeten we alle rijwegen bij langs gaan om de
+	// bijbehorende subroutes als in gebruik zijnd te markeren.
+	Subroute := Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
+		Subroute^.Ingebruik := false;
+		Subroute := Subroute^.Volgende;
+	end;
+	Rijweg := Core.vAlleRijwegen;
+	while assigned(Rijweg) do begin
+		GeefRijwegWeer(Rijweg, false);
+		Rijweg := Rijweg^.Volgende;
+	end;
+	UpdateChg.Rijweg := true;
+	UpdateControls;
+
+	// Opslaan.
 
 	assignfile(f, filename);
 	rewrite(f,1);
@@ -2922,6 +2983,14 @@ begin
 			dispose(evWissel);
 		end;
 	UpdateChg.evWissels := true;
+	UpdateControls;
+end;
+
+procedure TstwseMain.DetailsWeergevenExecute(Sender: TObject);
+begin
+	DetailsWeergeven.Checked := not DetailsWeergeven.Checked;
+	FDetailsWeergeven := DetailsWeergeven.Checked;
+	UpdateChg.Schermen := true;
 	UpdateControls;
 end;
 

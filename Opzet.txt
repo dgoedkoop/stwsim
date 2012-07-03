@@ -391,6 +391,35 @@ CHANGELOG:
 - Fix: Bug in de rijrichtingsvelden van (dubbel-)enkelspoor opgelost
 - Volgorde van de commandoregel aangepast; commando's komen nu achteraan
 
+27 juni 2012:
+- Volgorde van de commandoregel toch weer in de oude situatie veranderd.
+- Fix: Rijrichtingsveld wordt bij verschijnen van trein nu echt goed ingesteld
+  ipv. dat deze meteen weer terugspringt.
+- Bij syntaxfouten in de fysieke simulatie wordt nu een foutmelding gegeven.
+
+28 juni 2012:
+- Trein vertelt bij door rood rijden nu door welk sein hij is gereden
+- Fix: treinen maken nu onderscheid tussen baanvaksnelheid en de door een sein
+  opgelegde snelheid
+
+29 juni 2012:
+- Functie voor seinbeeldbeperking toegevoegd
+- Fix: Bij het herroepen van een rijweg naar (dubbel-)enkelspoor wordt de
+  rijrichting nu ook weer meteen vrijgegeven.
+- Fix: Knoppen "Voer in" en "Herstel" worden nu correct ge-update als je de
+  simulatie pauzeert danwel weer verder laat lopen.
+- Fix: Randomize!
+
+1 juli 2012:
+- Fix: Verbeterde berekening wanneer een aankondiging getriggerd moet worden.
+
+3 juli 2012:
+- Fix: Inactieve hokjes werken nu onder alle omstandigheden goed. In detail:
+  bij subroutes wordt bij niet-strikt zoeken nu de beste overeenkomst gezocht.
+  En in de editor worden onnodig geworden subroutes nu gewist.
+- Fix: Enkelspoorbeveiliging werkte sinds 0.2.0.21 niet meer correct met twee
+  treinen op dezelfde vrije baan; opgelost.
+
 BERICHTEN AAN DE MACHINIST:
 
 - Rijd langzaam door het eerstvolgende rode sein

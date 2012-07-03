@@ -86,13 +86,15 @@ begin
 	if Sein^.H_Maxsnelheid <> -1 then begin
 		if (Sein^.Bediend or Sein^.Autosein) then begin
 			// Hoofdsein
-			Trein^.NieuweMaxsnelheid(Sein^.H_Maxsnelheid);
+			Trein^.NieuweMaxsnelheid(Sein^.H_Maxsnelheid, false);
 			if (Sein^.H_Maxsnelheid = 0) then begin
 				Trein^.ROZ := true;
 				if Trein^.doorroodopdracht then
 					Trein^.huidigemaxsnelheid := doorroodrozsnelheid
-				else
+				else begin
 					Trein^.doorroodgereden := true;
+					Trein^.doorroodgereden_sein := Sein^.naam;
+				end;
 			end else begin
 				Trein^.doorroodgereden := false;
 				if Sein^.Bediend and (Sein^.Bediend_Stand=2) then
@@ -107,7 +109,7 @@ begin
 		end else
 			// Snelheidsbordje.
 			if not Trein^.ROZ then
-				Trein^.NieuweMaxsnelheid(Sein^.H_Maxsnelheid);
+				Trein^.NieuweMaxsnelheid(Sein^.H_Maxsnelheid, true);
 		// Er zijn twee mogelijkheden. Ofwel het is een echt hoofdsein.
 		// Dan geldt een voorsein-adviessnelheid niet meer.
 		// Als het geen echt hoofdsein is dan is het een snelheidsbordje.
@@ -724,8 +726,17 @@ begin
 						Core.ScorePerrongebruik(Trein, true)
 					else
 						Core.ScorePerrongebruik(Trein, false);
-
-					ZetStil(Trein);
+					If GevSein^.Perronnummer <> '' then
+						// Correct
+						ZetStil(Trein)
+					else begin
+						// Er is in feite geen perron
+						// Vertragingsinfo bijwerken
+						Trein^.Vertraging := (GetTijd -
+							Trein^.Planpunten^.Aankomst) div 60;
+						// Naar volgende planpunt springen
+						dispose(Trein^.GetVolgendRijplanpunt);
+					end;
 				end;
 				
 			// Kijk of we voor een trein staan en moeten gaan koppelen.
@@ -850,7 +861,7 @@ begin
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stDoorrood: begin
-					Gesprek^.tekstX := 'Ik ben door rood gereden!';
+					Gesprek^.tekstX := 'Ik ben door rood sein '+Trein^.doorroodgereden_sein+' gereden!';
 					Gesprek^.tekstXsoort := pmsSTSpassage;
 				end;
 				stWissel: begin

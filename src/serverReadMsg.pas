@@ -273,16 +273,7 @@ begin
 					SendError('direction can not be changed like this now.')
 			end else if (wat = 'r') then begin
 				if (tmpErlaubnis^.richting = standnr) then begin
-					// We geven een reeds geclaimde rijrichting vrij. In ieder
-					// geval heffen we de vergrendeling op.
-					tmpErlaubnis^.voorvergendeld := false;
-					// Is de rijrichting helemaal vrij, dan kan hij meteen worden
-					// vrijgegeven.
-					if Core.ErlaubnisVrij(tmpErlaubnis) then begin
-						tmpErlaubnis^.richting := tmpErlaubnis^.standaardrichting;
-						tmpErlaubnis^.vergrendeld := false;
-						tmpErlaubnis^.r_veranderd := true;
-					end;
+					Core.GeefErlaubnisVrij(tmpErlaubnis);
 					SendOK
 				end else
 					SendError('direction can only be released by owner.')

@@ -112,10 +112,10 @@ object stwsimMainForm: TstwsimMainForm
         Top = 52
         Width = 75
         Height = 25
+        Action = RijwegVoerin
         Anchors = [akLeft, akBottom]
         Caption = 'Voer in'
         TabOrder = 0
-        OnClick = voerInButClick
       end
       object cancelBut: TButton
         Left = 88
@@ -641,6 +641,11 @@ object stwsimMainForm: TstwsimMainForm
     object Wisselreparatie: TAction
       Category = 'Tools'
       Caption = 'Wissel repareren...'
+    end
+    object RijwegVoerin: TAction
+      Category = 'Rijweg'
+      Caption = 'RijwegVoerin'
+      OnExecute = RijwegVoerinExecute
     end
   end
   object OpenDialog: TOpenDialog

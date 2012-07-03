@@ -277,7 +277,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 3
           end
           object wgBox: TComboBox
@@ -335,7 +335,7 @@ object stwseMain: TstwseMain
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 0
             OnChange = onafhComboChange
           end
@@ -345,7 +345,7 @@ object stwseMain: TstwseMain
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 1
             OnChange = afhComboChange
           end
@@ -2912,6 +2912,9 @@ object stwseMain: TstwseMain
       object Treinnummersweergeven1: TMenuItem
         Action = TreinnrWeergeven
       end
+      object Detailsweergeven1: TMenuItem
+        Action = DetailsWeergeven
+      end
     end
     object Help1: TMenuItem
       Caption = '&Help'
@@ -2948,6 +2951,10 @@ object stwseMain: TstwseMain
       Caption = 'Afsluiten'
       ShortCut = 32883
       OnExecute = exitActExecute
+    end
+    object DetailsWeergeven: TAction
+      Caption = 'Details weergeven'
+      OnExecute = DetailsWeergevenExecute
     end
   end
   object OpenDialog: TOpenDialog

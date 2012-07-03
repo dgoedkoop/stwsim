@@ -5,7 +5,7 @@ interface
 uses forms, stwvCore, stwvMeetpunt, stwvGleisplan, stwvHokjes, stwvSporen,
 	stwvRijwegen, stwvRijwegLogica;
 
-procedure WisRijwegenVanPlan(Gleisplan: TvGleisplan);
+procedure WisRijwegenVanPlan(Gleisplan: TvGleisplan; paint: boolean);
 procedure RijwegVoegInactiefHokjeToe(RijwegLogica: TRijweglogica; Tab: PTabList; x,y: integer);
 function RijwegVerwijderInactiefHokje(RijwegLogica: TRijweglogica; Tab: PTabList; x,y: integer): boolean;
 function ZoekSubrouteBijHokje(RijwegLogica: TRijweglogica; Tab: PTabList; x,y: integer): PvSubroute;
@@ -46,7 +46,7 @@ begin
 							repaint := true;
 						end;
 					end;
-					if repaint then
+					if paint and repaint then
 						Gleisplan.PaintMeetpunt(PvHokjeSpoor(Hokje.grdata)^.Meetpunt);
 				end;
 				3: begin
@@ -54,7 +54,8 @@ begin
 						if PvHokjeSein(Hokje.grdata)^.Sein^.Stand <> 'r' then begin
 							PvHokjeSein(Hokje.grdata)^.Sein^.Stand := 'r';
 							PvHokjeSein(Hokje.grdata)^.Sein^.RijwegOnderdeel := nil;
-							Gleisplan.PaintSein(PvHokjeSein(Hokje.grdata)^.Sein);
+							if paint then
+								Gleisplan.PaintSein(PvHokjeSein(Hokje.grdata)^.Sein);
 						end;
 				end;
 				5: begin
@@ -62,14 +63,16 @@ begin
 					if assigned(PvHokjeWissel(Hokje.grdata)^.Wissel^.RijwegOnderdeel) then begin
 						PvHokjeWissel(Hokje.grdata)^.Wissel^.RijwegOnderdeel := nil;
 						PvHokjeWissel(Hokje.grdata)^.Wissel^.Stand := wsOnbekend;
-						Gleisplan.PaintWissel(PvHokjeWissel(Hokje.grdata)^.Wissel);
+						if paint then
+							Gleisplan.PaintWissel(PvHokjeWissel(Hokje.grdata)^.Wissel);
 					end;
 				end;
 				6: begin
 					if assigned(PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis) then
 						if PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis^.richting <> 0 then begin
 							PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis^.richting := 0;
-							Gleisplan.PaintErlaubnis(PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis);
+							if paint then
+								Gleisplan.PaintErlaubnis(PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis);
 						end;
 				end;
 			end;
