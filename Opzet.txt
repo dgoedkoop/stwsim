@@ -425,6 +425,33 @@ CHANGELOG:
 - Fix: Verschijnen op onbeveiligd spoor werkt nu gewoon niet, ipv. dat het
   mogelijk een nulpointer-verwijzing veroorzaakt.
 
+(0.2.0.30) 4 juli 2012:
+- Stootblok toegevoegd als decoratie-element
+- Fix: Bij loskoppelen worden snelheidslimieten ook aan de nieuwe trein
+  doorgegeven.
+- Fix: Bij stilstaan zonder stuurstand niet opbellen. (Eerder werd dan gebeld
+  met een andere melding indien van toepassing, bijv. voor rood sein staan)
+- CheatGeenDefecten toegevoegd om dienstregelingen te testen.
+
+5 juli 2012:
+- Fix: Verhinderingen worden nu correct in savegames opgeslagen
+- Mogelijkheid voor scenario's ingebouwd.
+- Fix: Bij koppelen moeten we niet helemaal zomaar aan de eerste de beste trein
+  koppelen, maar alleen aan eentje die bij het betreffende station stilstaat.
+- Het procesplan handelt nu treinen van/naar een bepaald spoor nu in de correcte
+  volgorde (gesorteerd op insteltijd) af.
+- Fix: Dubbelklik op reeds uitgevoerde procesplanpunten doet niks, ipv. dat het
+  evt. een nulpointer-fout veroorzaakt.
+- Na omdraaien gaan we 40 km/u rijden maar zonder idee over snelheids-
+  aankondigingen. Als een trein keert, een deel afkoppelt en dat afgekoppelde
+  deel weer keert (dus effectief gewoon doorrijdt) dan doen we dat uiteraard
+  niet!
+- Fix: Door het niet correct initialiseren van een dynamische variabele (nl. of
+  de speciale acties van een dienstregelingpunt al zijn uitgevoerd) bij het
+  toekennen van een dienstregeling aan een trein, kon het voorkomen dat indien
+  een dienstregelingpunt was gewijzigd, de speciale acties die daarbij horen
+  niet werden uitgevoerd. Dit is opgelost.
+
 BERICHTEN AAN DE MACHINIST:
 
 - Rijd langzaam door het eerstvolgende rode sein

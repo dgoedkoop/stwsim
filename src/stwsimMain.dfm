@@ -375,6 +375,9 @@ object stwsimMainForm: TstwsimMainForm
     Top = 320
     object Bestand2: TMenuItem
       Caption = '&Bestand'
+      object Scenarioopenen1: TMenuItem
+        Action = ScenOpen
+      end
       object Starten1: TMenuItem
         Action = PauzeAction
       end
@@ -647,6 +650,12 @@ object stwsimMainForm: TstwsimMainForm
       Caption = 'RijwegVoerin'
       OnExecute = RijwegVoerinExecute
     end
+    object ScenOpen: TAction
+      Category = 'Hoofdmenu'
+      Caption = 'S&cenario openen...'
+      Enabled = False
+      OnExecute = ScenOpenExecute
+    end
   end
   object OpenDialog: TOpenDialog
     DefaultExt = 'sts'
@@ -668,7 +677,7 @@ object stwsimMainForm: TstwsimMainForm
     DefaultExt = 'sso'
     Filter = 'StwSim Opgeslagen Spel|*.sso'
     Title = 'Opgeslagen spel openen'
-    Left = 248
+    Left = 280
     Top = 320
   end
   object DienstOpenDialog: TOpenDialog
@@ -685,5 +694,12 @@ object stwsimMainForm: TstwsimMainForm
     Title = 'Spel opslaan'
     Left = 248
     Top = 352
+  end
+  object ScenOpenDialog: TOpenDialog
+    DefaultExt = 'sso'
+    Filter = 'StwSim Scenario|*.ssc'
+    Title = 'Scenario openen'
+    Left = 248
+    Top = 320
   end
 end

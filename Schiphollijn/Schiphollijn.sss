@@ -493,7 +493,7 @@ m	205_2	205_2	-
 #Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
 c	233_2b	e	205_1a	b	n	j	-	-
 c	205_1a	e	205_1b	b	n	n	-	-
-c	205_1b	b	205_1c	e	j	n	1183A	205_1
+c	205_1b	b	205_1c	e	j	n	1163A	205_1
 c	205_1b	e	205_2	b	n	j	-	-
 
 #Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
@@ -521,6 +521,7 @@ c	206_1b	e	206_1c	b	n	n	-	-
 c	206_1c	b	206_1g	e	j	n	1165A	206_1
 c	206_1f	e	206_1e	b	n	n	-	-
 c	206_1f	e	206_1g	b	j	n	1163B	206_1
+c	206_1f	b	234_2e	e	n	j	-	-
 c	206_1c	e	206_2	b	n	j	-	-
 c	233_2c	e	206_1a	b	n	j	-	-
 c	206_1d	e	205_1c	b	n	j	-	-
@@ -544,7 +545,7 @@ m	207_3a	207_3	-
 
 #Wat	Enesp	be	Andere	be	aft	iso	Wissnm.	Meetp
 c	234_2d	e	207_1	b	n	j	-	-
-c	207_1	e	207_2a	b	n	n	-	-
+c	207_1	e	207_2a	b	n	j	-	-
 c	207_2a	e	207_2b	b	n	n	-	-
 c	207_2b	e	207_3a	b	n	j	-	-
 c	207_2b	b	207_2c	e	j	n	1161	207_2
@@ -553,7 +554,7 @@ c	207_3a	e	207_3c	b	j	n	1123B	207_3
 
 #Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
 s	207_1	b	234_2d	e	1164	j	-	-	-	j	-	-	207	Hfdm
-s	207_1	e	207_2a	b	207x1	-	-	-	-	-	-	-	207	Hfdm
+s	207_1	e	207_2a	b	1160	j	-	-	-	j	-	-	207	Hfdm
 
 #Wat	Spoornr	Lengte	Snelh	Elektr
 r	208	257	130	j
@@ -565,6 +566,7 @@ m	208	208	-
 c	208	e	207_2c	b	n	j	-	-
 
 #Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
+s	208	e	207_2c	b	1162	j	-	-	-	j	-	-	208	Hfdm
 # Sein 1176 is gedefinieerd bij het opstelterrein, hieronder.
 
 ######################################################################
@@ -698,7 +700,7 @@ c	223	e	222_2b	b	n	j	-	-
 
 #Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
 s	208	b	212_3a	e	1176	j	-	-	-	j	-	-	208	Hfdm
-s	211	e	211	e	211x1	-	-	-	0	-	-	-	211	Hfdo
+s	211	e	211	e	211x1	-	-	-	0	-	-	-	211	Hfdm
 s	212_1	b	212_1	b	212x1	-	-	-	0	-	-	-	212	Hfdo
 s	213_1	b	213_1	b	213x1	-	-	-	0	-	-	-	213	Hfdo
 s	214_1	b	214_1	b	214x1	-	-	-	0	-	-	-	214	Hfdo
@@ -707,7 +709,7 @@ s	216_1	b	216_1	b	216x1	-	-	-	0	-	-	-	216	Hfdo
 s	221_1	b	221_1	b	221x1	-	-	-	0	-	-	-	221	Hfdo
 s	222_1	b	222_1	b	222x1	-	-	-	0	-	-	-	222	Hfdo
 s	223	b	223	b	223x1	-	-	-	0	-	-	-	223	Hfdo
-s	211	b	212_3e	e	1174	j	-	-	-	j	-	-	211	Hfdo
+s	211	b	212_3e	e	1174	j	-	-	-	j	-	-	211	Hfdm
 s	212_1	e	212_2d	b	1178	j	-	-	-	j	-	-	212	Hfdo
 s	213_1	e	213_2d	b	1180	j	-	-	-	j	-	-	213	Hfdo
 s	214_1	e	214_2d	b	1182	j	-	-	-	j	-	-	214	Hfdo
@@ -957,10 +959,10 @@ c	203_4a	e	203_4b	b	n	n	-	-
 c	203_4b	b	203_4d	e	j	n	1117A	203_4
 c	203_4b	e	203_4c	b	n	n	-	-
 c	203_4b	e	203_4e	b	j	n	1107B	203_4
-c	203_4e	e	202_13d	b	j	n	-	-
-c	202_13b	e	203_5e	b	j	n	-	-
-c	203_4c	e	203_5a	b	j	n	-	-
-c	203_5a	b	203_5b	b	n	n	-	-
+c	203_4e	e	202_13d	b	n	j	-	-
+c	202_13b	e	203_5e	b	n	j	-	-
+c	203_4c	e	203_5a	b	n	j	-	-
+c	203_5a	e	203_5b	b	n	n	-	-
 c	203_5b	b	203_5e	e	j	n	1103A	203_5
 c	203_5b	e	203_5c	b	n	n	-	-
 c	203_5b	e	203_5f	b	j	n	1101B	203_5
@@ -1740,8 +1742,8 @@ s	R4_3	e	R4_4	b	P1722	a	R4	1	-	j	-	-	-	-
 s	R4_5	b	R4_4	e	P1721	a	R4	2	-	j	-	-	-	-
 s	R4_5	e	R4_6	b	P1708	a	R4	1	-	j	-	-	-	-
 s	R4_7	b	R4_6	e	P1707	a	R4	2	-	j	-	-	-	-
-s	R4_7	e	R4_8a	b	1020	j	-	-	-	j	-	-	-	-
-s	R4_9a	b	R4_8b	e	R4x3	-	-	-	130	-	-	-	-	-
+s	R4_7	e	R4_8a	b	1020	j	-	-	-	j	-	-	-	Asra
+s	R4_9a	b	R4_8b	e	R4x3	-	-	-	130	-	-	-	-	Asra
 
 #Wat	Spoornr	Lengte	Snelh	Elektr
 r	R3_1a	525	130	j
@@ -1833,8 +1835,8 @@ s	R3_5	e	R1_1a	b	1306	j	-	-	-	j	-	-	-	-
 s	R1_1b	b	R1_1a	e	R1x1	-	-	-	130	-	-	-	-	-
 s	R1_2b	e	R1_2c	b	R1x2	-	-	-	130	-	-	-	-	-
 s	R1_3	b	R1_2c	e	1304	j	-	-	-	j	-	-	-	-
-s	R1_3	e	R1_4	b	1022	j	-	-	-	j	-	-	-	-
-s	R1_6b	b	R1_6a	e	R1x3	-	-	-	130	-	-	-	-	-
+s	R1_3	e	R1_4	b	1022	j	-	-	-	j	-	-	-	Asra
+s	R1_6b	b	R1_6a	e	R1x3	-	-	-	130	-	-	-	-	Asra
 
 #Wat	Spoornr	Lengte	Snelh	Elektr
 r	RB1_1a	525	130	j
@@ -1928,8 +1930,8 @@ s	RB1_5	e	RB2_1	b	1308	j	-	-	-	j	-	-	-	-
 s	RB2_2a	b	RB2_1	e	RB2x1	-	-	-	130	-	-	-	-	-
 s	RB2_3b	e	RB2_4	b	RB2x2	-	-	-	130	-	-	-	-	-
 s	RB2_5	b	RB2_4	e	1302	j	-	-	-	j	-	-	-	-
-s	RB2_5	e	RB2_6	b	1024	j	-	-	-	j	-	-	-	-
-s	RB2_8b	b	RB2_8a	e	RB2x3	-	-	-	130	-	-	-	-	-
+s	RB2_5	e	RB2_6	b	1024	j	-	-	-	j	-	-	-	Asra
+s	RB2_8b	b	RB2_8a	e	RB2x3	-	-	-	130	-	-	-	-	Asra
 
 #Wat	Spoornr	Lengte	Snelh	Elektr
 r	RA_1a	525	130	j
@@ -1989,8 +1991,8 @@ s	RA_3	e	RA_4	b	P1728	a	RA	1	-	j	-	-	-	-
 s	RA_5	b	RA_4	e	P1715	a	RA	2	-	j	-	-	-	-
 s	RA_5	e	RA_6	b	P1714	a	RA	1	-	j	-	-	-	-
 s	RA_7	b	RA_6	e	P1701	a	RA	2	-	j	-	-	-	-
-s	RA_7	e	RA_8a	b	1026	j	-	-	-	j	-	-	-	-
-s	RA_9a	b	RA_8b	e	RAx3	-	-	-	130	-	-	-	-	-
+s	RA_7	e	RA_8a	b	1026	j	-	-	-	j	-	-	-	Asra
+s	RA_9a	b	RA_8b	e	RAx3	-	-	-	130	-	-	-	-	Asra
 
 ######################################################################
 # NAAR STATION ZUID
@@ -2249,9 +2251,9 @@ c	RE_2	e	RE_3	b	n	j	-	-
 #Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
 s	2_5c	e	RE_1a	b	P1826	a	RE	1	-	j	-	-	-	-
 s	RE_1a	e	RE_1b	b	REx1	-	-	-	-	-	90	-	-	-
-s	RE_2	b	RE_1b	e	P1821	a	RE	2	-	j	-	-	-	-
+s	RE_2	b	RE_1b	e	P1821	a	RE	2	-	j	-	j	-	Asdl
 # Een beetje fictief
-s	RE_1b	e	RE_2	b	P944	a	RE	1	-	-	-	j	-	Asdl
+s	RE_1b	e	RE_2	b	P944	a	RE	1	-	-	-	-	-	-
 s	RE_3	b	RE_2	e	P932	a	RE	2	-	j	-	-	-	-
 
 #Wat	Spoornr	Lengte	Snelh	Elektr
@@ -2277,9 +2279,9 @@ c	RF_2	e	RF_3	b	n	j	-	-
 #Wat	Enesp	be	Andere	be	Naam	Bediend	Erl	Erlst	Hmax	Vhfd	Vwrsch	Haltev	Perrp	Station
 s	1_3c	e	RF_1a	b	P1824	a	RF	1	-	j	-	-	-	-
 s	RF_1a	e	RF_1b	b	RFx1	-	-	-	-	-	90	-	-	-
-s	RF_2	b	RF_1b	e	P1823	a	RF	2	-	j	-	-	-	-
+s	RF_2	b	RF_1b	e	P1823	a	RF	2	-	j	-	j	-	Asdl
 # Een beetje fictief
-s	RF_1b	e	RF_2	b	P942	a	RF	1	-	-	-	j	-	Asdl
+s	RF_1b	e	RF_2	b	P942	a	RF	1	-	-	-	-	-	-
 s	RF_3	b	RF_2	e	P934	a	RE	2	-	j	-	-	-	-
 
 #	#Naam	#Vertr	#Spoor	#Met	#Richtg	#Mod	#snelh	#Erla.	#Erlst

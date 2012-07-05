@@ -48,7 +48,7 @@ object stwseMain: TstwseMain
       Top = 0
       Width = 842
       Height = 237
-      ActivePage = gplTab
+      ActivePage = reTab
       Align = alClient
       Constraints.MinHeight = 193
       TabOrder = 0
@@ -277,7 +277,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 3
           end
           object wgBox: TComboBox
@@ -335,7 +335,7 @@ object stwseMain: TstwseMain
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 0
             OnChange = onafhComboChange
           end
@@ -345,7 +345,7 @@ object stwseMain: TstwseMain
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 1
             OnChange = afhComboChange
           end
@@ -515,7 +515,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 3
           end
           object ovmaDBut: TButton
@@ -2084,6 +2084,60 @@ object stwseMain: TstwseMain
             ShowHint = True
             OnClick = SpeedButton43Click
           end
+          object SpeedButton30: TSpeedButton
+            Left = 144
+            Top = 8
+            Width = 23
+            Height = 22
+            Hint = 'Stootblok'
+            GroupIndex = 1
+            Flat = True
+            Glyph.Data = {
+              B6010000424DB601000000000000360000002800000008000000100000000100
+              18000000000080010000630C0000630C00000000000000000000000000000000
+              0000000000000000000000000000000000000000000000000000000000000000
+              00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000
+              0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000FFFFFFFFFFFF
+              000000000000000000000000000000000000FFFFFFFFFFFF0000000000000000
+              00000000000000000000FFFFFFFFFFFF00000000000000000000000000000000
+              0000FFFFFFFFFFFF000000000000000000000000000000000000FFFFFFFFFFFF
+              000000000000000000000000000000000000FFFFFFFFFFFF0000000000000000
+              00000000000000000000FFFFFFFFFFFF00000000000000000000000000000000
+              0000FFFFFFFFFFFF000000000000000000000000000000000000FFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFF000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FF00000000000000000000000000000000000000000000000000000000000000
+              0000000000000000000000000000000000000000000000000000}
+            ParentShowHint = False
+            ShowHint = True
+            OnClick = SpeedButton30Click
+          end
+          object SpeedButton32: TSpeedButton
+            Left = 120
+            Top = 8
+            Width = 23
+            Height = 22
+            Hint = 'Stootblok'
+            GroupIndex = 1
+            Flat = True
+            Glyph.Data = {
+              B6010000424DB601000000000000360000002800000008000000100000000100
+              18000000000080010000630C0000630C00000000000000000000000000000000
+              0000000000000000000000000000000000000000000000000000000000000000
+              00000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFF000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000
+              000000000000000000000000FFFFFFFFFFFF0000000000000000000000000000
+              00000000FFFFFFFFFFFF000000000000000000000000000000000000FFFFFFFF
+              FFFF000000000000000000000000000000000000FFFFFFFFFFFF000000000000
+              000000000000000000000000FFFFFFFFFFFF0000000000000000000000000000
+              00000000FFFFFFFFFFFF000000000000000000000000000000000000FFFFFFFF
+              FFFF000000000000000000000000000000000000FFFFFFFFFFFF000000000000
+              000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000FFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000000000000000
+              0000000000000000000000000000000000000000000000000000}
+            ParentShowHint = False
+            ShowHint = True
+            OnClick = SpeedButton32Click
+          end
           object mElBox: TComboBox
             Left = 408
             Top = 36
@@ -2095,7 +2149,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 0
+            ItemHeight = 13
             ParentFont = False
             TabOrder = 0
             OnChange = mElBoxChange
@@ -2121,7 +2175,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 0
+            ItemHeight = 13
             ParentFont = False
             TabOrder = 2
             OnChange = wElBoxChange
@@ -2137,7 +2191,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 0
+            ItemHeight = 13
             ParentFont = False
             TabOrder = 3
             OnChange = sElBoxChange
@@ -2182,7 +2236,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 0
+            ItemHeight = 13
             ParentFont = False
             TabOrder = 6
             OnChange = mTnBoxChange
@@ -2198,7 +2252,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 0
+            ItemHeight = 13
             ParentFont = False
             TabOrder = 7
             OnChange = eElBoxChange

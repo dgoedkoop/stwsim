@@ -112,6 +112,5 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
       '5')
     ParentFont = False
     TabOrder = 3
-    OnDblClick = RegelListDblClick
   end
 end

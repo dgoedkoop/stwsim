@@ -22,6 +22,8 @@ type
 		rijrichting:	byte;			// 0=geen, 1=up, 2=down (voor vrije banen)
 		// Defecten
 		defect:		boolean;
+		// Scenario
+		kortsluitlans: boolean;
 
 		// OVERIG
 		veranderd:	boolean;
@@ -74,6 +76,7 @@ constructor TpMeetpunt.Create;
 begin
 	ZichtbaarLijst := nil;
 	bezet := false;
+   kortsluitlans := false;
 end;
 
 destructor TpMeetpunt.Destroy;
@@ -100,7 +103,7 @@ begin
 		tmpRail := tmpRail^.volgende;
 	end;
 
-	if not defect then begin
+	if not (defect or kortsluitlans) then begin
 		// Dan nu kijken of nog andere treinen zich binnen het meetbereik bevinden.
 		tmpTrein := Treinen;
 		while assigned(tmpTrein) do begin

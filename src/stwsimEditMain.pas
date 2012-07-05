@@ -267,6 +267,8 @@ type
     verzoekBox: TRadioButton;
     DetailsWeergeven: TAction;
     Detailsweergeven1: TMenuItem;
+    SpeedButton30: TSpeedButton;
+    SpeedButton32: TSpeedButton;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -380,6 +382,8 @@ type
     procedure afhComboChange(Sender: TObject);
     procedure evwdButClick(Sender: TObject);
     procedure DetailsWeergevenExecute(Sender: TObject);
+    procedure SpeedButton30Click(Sender: TObject);
+    procedure SpeedButton32Click(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab: 	PTabList;
@@ -461,9 +465,14 @@ begin
 	// aangeroepen (bij het tekenen van het meetpunt), want daardoor worden de
 	// juiste subroutes als in gebruik zijnde gemarkeerd.
 
+	// We moeten allereerst de dingen van de zichtbare tab wissen. Anders kunnen
+	// dingen op een andere tab al zijn vrijgegeven voordat de zichtbare tab
+	// aan de beurt is, wat ervoor kan zorgen dat niet gerepaint wordt.
+	WisRijwegenVanPlan(VisibleTab^.Gleisplan, paint);
 	Tab := RijwegLogica.Tabs;
 	while assigned(Tab) do begin
-		WisRijwegenVanPlan(Tab^.Gleisplan, paint);
+		if Tab <> VisibleTab then
+			WisRijwegenVanPlan(Tab^.Gleisplan, paint);
 		Tab := Tab^.Volgende;
 	end;
 
@@ -1362,8 +1371,11 @@ begin
 	4: infoMemo.Lines.Add('Decoratie');
 	5: begin
 		infoMemo.Lines.Add('Wissel');
-		if assigned(PvHokjeWissel(Hokje.grdata)^.Wissel) then
+		if assigned(PvHokjeWissel(Hokje.grdata)^.Wissel) then begin
 			infoMemo.Lines.Add('Wissel: '+PvHokjeWissel(Hokje.grdata)^.Wissel^.WisselID);
+			if PvHokjeWissel(Hokje.grdata)^.SchuinIsRecht then
+				infoMemo.Lines.Add('Rechte stand wordt schuin weergegeven en v.v.');
+		end;
 		if assigned(PvHokjeWissel(Hokje.grdata)^.Meetpunt) then
 			infoMemo.Lines.Add('Meetpunt: '+PvHokjeWissel(Hokje.grdata)^.Meetpunt^.meetpuntID);
 	end;
@@ -2086,6 +2098,8 @@ begin
 
 		modified := false;
 		Openen.Enabled := false;
+
+		closefile(f);
 	end;
 end;
 
@@ -2992,6 +3006,20 @@ begin
 	FDetailsWeergeven := DetailsWeergeven.Checked;
 	UpdateChg.Schermen := true;
 	UpdateControls;
+end;
+
+procedure TstwseMain.SpeedButton30Click(Sender: TObject);
+begin
+	p_mode := 4;
+	p_gix := 7;
+	p_giy := 4;
+end;
+
+procedure TstwseMain.SpeedButton32Click(Sender: TObject);
+begin
+	p_mode := 4;
+	p_gix := 6;
+	p_giy := 4;
 end;
 
 end.

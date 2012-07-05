@@ -10,7 +10,7 @@ const
 
 type
 	TWaaromStilstaan = (stWeetniet, stSein, stTrein, stStroom, stDoorrood,
-							  stWissel, stUndef);
+							  stWissel, stStuurstand, stUndef);
 
 	PpWagon = ^TpWagon;
 	TpWagon = record
@@ -128,7 +128,7 @@ type
 
 		procedure ZieVoorsein(Sein: PpSein);
 
-		Procedure DraaiOm;
+		Procedure DraaiOm(SnelhedenAanpassen: boolean);
 		function GetVolgendRijplanpunt: PpRijplanpunt;
 		Procedure Moetwachten(tijdsduur: integer);
 
@@ -443,7 +443,14 @@ begin
 		EersteWagon := tmpWagon;
 		tmpWagon.omgekeerd := not tmpWagon.omgekeerd;
 		tmpWagon := Volgende;
-   end;
+	end;
+	// Snelheidsbeperking instellen
+	if snelhedenaanpassen then begin
+		huidigemaxsnelheid := RemwegSnelheid;
+		V_Adviessnelheid := -1;
+		B_Adviessnelheid := -1;
+		vorigemaxsnelheid := -1;
+	end;
 end;
 
 procedure TpTrein.Update;

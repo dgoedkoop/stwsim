@@ -420,10 +420,6 @@ end;
 
 function WisselKanOmgezet;
 begin
-	if Lock then begin
-		result := false;
-		exit;
-	end;
 	case Wissel^.Wensstand of
 	wsRechtdoor: result := WisselStandKan(Wissel, wsAftakkend, Flankbeveiliging);
 	wsAftakkend: result := WisselStandKan(Wissel, wsRechtdoor, Flankbeveiliging);

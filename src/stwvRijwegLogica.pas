@@ -57,6 +57,7 @@ type
 		function StelRijwegIn(Rijweg: PvRijweg; ROZ, Auto: boolean; WatMetActief: TWatMetActief): boolean;
 		function StelPrlRijwegIn(PrlRijweg: PvPrlRijweg; ROZ, gefaseerd: Boolean; Dwang: byte): boolean;
 		function ZetWisselOm(Wissel: PvWissel): boolean;
+		function StelWisselIn(Wissel: PvWissel; Stand: TWisselstand): boolean;
 		// Herroepen van rijwegen
 		procedure DeclaimRijweg(ActieveRijweg: PvActieveRijwegLijst);
 		function HerroepRijweg(seinnaam: string): boolean;
@@ -1643,6 +1644,31 @@ begin
 				Stand := wsAftakkend
 			else
 				Stand := wsRechtdoor;
+			StandenLijst := WisselstandenLijstBereken(Wissel, Stand,
+				Core.vFlankbeveiliging, nil, true);
+			if not RijveiligheidLock then begin result := false; exit end;
+			tmpStand := StandenLijst;
+			while assigned(tmpStand) do begin
+				SendMsg.SendWissel(tmpStand^.Wissel, tmpStand^.Stand);
+				tmpStand := tmpStand^.Volgende;
+			end;
+			RijveiligheidUnlock;
+			WisselstandenLijstDispose(StandenLijst);
+			result := true
+		end else
+			result := false
+	else
+		result := false
+end;
+
+// Deze functie gebruikt RijveiligheidLock om te voorkomen dat halverwege het
+// instellen van de wissels een parallelle functie iets anders gaat doen.
+function TRijwegLogica.StelWisselIn;
+var
+	StandenLijst, tmpStand: PWisselstandLijst;
+begin
+	if assigned(Wissel) then
+		if WisselStandKan(Wissel, Stand, Core.vFlankbeveiliging) then begin
 			StandenLijst := WisselstandenLijstBereken(Wissel, Stand,
 				Core.vFlankbeveiliging, nil, true);
 			if not RijveiligheidLock then begin result := false; exit end;

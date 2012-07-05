@@ -19,7 +19,6 @@ type
 		Vertrek:			integer;	// Tijden. Vertrek = -1 voor niet-van-toepassing.
 		minwachttijd:	integer;	// in seconden. -1 voor niet-van-toepassing.
 		stoppen:			boolean;	// Moeten we hier überhaupt stoppen?
-		spc_gedaan:		boolean;	// Onderstaande speciale acties uitgevoerd?
 		keren:			boolean;
 		nieuwetrein:	boolean;	// Worden we een nieuwe trein?
 		nieuwetrein_w:	string;	// Zo ja, welke?
@@ -28,6 +27,8 @@ type
 		loskoppelen_keren: boolean;	// Afgekoppeld deel omkeren?
 		samenvoegen:	boolean;	// Voor / bij aankomstpunt met een staande trein
 										// koppelen?
+		// Dynamische gegevens
+		spc_gedaan:		boolean;	// Onderstaande speciale acties uitgevoerd?
 		volgende: 		PpRijplanPunt;
 	end;
 

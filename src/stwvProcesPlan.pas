@@ -34,6 +34,8 @@ type
 		RestNummer:			string;	// Een achtergebleven, afgekoppeld treindeel
 											// krijgt dit nummer bij vertrek van het andere
 											// treindeel.
+		// Voor de volgorde
+		VolgordeOK:			boolean;
 		RestNummerGedaan:	boolean;
 
 		Volgende:			PvProcesPlanPunt;
@@ -68,6 +70,9 @@ type
 		destructor Destroy; override;
 		procedure UpdatePlanpunt(ProcesPlanPunt: PvProcesPlanPunt);
 		procedure MarkeerKlaar(ProcesPlanPunt: PvProcesPlanPunt);
+		procedure UpdateVolgordeVoorPunt(ProcesPlanPunt: PvProcesPlanPunt);
+		procedure UpdateVolgordeAfhVanPunt(ProcesPlanPunt: PvProcesPlanPunt);
+		procedure UpdateVolgordes;
 		// Extern
 		procedure LaadProcesplan(filename: string);
 		procedure Sorteer;
@@ -329,12 +334,62 @@ begin
 	ProcesPlanPunt^.AnalyseGedaan := true;
 end;
 
+procedure TProcesPlan.UpdateVolgordeVoorPunt;
+var
+	tmpPlanPunt: PvProcesPlanPunt;
+begin
+	ProcesPlanPunt^.VolgordeOK := true;
+	// We kijken of er niet nog andere, eerdere planpunten zijn van hetzelfde
+	// bronspoor of naar hetzelfde doelspoor etc.
+	tmpPlanPunt := ProcesPlanPuntenPending;
+	while assigned(tmpPlanPunt) do begin
+		if (tmpPlanPunt^.Insteltijd < ProcesPlanPunt^.Insteltijd) and
+			((tmpPlanPunt^.van = ProcesPlanPunt^.van) or
+			 (tmpPlanPunt^.naar = ProcesPlanPunt^.naar) or
+			 (tmpPlanPunt^.naar = ProcesPlanPunt^.van) or
+			 (tmpPlanPunt^.van = ProcesPlanPunt^.naar)) then begin
+			ProcesPlanPunt^.VolgordeOK := false;
+			exit;
+		end;
+		tmpPlanPunt := tmpPlanPunt^.Volgende;
+	end;
+end;
+
+procedure TProcesPlan.UpdateVolgordes;
+var
+	ProcesPlanPunt: PvProcesPlanPunt;
+begin
+	ProcesPlanPunt := ProcesPlanPuntenPending;
+	while assigned(ProcesPlanPunt) do begin
+		UpdateVolgordeVoorPunt(ProcesPlanPunt);
+		ProcesPlanPunt := ProcesPlanPunt^.Volgende;
+	end;
+end;
+
+procedure TProcesPlan.UpdateVolgordeAfhVanPunt;
+var
+	tmpPlanPunt: PvProcesPlanPunt;
+begin
+	tmpPlanPunt := ProcesPlanPuntenPending;
+	while assigned(tmpPlanPunt) do begin
+		if (ProcesPlanPunt^.Insteltijd < tmpPlanPunt^.Insteltijd) and
+			tmpPlanPunt^.VolgordeOK then
+			UpdateVolgordeVoorPunt(tmpPlanPunt)
+		else if not tmpPlanPunt^.VolgordeOK then
+			UpdateVolgordeVoorPunt(tmpPlanPunt);
+		tmpPlanPunt := tmpPlanPunt^.Volgende;
+	end;
+end;
+
 function TProcesPlan.ProbeerPlanpuntUitTeVoeren;
 var
 	PrlRijweg: PvPrlRijweg;
 	TreinIsEr: boolean;
 begin
 	result := false;
+
+	if not ProcesPlanPunt^.VolgordeOK then exit;
+
 	UpdatePlanpunt(ProcesPlanPunt);
 	// Eerst eens kijken of de juiste trein op de juiste plaats staat.
 	// WaarNietPunt is de eerste plaats waar we kijken. Daar mag geen andere trein staan.
@@ -393,6 +448,8 @@ begin
 	ProcesPlanPunt^.Volgende := ProcesPlanPuntenKlaar;
 	ProcesPlanPuntenKlaar := ProcesPlanPunt;
 	inc(KlaarAantal);
+	// En volgordes aanpassen.
+	UpdateVolgordeAfhVanPunt(ProcesPlanPunt);
 end;
 
 procedure TProcesPlan.DoeStapje;
@@ -502,6 +559,7 @@ begin
 			PPP^.NieuwNummerGedaan := false;
 			PPP^.RestNummer := '';
 			PPP^.RestNummerGedaan := false;
+			PPP^.VolgordeOK := true;
 			PPP^.AnalyseGedaan := false;
 			PPP^.TNVVan := nil;
 			PPP^.TriggerPunt := nil;
@@ -571,6 +629,7 @@ begin
 	closefile(f);
 
 	Sorteer;
+	UpdateVolgordes;
 end;
 
 procedure TProcesPlan.Sorteer;

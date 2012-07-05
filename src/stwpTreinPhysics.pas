@@ -18,11 +18,11 @@ type
 		procedure HerkenFlankbotsingen(Trein: PpTrein);
 		procedure BeweegTrein(Trein: PpTrein);
 		procedure ActieKoppelen(Trein: PpTrein);
-		procedure ActieLoskoppelen(Trein: PpTrein);
+		procedure ActieLoskoppelen(Trein: PpTrein; AfkoppelenVanOmgekeerdeTrein: boolean);
 		procedure ActiesAfhandelen(Trein: PpTrein);
 		procedure ControleerVertrektijd(Trein: PpTrein);
 		procedure ControleerStoppen(Trein: PpTrein);
-		function  ControleerKoppelTrein(Trein: PpTrein): boolean;
+		function  ControleerKoppelTrein(Trein: PpTrein; Planpunt: PpRijplanpunt): boolean;
 		procedure ZetStil(Trein: PpTrein);
 		procedure WisPlanregelsDieTijdensRijdenNutteloosZijn(Trein: PpTrein);
 		function ZoekTelefoongesprek(Trein: PpTrein; Soort: TpTreinTelefoonSoort): PpTelefoonGesprek;
@@ -458,7 +458,11 @@ var
 	GevOmgekeerd:	boolean;
 begin
 	Core.ZoekVolgendeTrein(Trein, maxkoppelkijkafstand, GevKoppelTrein, GevTreinAfstand, GevOmgekeerd);
-	result := assigned(GevKoppelTrein) and (GevTreinAfstand <= maxkoppelkijkafstand);
+	result := false;
+	if assigned(Planpunt) and assigned(GevKoppelTrein) and assigned(GevKoppelTrein^.StationModusPlanpunt) then
+		result := (GevTreinAfstand <= maxkoppelkijkafstand) and
+					 (GevKoppelTrein^.modus = tmStilstaan) and
+					 (GevKoppelTrein^.StationModusPlanpunt^.Station = Planpunt^.Station);
 end;
 
 procedure TpTreinPhysics.ActieKoppelen;
@@ -478,7 +482,7 @@ begin
 	// b) >>>WIJ>>> <<<HUN<<< -> >>>>>>WIJ>>>>>> (of hun)
 
 	// Geval b) vormen wij in geval a) om.
-	if GevOmgekeerd then GevKoppelTrein^.DraaiOm;
+	if GevOmgekeerd then GevKoppelTrein^.DraaiOm(false);
 
 	// Zo, nu hebben we gegarandeerd een geval a). Mooi.
 	// Wij nemen de positie van de andere trein aan.
@@ -570,11 +574,19 @@ begin
 		tmpTrein^.Planpunten := Core.CopyDienstFrom(tmpTrein^.Treinnummer, Trein^.StationModusPlanpunt^.Station);
 		tmpTrein^.StationModusPlanpunt := tmpTrein^.GetVolgendRijplanpunt;
 		tmpTrein^.StationModusPlanpunt^.spc_gedaan := true;
+		// Af te wachten tijd instellen
+		tmpTrein^.kannietwegvoor := Trein^.kannietwegvoor;
+		// Dynamische gegevens overkopiëren
+		tmpTrein^.Update;
+		tmpTrein^.baanvaksnelheid := Trein^.baanvaksnelheid;
+		tmpTrein^.huidigemaxsnelheid := Trein^.huidigemaxsnelheid;
+		tmpTrein^.V_Adviessnelheid := Trein^.V_Adviessnelheid;
+		tmpTrein^.B_Adviessnelheid := Trein^.B_Adviessnelheid;
+		tmpTrein^.vorigemaxsnelheid := Trein^.vorigemaxsnelheid;
+		tmpTrein^.afstandsindsvorige := Trein^.afstandsindsvorige - Trein^.lengte + tmpTrein^.lengte;
 		// Afgekoppelde trein eventueel omkeren.
 		if Trein^.StationModusPlanpunt^.loskoppelen_keren then
-			tmpTrein^.DraaiOm;
-		// En af te wachten tijd instellen
-		tmpTrein^.kannietwegvoor := Trein^.kannietwegvoor;
+			tmpTrein^.DraaiOm(not AfkoppelenVanOmgekeerdeTrein);
 	end;
 end;
 
@@ -590,16 +602,16 @@ begin
 
 	// 1. KOPPELEN
 	if Trein^.StationModusPlanpunt^.samenvoegen then
-		if ControleerKoppelTrein(Trein) then
+		if ControleerKoppelTrein(Trein, Trein^.StationModusPlanpunt) then
 			ActieKoppelen(Trein);
 
 	// 2. OMDRAAIEN.
 	if Trein^.StationModusPlanpunt^.keren then
-		Trein^.DraaiOm;
+		Trein^.DraaiOm(true);
 
 	// 3. LOSKOPPELEN (en voor losgekoppeld deel rijplan laden)
 	if Trein^.StationModusPlanpunt^.loskoppelen <> 0 then
-		ActieLoskoppelen(Trein);
+		ActieLoskoppelen(Trein, Trein^.StationModusPlanpunt^.keren);
 
 	// 4. EN LAATSTE: ONSZELF OMNUMMEREN (en nieuw rijplan laden)
 	if Trein^.StationModusPlanpunt^.nieuwetrein then begin
@@ -741,7 +753,7 @@ begin
 				
 			// Kijk of we voor een trein staan en moeten gaan koppelen.
 			if (Trein^.Modus <> tmStilstaan) and Trein^.Planpunten^.samenvoegen then
-				if ControleerKoppelTrein(Trein) then
+				if ControleerKoppelTrein(Trein, Trein^.Planpunten) then
 					ZetStil(Trein);
 		end;
 	end;
@@ -840,8 +852,10 @@ begin
 			waaromstilstaan := stStroom;
 		if Trein^.doorroodgereden then
 			waaromstilstaan := stDoorrood;
+		if not Trein^.bedienbaar then
+			waaromstilstaan := stStuurstand;
 		// Nu hebben we de reden. Kijk of we een bericht moeten sturen.
-		if waaromstilstaan <> stWeetniet then
+		if (waaromstilstaan <> stWeetniet) and (waaromstilstaan <> stStuurstand) then
 			if (not assigned(Core.ZoekTelefoongesprek(Trein)))	// Niet bellen als we al in gesprek zijn
 				and not ((waaromstilstaan = Trein^.vorigewaaromstilstaan) // En niet bellen als we hier al over hebben gebeld...
 				 and (waaromstilstaan in [stTrein, stStroom, stWissel, stWeetniet])) then begin	// ... en het iets is waar maar 1 keer over gebeld moet worden.
@@ -866,6 +880,10 @@ begin
 				end;
 				stWissel: begin
 					Gesprek^.tekstX := 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
+					Gesprek^.tekstXsoort := pmsVraagOK;
+				end;
+				stStuurstand: begin
+					Gesprek^.tekstX := 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand.';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end
 				else

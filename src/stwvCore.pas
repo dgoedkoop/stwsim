@@ -1238,6 +1238,8 @@ procedure SaveWisselStatus;
 var
 	WisselCount: integer;
 	Wissel: PvWissel;
+	WisselGroepCount: integer;
+	WisselGroep: PvWisselGroep;
 begin
 	WisselCount := 0;
 	Wissel := EersteWissel(core);
@@ -1250,7 +1252,22 @@ begin
 	while assigned(Wissel) do begin
 		stringwrite(f, Wissel^.WisselID);
 		bytewrite(f, StandNr(Wissel^.WensStand));
+		boolwrite(f, Wissel^.rijwegverh);
 		Wissel := VolgendeWissel(Wissel);
+	end;
+
+	WisselGroepCount := 0;
+	WisselGroep := Core.vAlleWisselGroepen;
+	while assigned(WisselGroep) do begin
+		inc(WisselGroepCount);
+		WisselGroep := WisselGroep^.Volgende;
+	end;
+	intwrite(f, WisselGroepCount);
+	WisselGroep := Core.vAlleWisselGroepen;
+	while assigned(WisselGroep) do begin
+		stringwrite(f, WisselGroep^.GroepID);
+		boolwrite(f, WisselGroep^.bedienverh);
+		WisselGroep := WisselGroep^.Volgende;
 	end;
 end;
 
@@ -1258,8 +1275,12 @@ procedure LoadWisselStatus;
 var
 	WisselCount: integer;
 	Wissel: PvWissel;
+
+	WisselGroepCount: integer;
+	WisselGroep: PvWisselGroep;
+
 	i: integer;
-	WisselID: string;
+	WisselID, WisselGroepID: string;
 	wensstandnr: byte;
 begin
 	intread(f, WisselCount);
@@ -1268,6 +1289,13 @@ begin
 		Wissel := ZoekWissel(Core, WisselID);
 		byteread(f, wensstandnr);
 		Wissel^.WensStand := NrStand(wensstandnr);
+		boolread(f, Wissel^.rijwegverh);
+	end;
+	intread(f, WisselGroepCount);
+	for i := 1 to WisselGroepCount do begin
+		stringread(f, WisselGroepID);
+		WisselGroep := ZoekWisselGroep(Core, WisselGroepID);
+		boolread(f, WisselGroep^.bedienverh);
 	end;
 end;
 

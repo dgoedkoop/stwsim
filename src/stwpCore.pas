@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.5';
+	SaveIOMagic			= 'STWSIMSAVE.6';
 
 	tps					= 10;
 
@@ -39,7 +39,7 @@ const
 	storingsdienstnaam				= 'Storingsdienst';
 
 	meetpuntdefectbijtreinkans		= 1/1500;
-	seindefectkans						= {1/400}0;
+	seindefectkans						= 1/4000;
 	seindefectmintijd					= 10;
 	seindefectmaxtijd					= 20;
 
@@ -95,6 +95,8 @@ type
 		Stoptijd:				integer;
 		// Dynamische gegevens: Treinen
 		pAlleTreinen:			PpTrein;
+		// Dynamische gegevens: cheat
+		CheatGeenDefecten:	boolean;
 		//
 		pMonteur:				PpMonteur;
 
@@ -168,6 +170,7 @@ type
 		// Publieke functies
 		function ErlaubnisVrij(Erlaubnis: PpErlaubnis): boolean;
 		function LoadRailString(s: string): boolean;
+		function LoadScenarioString(s: string): boolean;
 		function WagonsLaden(filenaam: string): boolean;
 		procedure WagonsWissen;
 		function ZetWissel(Wissel: PpWissel; stand: TWisselstand): boolean;
@@ -204,6 +207,8 @@ begin
 	pAlleDiensten			:= nil;
 	VerschijnLijst			:= nil;
 	pAlleTreinen			:= nil;
+
+   CheatGeenDefecten    := false;
 
 	new(pMonteur);
 	pMonteur^ := TpMonteur.Create;
@@ -335,7 +340,7 @@ end;
 
 function TpCore.GaatDefect;
 begin
-	result := random < kans;
+	result := (random < kans) and not CheatGeenDefecten;
 end;
 
 procedure TpCore.DoeMeetpuntDefect;
@@ -476,7 +481,11 @@ begin
 					NPunt := NPunt^.Volgende;
 				end;
 				NPunt^ := TPunt^;
-				NPunt^.Volgende := nil;	// Eigenlijk niet echt nodig.
+
+				// Dynamische gegevens initialiseren
+				NPunt^.spc_gedaan := false;
+				NPunt^.Volgende := nil; // Eigenlijk niet nodig.
+				
 				TPunt := TPunt^.Volgende;
 			end;
 			exit;
@@ -1268,7 +1277,7 @@ begin
 
 		// Punctualiteit is zo ongeveer 87,5% volgens de 3-minuten-norm.
 		k := Power(0.5, 1/(tps*60));
-		magversch := magversch and ((random>=k) or (not Plaats^.vertragingmag));
+		magversch := magversch and ((random>=k) or (not Plaats^.vertragingmag) or CheatGeenDefecten);
 
 		magversch := magversch and (GetTijd>=vt);
 		if magversch then begin
@@ -1966,6 +1975,120 @@ begin
 					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else
+				begin Leesfout_melding := 'Dit commando bestaat niet.'; exit end;	// Verkeerde 'soort' opgegeven.
+			inc(index);
+		end;
+	result := true;
+end;
+
+function TpCore.LoadScenarioString;
+const
+	ws = [#9, ' '];
+var
+	// Algemene variabelen
+	waarde: string;
+	index: integer;
+	p: integer;
+	soort: string;
+	// Spoor
+	tmpRail: PpRailLijst;
+	// Seinen
+	tmpMeetpunt: PpMeetpunt;
+	// Verschijnen
+	tmpOudeVerschijnpunt: PpVerschijnpunt;
+	tmpVerschijnpuntBkp: PpVerschijnpunt;
+	tmpHierVerschijnpunt: PpVerschijnpunt;
+begin
+	result := false;
+	// Even dat de compiler niet zeurt.
+	tmpOudeVerschijnpunt := nil;
+
+	index := 0;
+	if copy(s,1,1)<>'#' then
+		while s <> '' do begin
+			// Whitespace van het begin schrappen.
+			while (s <> '') and (s[1] in ws) do
+				s := copy(s, 2, length(s)-1);
+			if s='' then break;
+			p := 1;
+			while (p <= length(s)) and not(s[p] in ws) do
+				inc(p);
+			waarde := copy(s, 1, p-1);
+			s := copy(s, p+1, length(s)-p);
+			// Als eerste bepalen we wat voor soort ding we maken.
+			if index = 0 then
+				soort := waarde
+			// En dan komt een reuzen-IF voor de rest!
+			else if soort = 'k' then begin				// KORTSLUITLANS
+				case index of
+				1: begin
+					tmpMeetpunt := ZoekMeetpunt(waarde);
+					if not assigned(tmpMeetpunt) then
+						begin Leesfout_melding := 'Meetpunt '+waarde+' niet gevonden'; exit end;
+					// Stel de kortsluitlans in
+					tmpMeetpunt^.kortsluitlans := true;
+					// Breek dit meetpunt los van het spoorplan
+					tmpRail := pAlleRails;
+					while assigned(tmpRail) do begin
+						if tmpRail^.Rail^.meetpunt = tmpMeetpunt then begin
+							if tmpRail^.Rail^.Volgende^.recht^.meetpunt <> tmpMeetpunt then begin
+								if not tmpRail^.Rail^.Volgende^.r_foutom then begin
+									tmpRail^.Rail^.Volgende^.recht^.Vorige^.recht := tmpRail^.Rail^.Volgende^.recht;
+									tmpRail^.Rail^.Volgende^.recht^.Vorige^.r_foutom := true;
+								end else begin
+									tmpRail^.Rail^.Volgende^.recht^.Volgende^.recht := tmpRail^.Rail^.Volgende^.recht;
+									tmpRail^.Rail^.Volgende^.recht^.Volgende^.r_foutom := true;
+								end;
+								tmpRail^.Rail^.Volgende^.recht := tmpRail^.Rail;
+								tmpRail^.Rail^.Volgende^.r_foutom := true;
+							end else if tmpRail^.Rail^.Vorige^.recht^.meetpunt <> tmpMeetpunt then begin
+								if not tmpRail^.Rail^.Vorige^.r_foutom then begin
+									tmpRail^.Rail^.Vorige^.recht^.Vorige^.recht := tmpRail^.Rail^.Vorige^.recht;
+									tmpRail^.Rail^.Vorige^.recht^.Vorige^.r_foutom := true;
+								end else begin
+									tmpRail^.Rail^.Vorige^.recht^.Volgende^.recht := tmpRail^.Rail^.Vorige^.recht;
+									tmpRail^.Rail^.Vorige^.recht^.Volgende^.r_foutom := true;
+								end;
+								tmpRail^.Rail^.Vorige^.recht := tmpRail^.Rail;
+								tmpRail^.Rail^.Vorige^.r_foutom := false;
+							end;
+						end;
+						tmpRail := tmpRail^.volgende;
+					end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'vsv' then begin	// VERSCHIJN VERKEERD SPOOR
+				case index of
+				1: begin
+					tmpOudeVerschijnpunt := pAlleVerschijnpunten;
+					while assigned(tmpOudeVerschijnpunt) do
+						if tmpOudeVerschijnpunt^.Naam = waarde then
+							break
+						else
+							tmpOudeVerschijnpunt := tmpOudeVerschijnpunt^.Volgende;
+					if not assigned(tmpOudeVerschijnpunt) then
+						begin Leesfout_melding := 'Verschijnpunt '+waarde+' niet gevonden'; exit end;
+				end;
+				2: begin
+					tmpHierVerschijnpunt := pAlleVerschijnpunten;
+					while assigned(tmpHierVerschijnpunt) do
+						if tmpHierVerschijnpunt^.Naam = waarde then
+							break
+						else
+							tmpHierVerschijnpunt := tmpHierVerschijnpunt^.Volgende;
+					if not assigned(tmpHierVerschijnpunt) then
+						begin Leesfout_melding := 'Verschijnpunt '+waarde+' niet gevonden'; exit end;
+					new(tmpVerschijnpuntBkp);
+					tmpVerschijnpuntBkp^ := tmpOudeVerschijnpunt^;
+					tmpOudeVerschijnpunt^ := tmpHierVerschijnpunt^;
+					tmpOudeVerschijnpunt^.Naam := tmpVerschijnpuntBkp^.Naam;
+					tmpOudeVerschijnpunt^.Volgende := tmpVerschijnpuntBkp^.Volgende;
+					dispose(tmpVerschijnpuntBkp);
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if (soort <> 'c') and (soort <> 'w') then
 				begin Leesfout_melding := 'Dit commando bestaat niet.'; exit end;	// Verkeerde 'soort' opgegeven.
 			inc(index);
 		end;

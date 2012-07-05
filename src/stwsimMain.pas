@@ -36,7 +36,7 @@ type
 	 WisselSwitch: TAction;
     WisselBedienVerh: TAction;
 	 WisselRijwegVerh: TAction;
-    Berichtnaartreinsturen1: TMenuItem;
+	 Berichtnaartreinsturen1: TMenuItem;
     Treinnummerwijzigen1: TMenuItem;
     N1: TMenuItem;
 	 Wisselomzetten1: TMenuItem;
@@ -55,7 +55,7 @@ type
 	 RijwegHo: TAction;
     RijwegNormaal: TAction;
 	 RijwegROZ: TAction;
-    RijwegAuto: TAction;
+	 RijwegAuto: TAction;
 	 RijwegCancel: TAction;
 	 NNormalerijweg1: TMenuItem;
     Rijweg1: TMenuItem;
@@ -67,7 +67,7 @@ type
     Hulpmiddelen1: TMenuItem;
     Splitter1: TSplitter;
     tijdLabel: TLabel;
-    voerInBut: TButton;
+	 voerInBut: TButton;
     cancelBut: TButton;
 	 LaatProcesplanZien: TAction;
     N2: TMenuItem;
@@ -90,10 +90,10 @@ type
 	 Label1: TLabel;
 	 SpeedTrack: TTrackBar;
     Label2: TLabel;
-    Label3: TLabel;
+	 Label3: TLabel;
 	 Hulpmiddelentonen1: TMenuItem;
     DienstEdit: TAction;
-    Dienstregelingbewerken1: TMenuItem;
+	 Dienstregelingbewerken1: TMenuItem;
     DoorspoelBut: TButton;
 	 PauzePanel: TPanel;
     SimOpenPanel: TPanel;
@@ -112,9 +112,12 @@ type
     SGOpenen: TAction;
 	 SGSave: TAction;
     Spelopslaanals1: TMenuItem;
-    Wisselreparatie: TAction;
-    invoerEdit: TEdit;
+	 Wisselreparatie: TAction;
+	 invoerEdit: TEdit;
     RijwegVoerin: TAction;
+    ScenOpen: TAction;
+    Scenarioopenen1: TMenuItem;
+    ScenOpenDialog: TOpenDialog;
 	 procedure FormCreate(Sender: TObject);
 	 procedure TijdTimerTimer(Sender: TObject);
 	 procedure SimOpenenExecute(Sender: TObject);
@@ -128,10 +131,10 @@ type
 	 procedure TreinStatusExecute(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure RijwegHoExecute(Sender: TObject);
-    procedure RijwegNormaalExecute(Sender: TObject);
+	 procedure RijwegNormaalExecute(Sender: TObject);
 	 procedure RijwegROZExecute(Sender: TObject);
 	 procedure RijwegAutoExecute(Sender: TObject);
-    procedure RijwegCancelExecute(Sender: TObject);
+	 procedure RijwegCancelExecute(Sender: TObject);
 	 procedure TreinBellenExecute(Sender: TObject);
 	 procedure TelefoonShowExecute(Sender: TObject);
 	 procedure SchermenTabChange(Sender: TObject);
@@ -156,9 +159,10 @@ type
 	 procedure SGSaveExecute(Sender: TObject);
 	 procedure SGOpenenExecute(Sender: TObject);
     procedure invoerEditChange(Sender: TObject);
-    procedure invoerEditEnter(Sender: TObject);
+	 procedure invoerEditEnter(Sender: TObject);
     procedure invoerEditExit(Sender: TObject);
     procedure RijwegVoerinExecute(Sender: TObject);
+    procedure ScenOpenExecute(Sender: TObject);
 	private
 		// Belangrijkste
 		pCore:		PpCore;
@@ -179,6 +183,9 @@ type
 		// Dingen
 		Log:				TLog;
 		RijwegLogica:	TRijwegLogica;
+		Scenario:		TStringList;
+		Scenario_leesfout: string;
+		ScenarioToegepast: boolean;
 		// Bediening
 		gselx, gsely:integer;
 		selHokje:	 TvHokje;
@@ -202,6 +209,9 @@ type
 		procedure LoadFile(filename: string);
 		procedure AddScherm(ID: integer; titel: string; showdetails: boolean);
 		function GetScherm(ID: Integer): PTabList;
+		// Scenario
+		function vLoadScenarioString(s: string): boolean;
+		procedure ScenarioToepassen(vToepassen: boolean);
 		// Tekenen
 		procedure UpdateControls;
 		procedure SetSeltabVisible;
@@ -318,7 +328,7 @@ begin
 				for j := 1 to length(s) do
 					if s[j]=#9 then s[j] := #32;
 				str(i,r);
-				Application.MessageBox(pchar('Regel: '+r+' ('+s+')'+#13#10+'Fout: '+pCore.Leesfout_melding),'Fout bij laden simulatie', MB_OK+MB_ICONEXCLAMATION);
+				Application.MessageBox(pchar('Regel: '+r+' ('+s+')'+#13#10+'Fout: '+pCore.Leesfout_melding),'Fout bij laden simulatie', MB_OK+MB_ICONERROR);
 				halt;
 			end;
 		end;
@@ -379,6 +389,7 @@ begin
 	UpdateControls;
 
 	SimOpenen.Enabled := false;
+   ScenOpen.Enabled := true;
 
 	SetPanelsPos;
 	SimOpenPanel.Visible := false;
@@ -607,6 +618,9 @@ begin
 	RijwegLogica.Core := vCore;
 	RijwegLogica.Log := Log;
 	RijwegLogica.SendMsg := vSendMsg;
+
+	Scenario := TStringList.Create;
+	ScenarioToegepast := false;
 
 	RinkelStapjes := 0;
 	RinkelSound := LoadSound('snd_tele');
@@ -1173,6 +1187,7 @@ function TstwsimMainForm.OpenGame;
 var
 	f: file;
 	s: string;
+	i,n: integer;
 	Tijd: integer;
 begin
 	result := false;
@@ -1214,6 +1229,15 @@ begin
 		// Actieve rijwegen laden
 		RijwegLogica.LoadActieveRijwegen(f);
 		LoadWisselStatus(f, vCore);
+		// Scenario laden
+		Scenario.Clear;
+		intread(f, n);
+		for i := 1 to n do begin
+			stringread(f, s);
+			Scenario.Add(s);
+		end;
+		ScenarioToepassen(false);
+
 		closefile(f);
 		SGOpenen.Enabled := false;
 		result := true;
@@ -1251,6 +1275,7 @@ end;
 function TstwsimMainForm.SaveGame;
 var
 	f: file;
+	i: integer;
 	oudepauze: boolean;
 begin
 	oudepauze := pauze;
@@ -1281,6 +1306,11 @@ begin
 		// Actieve rijwegen opslaan
 		RijwegLogica.SaveActieveRijwegen(f);
 		SaveWisselStatus(f, vCore);
+		// Scenario opslaan
+		intwrite(f, Scenario.Count);
+		for i := 1 to Scenario.Count do
+			stringwrite(f, Scenario[i-1]);
+
 		closefile(f);
 		result := true;
 	end;
@@ -1293,12 +1323,96 @@ begin
 	SaveGame;
 end;
 
+function TstwsimMainForm.vLoadScenarioString;
+const
+	ws = [#9, ' '];
+var
+	// Algemene variabelen
+	waarde: string;
+	index: integer;
+	p: integer;
+	soort: string;
+	// Wissel
+	tmpvWissel: PvWissel;
+begin
+	result := false;
+	// Even dat de compiler niet zeurt
+	tmpvWissel := nil;
+
+	index := 0;
+	if copy(s,1,1)<>'#' then
+		while s <> '' do begin
+			// Whitespace van het begin schrappen.
+			while (s <> '') and (s[1] in ws) do
+				s := copy(s, 2, length(s)-1);
+			if s='' then break;
+			p := 1;
+			while (p <= length(s)) and not(s[p] in ws) do
+				inc(p);
+			waarde := copy(s, 1, p-1);
+			s := copy(s, p+1, length(s)-p);
+			// Als eerste bepalen we wat voor soort ding we maken.
+			if index = 0 then
+				soort := waarde
+			// En dan komt een reuzen-IF voor de rest!
+			else if soort = 'c' then begin				// COMMANDO
+				case index of
+				1: begin
+					if s <> '' then waarde := waarde + ' '+s;
+					RijwegLogica.VoerStringUit(waarde);
+					s := '';
+				end else
+					begin Scenario_leesfout := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'w' then begin	// WISSELSTAND
+				case index of
+				1: begin
+					tmpvWissel := stwvCore.ZoekWissel(vCore, waarde);
+					if not assigned(tmpvWissel) then
+						begin Scenario_leesfout := 'Wissel '+waarde+' niet gevonden.'; exit end;
+				end;
+				2: begin
+					if waarde = 'r' then begin
+						if not RijwegLogica.StelWisselIn(tmpvWissel, wsRechtdoor) then
+							begin Scenario_leesfout := 'Deze wisselstand kan niet.'; exit end;
+					end else if waarde = 'a' then begin
+						if not RijwegLogica.StelWisselIn(tmpvWissel, wsAftakkend) then
+							begin Scenario_leesfout := 'Deze wisselstand kan niet.'; exit end;
+					end else
+						begin Scenario_leesfout := 'Wisselstand moet recht (r) of afbuigend (a) zijn.'; exit end;
+				end else
+					begin Scenario_leesfout := 'Te veel parameters'; exit end;
+				end;
+			end else if (soort <> 'k') and (soort <> 'vsv') then
+				begin Scenario_leesfout := 'Dit commando bestaat niet.'; exit end;	// Verkeerde 'soort' opgegeven.
+			inc(index);
+		end;
+	result := true;
+end;
+
+procedure TstwsimMainForm.ScenarioToepassen;
+var
+	i: integer;
+begin
+	if ScenarioToegepast then exit;
+	for i := 1 to Scenario.Count do
+		if not pCore.LoadScenarioString(Scenario[i-1]) then begin
+			Application.MessageBox(pchar('Regel: '+Scenario[i-1]+#13#10+pCore.Leesfout_melding),'Fout in scenario', MB_OK+MB_ICONWARNING);
+		end;
+	if vToepassen then
+		for i := 1 to Scenario.Count do
+			if not vLoadScenarioString(Scenario[i-1]) then begin
+				Application.MessageBox(pchar('Regel: '+Scenario[i-1]+#13#10+Scenario_leesfout),'Fout in scenario', MB_OK+MB_ICONWARNING);
+			end;
+	ScenarioToegepast := true;
+end;
+
 procedure TstwsimMainForm.PauzeActionExecute(Sender: TObject);
 var
 	Tab: PTablist;
 begin
 	if not gestart then begin
-		// Initialiseren
+		// Sim initialiseren
 		pCore.StartUp;
 		rijwegLogica.StartupBezig := false;
 		if not TimeSet then begin
@@ -1307,8 +1421,12 @@ begin
 		end;
 		Randomize;
 
+		// Scenario uitvoeren
+		ScenarioToepassen(true);
+
 		// UI updaten.
 		DienstOpen.Enabled := false;
+      ScenOpen.Enabled := false;
 
 		Tab := RijwegLogica.Tabs;
 		while assigned(Tab) do begin
@@ -1435,11 +1553,55 @@ begin
 end;
 
 procedure TstwsimMainForm.RijwegVoerinExecute(Sender: TObject);
+var
+	commando: string;
 begin
-	RijwegLogica.VoerStringUit(invoerEdit.Text);
+	commando := invoerEdit.Text;
+	if commando = 'CheatGeenDefecten' then
+		pCore.CheatGeenDefecten := true
+	else
+		RijwegLogica.VoerStringUit(commando);
 	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
 	UpdateControls;
+end;
+
+procedure TstwsimMainForm.ScenOpenExecute(Sender: TObject);
+var
+	f: textfile;
+	s: string;
+	ok: boolean;
+begin
+	if not ScenOpenDialog.Execute then exit;
+	assignfile(f, ScenOpenDialog.Filename);
+	{$I-}reset(f);{$I+}
+	if ioresult <> 0 then begin
+		Application.Messagebox('Fout bij openen bestand.', 'Fout', MB_ICONERROR);
+		exit;
+	end;
+	Scenario.Clear;
+	ok := false;
+	if not eof(f) then begin
+		readln(f, s);
+		if (s = pCore.simnaam) and not eof(f) then
+			ok := true;
+	end;
+	if not ok then begin
+		Application.Messagebox(pchar('Dit is geen geldig scenario.'), 'Fout', MB_ICONERROR);
+		exit;
+	end;
+	readln(f, s);
+	if s <> pCore.simversie then begin
+		Application.Messagebox('Deze savegame is voor een andere versie van deze simulatie.', 'Fout', MB_ICONERROR);
+		exit;
+	end;
+	while not eof(f) do begin
+		readln(f, s);
+		Scenario.Add(s);
+	end;
+	closefile(f);
+
+	ScenOpen.Enabled := false;
 end;
 
 end.
