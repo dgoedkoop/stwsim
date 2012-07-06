@@ -77,14 +77,14 @@ procedure LoadSein(var f: file; core: PvCore; Sein: PvSein);
 procedure SaveRijweg(var f: file; Rijweg: PvRijweg);
 procedure LoadRijweg(var f: file; core: PvCore; Rijweg: PvRijweg);
 procedure SavePrlRijweg(var f: file; PrlRijweg: PvPrlRijweg);
-procedure LoadPrlRijweg(var f: file; core: PvCore; PrlRijweg: PvPrlRijweg);
+procedure LoadPrlRijweg(var f: file; core: PvCore; PrlRijweg: PvPrlRijweg; modus: integer);
 procedure SaveSubroute(var f: file; Subroute: PvSubroute);
 procedure LoadSubroute(var f: file; core: PvCore; Subroute: PvSubroute);
 
 procedure SaveWisselStatus(var f: file; Core: PvCore);
 procedure LoadWisselStatus(var f: file; Core: PvCore);
 
-procedure LoadThings(Core: PvCore; var f: file);
+procedure LoadThings(Core: PvCore; var f: file; modus: integer);
 procedure SaveThings(Core: PvCore; var f: file);
 
 procedure BerekenAankondigingen(Core: PvCore);
@@ -878,8 +878,21 @@ end;
 procedure SavePrlRijweg;
 var
 	RijwegLijst: PvRijwegLijst;
+	Count: integer;
 begin
 	bytewrite(f, PrlRijweg^.Dwang);
+	// Tellen
+	Count := 0;
+	RijwegLijst := PrlRijweg^.Rijwegen;
+	if assigned(RijwegLijst) then begin
+		inc(count);
+		while assigned(RijwegLijst) do begin
+			inc(count);
+			RijwegLijst := RijwegLijst^.Volgende;
+		end;
+	end;
+	// Uitvoeren
+	intwrite(f, count);
 	RijwegLijst := PrlRijweg^.Rijwegen;
 	if assigned(RijwegLijst) then begin
 		stringwrite(f, RijwegLijst^.Rijweg^.Sein^.Van);
@@ -888,29 +901,57 @@ begin
 			RijwegLijst := RijwegLijst^.Volgende;
 		end;
 	end;
-	stringwrite(f, '');
 end;
 
 procedure LoadPrlRijweg;
 var
 	Rijweg: 	  PvRijweg;
 	van, naar: string;
+	i, count:  integer;
+	// Fix voor oude modus
+	x: byte;
 begin
 	byteread(f, PrlRijweg^.Dwang);
 	van := '';
 	naar := '';
-	stringread(f, naar);
-	while naar <> '' do begin
-		if van <> '' then begin
-			Rijweg := ZoekRijweg(Core, van, naar);
-			if not assigned(Rijweg) then halt;
-			PrlRijwegVoegRijwegToe(PrlRijweg, Rijweg);
-			if PrlRijweg^.Van = '' then
-				PrlRijweg^.Van := Van;
-			PrlRijweg^.Naar := Naar;
+	case modus of
+		0: begin
+			intread(f, count);
+			if count > 0 then begin
+				stringread(f, van);
+				for i := 1 to count-1 do begin
+					stringread(f, naar);
+					if (van <> '') and (naar <> '') then begin
+						Rijweg := ZoekRijweg(Core, van, naar);
+						if not assigned(Rijweg) then halt;
+						PrlRijwegVoegRijwegToe(PrlRijweg, Rijweg);
+						if PrlRijweg^.Van = '' then
+							PrlRijweg^.Van := Van;
+						PrlRijweg^.Naar := Naar;
+					end;
+					van := naar;
+				end;
+			end;
 		end;
-		van := naar;
-		stringread(f, naar);
+		1: begin
+			// Oude modus
+			stringread(f, naar);
+			while naar <> '' do begin
+				if van <> '' then begin
+					Rijweg := ZoekRijweg(Core, van, naar);
+					if not assigned(Rijweg) then halt;
+					PrlRijwegVoegRijwegToe(PrlRijweg, Rijweg);
+					if PrlRijweg^.Van = '' then
+						PrlRijweg^.Van := Van;
+					PrlRijweg^.Naar := Naar;
+				end;
+				van := naar;
+				stringread(f, naar);
+			end;
+			byteread(f, x);
+			if x <> 0 then
+				seek(f, filepos(f)-1);
+		end;
 	end;
 end;
 
@@ -1106,7 +1147,7 @@ begin
 			end;
 			'l': begin
 				PrlRijweg := NieuwePrlRijweg(core);
-				LoadPrlRijweg(f, Core, PrlRijweg);
+				LoadPrlRijweg(f, Core, PrlRijweg, modus);
 			end;
 			'p': klaar := true;
 		end;

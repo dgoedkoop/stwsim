@@ -436,7 +436,8 @@ uses stwsimClientEditInfo;
 {$R *.DFM}
 
 const
-	MagicCode = 'StwSim Client Beta 8';
+	MagicCode = 'STWSIM.1';
+	MagicCode_old = 'StwSim Client Beta 8';
 
 procedure TstwseMain.UpdateSubrouteUpDownCtls;
 begin
@@ -2055,20 +2056,24 @@ var
 	magic, schermnaam: string;
 	schermID: integer;
 	details: boolean;
+	modus: integer;
 begin
 	if OpenDialog.Execute then begin
 		filename := OpenDialog.Filename;
 		assignfile(f, filename);
 		reset(f, 1);
 		stringread(f, magic);
-		if magic <> magicCode then begin
+		modus := -1;
+		if magic = magicCode then modus := 0;
+		if magic = magicCode_old then modus := 1;
+		if modus = -1 then begin
 			Application.MessageBox('Dit is geen geldig bestand.', 'Fout', MB_ICONERROR);
 			exit;
 		end;
 
 		LoadInfra(f, Infrastructuur);
 
-		LoadThings(@Core, f);
+		LoadThings(@Core, f, modus);
 
 		repeat
 			intread(f, schermID);

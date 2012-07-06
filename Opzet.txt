@@ -452,6 +452,12 @@ CHANGELOG:
   een dienstregelingpunt was gewijzigd, de speciale acties die daarbij horen
   niet werden uitgevoerd. Dit is opgelost.
 
+6 juli 2012:
+- Fix: Als een rijweg geen naar-spoor had ingesteld en je nam dan alle rijwegen
+  in de editor over naar procesleiding, dan kon je na opslaan de simulatie niet
+  meer openen. Dit is opgelost, ook bestanden waarbij deze fout optreedt kunnen
+  nu weer worden gelezen.
+
 BERICHTEN AAN DE MACHINIST:
 
 - Rijd langzaam door het eerstvolgende rode sein

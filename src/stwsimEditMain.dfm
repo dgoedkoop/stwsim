@@ -277,7 +277,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 3
           end
           object wgBox: TComboBox
@@ -335,7 +335,7 @@ object stwseMain: TstwseMain
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 0
             OnChange = onafhComboChange
           end
@@ -345,7 +345,7 @@ object stwseMain: TstwseMain
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 1
             OnChange = afhComboChange
           end
@@ -515,7 +515,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 3
           end
           object ovmaDBut: TButton

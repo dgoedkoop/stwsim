@@ -257,7 +257,7 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 {$R xpthemes.res}
 
 const
-	MagicCode = 'StwSim Client Beta 8';
+	MagicCode = 'STWSIM.1';
 
 procedure TstwsimMainForm.DoeStapje;
 begin
@@ -364,7 +364,7 @@ begin
 	Caption := naam;
 	Application.Title := naam;
 
-	LoadThings(vCore, f);
+	LoadThings(vCore, f, 0);
 
 	repeat
 		intread(f, schermID);
