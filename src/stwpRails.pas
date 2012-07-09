@@ -81,6 +81,7 @@ function RailOpLijst(Rail: PpRail; Lijst: PpRailLijst): boolean;
 function ZoekRail(pAlleRails: PpRailLijst; Naam: string): PpRail;
 
 function IsHierHoofdsein(Conn: PpRailConn): boolean;
+function IsHierSnelheidsbordje(Conn: PpRailConn): boolean;
 
 function ZoekOmgekeerdeConnectie(Conn: PpRailConn): PpRailConn;
 
@@ -218,7 +219,7 @@ begin
 	while assigned(tmprail1) do begin
 		tmprail2 := Raillijst2;
 		while assigned(tmprail2) do begin
-	     	if tmprail1^.Rail = tmprail2^.Rail then
+			if tmprail1^.Rail = tmprail2^.Rail then
            	result := true;
 			tmprail2 := tmprail2^.volgende;
       end;
@@ -242,6 +243,11 @@ end;
 function IsHierHoofdsein;
 begin
 	result := IsHoofdsein(PpSein(Conn^.sein));
+end;
+
+function IsHierSnelheidsbordje;
+begin
+	result := IsSnelheidsbordje(PpSein(Conn^.sein));
 end;
 
 end.

@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.6';
+	SaveIOMagic			= 'STWSIMSAVE.9';
 
 	tps					= 10;
 
@@ -55,6 +55,9 @@ const
 	treindefectmintijd			= 5;
 	treindefectmaxtijd			= 15;
 	treindefectopgelostbericht = 'We kunnen nu vertrekken!';
+
+	zstvhHoofdsein = 1;
+	zstvhSnelheidsbordje = 2;
 
 type
 	TScoreInfo = record
@@ -130,7 +133,7 @@ type
 		function CopyDienstFrom(nummer, beginstation: string): PpRijplanPunt;
 		function CopyWagons(WagonConn: PpWagonConn): PpWagonConn;
 		function ZoekVolgendeConn(Rail: PpRail; achteruit: boolean): PpRailConn;
-		function ZoekSporenTotVolgendHoofdsein(Conn: PpRailConn): PpRailLijst;
+		function ZoekSporenTotVolgendHoofdsein(Conn: PpRailConn; flags: byte): PpRailLijst;
 		function ZoekSporenTotVolgendHoofdseinR(Rail: PpRail; achteruit: boolean): PpRailLijst;
 
 		// ZoekVolgendSein en ZoekVolgendeWissel zetten via de var-parameters de
@@ -298,19 +301,19 @@ function TpCore.CalcSeinbeeld;
 begin
 	result := sbRood;
 	if (Sein^.Bediend or Sein^.Autosein) and not Sein^.Autovoorsein then
-		if Sein^.H_Maxsnelheid > 0 then
+		if Sein^.H_MovementAuthority.HasAuthority then
 			result := sbGroen
 		else
 			result := sbRood;
 	if Sein^.Autovoorsein and not (Sein^.Bediend or Sein^.Autosein) then
-		if Sein^.V_Adviessnelheid > 0 then
+		if Sein^.V_AdviesAuthority.HasAuthority then
 			result := sbGroen
 		else
 			result := sbGeel;
 	if (Sein^.Bediend or Sein^.Autosein) and Sein^.Autovoorsein then begin
-		if Sein^.H_Maxsnelheid = 0 then
+		if not Sein^.H_MovementAuthority.HasAuthority then
 			result := sbRood
-		else if Sein^.V_Adviessnelheid < Sein^.H_Maxsnelheid then
+		else if Sein^.V_AdviesAuthority.HasAuthority then
 			result := sbGeel
 		else
 			result := sbGroen;
@@ -329,9 +332,14 @@ begin
 	// de bedoeling dat de meest restrictieve beperking die van toepassing is
 	// gebruikt wordt.
 	while assigned(tmpSeinBeperking) do begin
-		if (Vansein = tmpSeinBeperking^.Vansein) and
+		if // Betreft het deze combinatie?
+			(Vansein = tmpSeinBeperking^.Vansein) and
 			(Naarsein = tmpSeinBeperking^.Naarsein) and
-			(Naarsein^.H_Maxsnelheid <= tmpSeinBeperking^.Triggersnelheid) and
+			// Is aan deze trigger voldaan?
+			((not Naarsein^.H_MovementAuthority.HasAuthority) or
+			((not Naarsein^.H_MovementAuthority.Baanvaksnelheid) and
+			(Naarsein^.H_MovementAuthority.Snelheidsbeperking <= tmpSeinBeperking^.Triggersnelheid))) and
+			// Is deze beperking strenger dan wat we evt. eerder vonden?
 			((tmpSeinBeperking^.Beperking < result) or (result = -1)) then
 			result := tmpSeinBeperking^.Beperking;
 		tmpSeinBeperking := tmpSeinBeperking^.volgende;
@@ -347,7 +355,7 @@ procedure TpCore.DoeMeetpuntDefect;
 begin
 	if assigned(Meetpunt) then
 		Meetpunt^.defect := false;
-		if GaatDefect(meetpuntdefectbijtreinkans) then begin
+		if GaatDefect(meetpuntdefectbijtreinkans) and Meetpunt^.magdefect then begin
 			Meetpunt^.defect := true;
 		end;
 end;
@@ -530,6 +538,10 @@ var
 	tmpConn: PpRailConn;
 	tmpLijst2: PpRailLijst;
 begin
+	if ((flags and zstvhHoofdsein)=0) and ((flags and zstvhSnelheidsbordje)=0) then begin
+		result := nil;
+		exit
+	end;
 	// Pak de volgende rail.
 	VolgendeRail(Conn, tmpRail, tmpAchteruit);
 	// Het spoor waaraan het sein staat sowieso.
@@ -541,8 +553,12 @@ begin
 			tmpConn := tmpRail.Volgende
 		else
 			tmpConn := tmpRail.Vorige;
-		if IsHierHoofdsein(tmpConn) then
-			exit;
+		if (flags and zstvhHoofdsein)>0 then
+			if IsHierHoofdsein(tmpConn) then
+				exit;
+		if (flags and zstvhSnelheidsbordje)>0 then
+			if IsHierSnelheidsbordje(tmpConn) then
+				exit;
 
 		// Pak de volgende rail.
 		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
@@ -913,13 +929,13 @@ var
 	SporenTotVolgendSeinLijst, tmpRail: PpRaillijst;
 	VolgendSein: PpSein;
 	VolgendeMeetpunt: PpMeetpunt;
-	MaxSnelheid: integer;
 	Beperking: integer;
 	RailsBezet: boolean;
 	ErlaubnisOK: boolean;
 	Meetpunt: PpMeetpunt;
 	//////
-	Vorige_H_Maxsnelheid: integer;
+	MovementAuthority: THMovementAuthority;
+	Vorige_H_MovementAuthority: THMovementAuthority;
 	VorigeSeinbeeld: TSeinbeeld;
 	H_terugoprood:	boolean;
 	tmpNaam: string;
@@ -930,7 +946,7 @@ begin
 	if not (Sein^.Bediend or Sein^.Autosein or Sein^.Autovoorsein) then exit;
 
 	// Om te kijken of het verandert
-	Vorige_H_Maxsnelheid := Sein^.H_Maxsnelheid;
+	Vorige_H_MovementAuthority := Sein^.H_MovementAuthority;
 	VorigeSeinbeeld := CalcSeinbeeld(Sein);
 
 	// Is het een autovoorsein, dan zoeken we het bijbehorende hoofdsein op
@@ -938,9 +954,9 @@ begin
 	if Sein^.Autovoorsein then begin
 		ZoekVolgendHoofdSein(Sein^.Plaats, Sein2, false);
 		if assigned(Sein2) then
-			Sein^.V_Adviessnelheid := Sein2^.H_Maxsnelheid
+			Sein^.V_AdviesAuthority := Sein2^.H_MovementAuthority
 		else
-			Sein^.V_Adviessnelheid := 0;
+			Sein^.V_AdviesAuthority.HasAuthority := false
 	end;
 
 	// Sowieso eerst maar eens e.e.a. opzoeken.
@@ -952,14 +968,22 @@ begin
 
 	// Zowel voor een autosein als voor een bediend sein moeten we de snelheid
 	// weten die na het sein gereden mag worden.
-	SporenTotVolgendSeinLijst := ZoekSporenTotVolgendHoofdsein(Sein^.Plaats);
+	SporenTotVolgendSeinLijst := ZoekSporenTotVolgendHoofdsein(Sein^.Plaats, zstvhHoofdsein+zstvhSnelheidsbordje);
 	tmpRail := SporenTotVolgendSeinLijst;
-	MaxSnelheid := 0;
+	MovementAuthority.Baanvaksnelheid := true;
 	while assigned(tmpRail) do begin
-		if (MaxSnelheid=0) or (tmpRail^.Rail^.MaxSnelheid < MaxSnelheid) then
-			MaxSnelheid := tmpRail^.Rail^.MaxSnelheid;
+		if (tmpRail^.Rail^.MaxSnelheid >= 0) then
+			if MovementAuthority.Baanvaksnelheid then begin
+				MovementAuthority.Baanvaksnelheid := false;
+				MovementAuthority.Snelheidsbeperking := tmpRail^.Rail^.MaxSnelheid
+			end else if tmpRail^.Rail^.MaxSnelheid < MovementAuthority.Snelheidsbeperking then
+				MovementAuthority.Snelheidsbeperking := tmpRail^.Rail^.MaxSnelheid;
 		tmpRail := tmpRail^.volgende;
 	end;
+	// Raillijst aanpassen, vanaf nu gaan we kijken of sporen vrij zijn en dan
+	// moeten we echt helemaal tot het volgende sein kijken.
+	RaillijstWissen(SporenTotVolgendSeinLijst);
+	SporenTotVolgendSeinLijst := ZoekSporenTotVolgendHoofdsein(Sein^.Plaats, zstvhHoofdsein);
 	// Is het een autosein, dan zoeken we het meetpunt op en passen het seinbeeld
 	// aan.
 	if Sein^.Autosein then begin
@@ -1007,7 +1031,8 @@ begin
 		// SEINBEELD INSTELLEN
 		if (not RailsBezet) and ErlaubnisOK then begin
 			// Yo! Spoor vrij! Sein op groen!
-			Sein^.H_Maxsnelheid := MaxSnelheid;
+			MovementAuthority.HasAuthority := true;
+			Sein^.H_MovementAuthority := MovementAuthority;
 			// Bij een (dubbel-)enkelspoorbeveiliging moeten we de rijrichting
 			// laten voortplanten.
 			if assigned(Sein^.A_Erlaubnis) and assigned(VolgendeMeetpunt) then
@@ -1016,8 +1041,8 @@ begin
 					(VolgendeMeetpunt^.rijrichting <> Meetpunt^.rijrichting) then
 						VolgendeMeetpunt^.rijrichting := Meetpunt^.rijrichting;
 		end else
-			if Sein^.H_Maxsnelheid <> 0 then begin
-				Sein^.H_Maxsnelheid := 0;
+			if Sein^.H_MovementAuthority.HasAuthority then begin
+				Sein^.H_MovementAuthority.HasAuthority := false;
 				if RailsBezet then
 					H_terugoprood := true;
 			end;
@@ -1043,7 +1068,7 @@ begin
 				// Indien nodig een rijrichting instellen.
 				if VolgendeMeetpunt^.rijrichting = 0 then begin
 					ZoekVolgendHoofdsein(VolgendSein^.Plaats, Sein2, false);
-					if (not assigned(Sein2)) or (not Sein2^.Autosein) or (Sein2^.H_Maxsnelheid > 0) then
+					if (not assigned(Sein2)) or (not Sein2^.Autosein) or Sein2^.H_MovementAuthority.HasAuthority then
 						VolgendeMeetpunt^.rijrichting := Sein^.A_Erlaubnisstand;
 				end;
 			end;
@@ -1056,7 +1081,7 @@ begin
 	// De stand van een bediend sein moeten we eventueel aanpassen.
 	if Sein^.Bediend then begin
 		case Sein^.Bediend_Stand of
-			0: Sein^.H_Maxsnelheid := 0;
+			0: Sein^.H_MovementAuthority.HasAuthority := false;
 			1: begin
 				// Kijk of de rails na het autosein vrij zijn.
 				RailsBezet := false;
@@ -1068,22 +1093,34 @@ begin
 					end;
 					tmpRail := tmpRail^.volgende;
 				end;
-				if not RailsBezet then
-					Sein^.H_Maxsnelheid := MaxSnelheid;
+				if not RailsBezet then begin
+					MovementAuthority.HasAuthority := true;
+					Sein^.H_MovementAuthority := MovementAuthority;
+				end;
 			end;
 			2: begin
-				if MaxSnelheid < 20 then
-					Sein^.H_Maxsnelheid := MaxSnelheid
-				else
-					Sein^.H_Maxsnelheid := 20;
+				MovementAuthority.HasAuthority := true;
+				if MovementAuthority.Baanvaksnelheid then begin
+					MovementAuthority.Baanvaksnelheid := false;
+					MovementAuthority.Snelheidsbeperking := 20
+				end else if MovementAuthority.Snelheidsbeperking > 20 then
+					MovementAuthority.Snelheidsbeperking := 20;
+				Sein^.H_MovementAuthority := MovementAuthority;
 			end;
 		end;
 	end;
 
 	// Beperking checken
 	Beperking := CalcBeperking(Sein, VolgendSein);
-	if (Beperking > -1) and (Sein^.H_Maxsnelheid > Beperking) then
-		Sein^.H_Maxsnelheid := Beperking;
+	if Beperking = 0 then
+		Sein^.H_MovementAuthority.HasAuthority := false;
+	if Beperking > 0 then
+		if Sein^.H_MovementAuthority.Baanvaksnelheid then begin
+			Sein^.H_MovementAuthority.Baanvaksnelheid := false;
+			Sein^.H_MovementAuthority.Snelheidsbeperking := Beperking
+		end else
+			if Sein^.H_MovementAuthority.Snelheidsbeperking > Beperking then
+				Sein^.H_MovementAuthority.Snelheidsbeperking := Beperking;
 
 	// Defecten eventueel oplossen
 	if Sein^.groendefect and (GetTijd > Sein^.groendefecttot) then
@@ -1093,17 +1130,17 @@ begin
 	// Defecten uitvoeren
 	if (Sein^.Bediend or Sein^.Autosein) and not Sein^.Autovoorsein then begin
 		if Sein^.groendefect then
-			Sein^.H_Maxsnelheid := 0;
+			Sein^.H_MovementAuthority.HasAuthority := false;
 	end;
 	if Sein^.Autovoorsein and not (Sein^.Bediend or Sein^.Autosein) then begin
 		if Sein^.groendefect then
-			Sein^.V_Adviessnelheid := 0;
+			Sein^.V_AdviesAuthority.HasAuthority := false;
 	end;
 	if (Sein^.Bediend or Sein^.Autosein) and Sein^.Autovoorsein then begin
-		if Sein^.groendefect and (Sein^.V_Adviessnelheid >= Sein^.H_Maxsnelheid) then
-			Sein^.V_Adviessnelheid := RemwegSnelheid;
-		if Sein^.geeldefect and (Sein^.V_Adviessnelheid < Sein^.H_Maxsnelheid) then
-			Sein^.H_Maxsnelheid := 0;
+		if Sein^.groendefect and Sein^.V_AdviesAuthority.HasAuthority then
+			Sein^.V_AdviesAuthority.HasAuthority := false;
+		if Sein^.geeldefect and not Sein^.V_AdviesAuthority.HasAuthority then
+			Sein^.H_MovementAuthority.HasAuthority := false;
 	end;
 	// Defecten eventueel maken
 	Seinbeeld := CalcSeinbeeld(Sein);
@@ -1125,7 +1162,7 @@ begin
 
 	// Veranderd-status instellen
 	if (Sein^.Bediend or Sein^.Autosein) then
-		if (Sein^.H_Maxsnelheid <> Vorige_H_Maxsnelheid) then
+		if not AuthorityIdentical(Sein^.H_MovementAuthority, Vorige_H_MovementAuthority) then
 			Sein^.veranderd := true;
 
 	// En opruimen.
@@ -1245,7 +1282,7 @@ var
 	tmpRailL: PpRailLijst;
 	tmpErlaubnis: PpErlaubnis;
 	tmpSein: PpSein;
-	VolgendSeinSnelheid: integer;
+	VolgendeAuthority: THMovementAuthority;
 
 	// Treinnummer op juiste plaats zetten!
 	tmpConn: PpRailConn;
@@ -1306,7 +1343,7 @@ begin
 
 			// Stand van het volgende sein opvragen.
 			ZoekVolgendHoofdsein(ZoekVolgendeConn(tmpRail, Plaats^.achteruit), tmpSein, true);
-			VolgendSeinSnelheid := tmpSein^.H_Maxsnelheid;
+			VolgendeAuthority := tmpSein^.H_MovementAuthority;
 
 			// Nieuwe trein maken
 			new(tmpTrein);
@@ -1342,14 +1379,12 @@ begin
 			// Snelheid instellen. Niet te snel.
 			// Niet te snel houdt in dat we niet harder mogen rijden dan het
 			// eerstvolgende sein aangeeft.
-			if (VolgendSeinSnelheid > 0) then
-				tmpTrein^.V_Adviessnelheid := VolgendSeinSnelheid
-			else
-				tmpTrein^.V_Adviessnelheid := RemwegSnelheid;
-			if (Plaats^.startsnelheid <= VolgendSeinSnelheid) then
-				tmpTrein^.snelheid := Plaats^.startsnelheid
-			else
-				tmpTrein^.snelheid := VolgendSeinSnelheid;
+			tmpTrein^.baanvaksnelheid := Plaats^.baanvaksnelheid;
+			tmpTrein^.snelheid := Plaats^.startsnelheid;
+			tmpTrein^.ZieVoorsein(tmpSein);
+			if (tmpTrein^.snelheid > tmpTrein^.V_Adviessnelheid) and
+				(tmpTrein^.V_Adviessnelheid > -1) then
+				tmpTrein^.snelheid := tmpTrein^.V_Adviessnelheid;
 
 			// Dit is al voorbereid
 			tmpTrein^.EersteWagon := CopyWagons(VerschijnItem^.wagons);
@@ -1521,13 +1556,14 @@ begin
 						end;
 						tmpRail^.Rail^.Naam := Waarde;
 						tmpRail^.Rail^.meetpunt := nil;
+						tmpRail^.Rail^.MaxSnelheid := -1;
 					end;
 				2: begin
 						val(waarde, tmpRail^.Rail^.Lengte, code);
 						if code <> 0 then
 							begin Leesfout_melding := 'Lengte is geen getal'; exit end;
 					end;
-				3: begin
+				3: if waarde <> '-' then begin
 						val(waarde, tmpRail^.Rail^.MaxSnelheid, code);
 						if code <> 0 then
 							begin Leesfout_melding := 'Maximumsnelheid is geen getal'; exit end;
@@ -1719,9 +1755,11 @@ begin
 						tmpSein^.A_Erlaubnis := nil;
 						tmpSein^.A_Erlaubnisstand := 0;
 						tmpSein^.B_Meetpunt := nil;
-						tmpSein^.H_Maxsnelheid := -1;
+						tmpSein^.H_MovementAuthority.HasAuthority := false;
+						tmpSein^.V_AdviesAuthority.HasAuthority := false;
+						tmpSein^.H_Baanmaxsnelheid := -1;
+						tmpSein^.V_Baanmaxsnelheid := -1;
 						tmpSein^.Autovoorsein := false;
-						tmpSein^.V_Adviessnelheid := -1;
 						tmpSein^.Stationsnaam := '';
 						tmpSein^.vanwie := nil;
 						tmpSein^.veranderd := true;
@@ -1777,14 +1815,14 @@ begin
 						if assigned(tmpSein^.A_Erlaubnis) then
 							begin Leesfout_melding := 'Als een sein aan een rijrichtingsveld gekoppeld wordt, moet ook een richting worden opgegeven.'; exit end;
 				9: if waarde <> '-' then begin
-						val(waarde, tmpSein^.H_Maxsnelheid, code);
-						if (code <> 0) or tmpSein^.Bediend or tmpSein^.Autosein then
+						val(waarde, tmpSein^.H_Baanmaxsnelheid, code);
+						if code <> 0then
 							begin Leesfout_melding := 'Maximumsnelheid sein: Is geen getal, of het sein is bediend of een autosein.'; exit end;
 					end;
 				10: tmpSein^.Autovoorsein := (waarde = 'j') or (waarde = 'J');
 				11: if waarde <> '-' then begin
-						val(waarde, tmpSein^.V_Adviessnelheid, code);
-						if (code <> 0) or tmpSein^.Autovoorsein then
+						val(waarde, tmpSein^.V_Baanmaxsnelheid, code);
+						if code <> 0 then
 							begin Leesfout_melding := 'Snelheidsaankondiging sein: Is geen getal, of het sein is een autovoorsein.'; exit end;
 					end;
 				12: tmpSein^.Haltevoorsein := (waarde = 'j') or (waarde = 'J');
@@ -1841,6 +1879,7 @@ begin
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
 							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
+						tmpMeetpunt^.magdefect := true;
 						tmpMeetpunt^.defect := false;
 						tmpMeetpunt^.Rail := rail1;
 						tmpMeetpunt^.vanwies := nil;
@@ -1921,7 +1960,12 @@ begin
 						pAlleVerschijnpunten := tmpVerschijnpunt;
 					end;
 				2: tmpVerschijnpunt^.vertragingmag := (waarde='j') or (waarde='J');
-				3: tmpVerschijnpunt^.rail := ZoekRail(waarde);
+				3: begin
+						tmpVerschijnpunt^.rail := ZoekRail(waarde);
+						if assigned(tmpVerschijnpunt^.rail) then
+							if assigned(tmpVerschijnpunt^.rail^.Meetpunt) then
+								PpMeetpunt(tmpVerschijnpunt^.rail^.Meetpunt)^.magdefect := false;
+					end;
 				4: begin
 						val(waarde, tmpVerschijnpunt^.afstand, code);
 						if code <> 0 then
@@ -1944,8 +1988,13 @@ begin
 						if code <> 0 then
 							begin Leesfout_melding := 'Startsnelheid is geen getal.'; exit end;
 					end;
-				8: tmpVerschijnpunt^.erlaubnis := waarde;
-				9: begin
+				8: begin
+						val(waarde, tmpVerschijnpunt^.baanvaksnelheid, code);
+						if code <> 0 then
+							begin Leesfout_melding := 'Baanvaksnelheid is geen getal.'; exit end;
+					end;
+				9: tmpVerschijnpunt^.erlaubnis := waarde;
+				10: begin
 						if waarde <> '-' then begin
 							val(waarde, tmpVerschijnpunt^.erlaubnisstand, code);
 							if code <> 0 then
@@ -2292,7 +2341,7 @@ begin
 	for i := 1 to SeinenCount do begin
 		stringwrite(f, Sein^.naam);
 		intwrite   (f, Sein^.Bediend_Stand);
-		intwrite	  (f, Sein^.H_Maxsnelheid); // Voor terug-op-rood-berekening
+		SaveMA     (f, Sein^.H_MovementAuthority); // Voor terug-op-rood-berekening
 		boolwrite  (f, Sein^.groendefect);
 		intwrite   (f, Sein^.groendefecttot);
 		boolwrite  (f, Sein^.geeldefect);
@@ -2379,7 +2428,7 @@ begin
 	for i := 1 to SeinenCount do begin
 		stringread(f, SeinNaam);		Sein := ZoekSein(SeinNaam);
 		intread   (f, Sein^.Bediend_Stand);
-		intread	 (f, Sein^.H_Maxsnelheid); // Voor terug-op-rood-berekening
+		Sein^.H_MovementAuthority := LoadMA(f);	// Voor terug-op-rood-berekening
 		boolread  (f, Sein^.groendefect);
 		intread   (f, Sein^.groendefecttot);
 		boolread  (f, Sein^.geeldefect);

@@ -180,7 +180,6 @@ begin
 		stwscPlanregelEditForm.vanEdit.Text := selPunt^.van;
 		stwscPlanregelEditForm.naarEdit.Text := selPunt^.naar;
 		stwscPlanregelEditForm.rozCheck.Checked := selPunt^.ROZ;
-		stwscPlanregelEditForm.gefaseerdCheck.Checked := selPunt^.gefaseerd;
 		stwscPlanregelEditForm.ariCheck.Checked := selPunt^.ARI_toegestaan;
 		FmtTijd(selPunt^.Insteltijd, u, m, s);
 		us := inttostr(u); if length(us)=1 then us := '0'+us;
@@ -229,17 +228,16 @@ begin
 			selPunt^.naar := Naar;
 			selPunt^.Dwang := Dwang;
 			selPunt^.ROZ := stwscPlanregelEditForm.rozCheck.Checked;
-			selPunt^.gefaseerd := stwscPlanregelEditForm.gefaseerdCheck.Checked;
 			selPunt^.ARI_toegestaan := stwscPlanregelEditForm.ariCheck.Checked;
 			selPunt^.NieuwNummer := stwscPlanregelEditForm.nieuwNrEdit.Text;
 			selPunt^.RestNummer := stwscPlanregelEditForm.RestNrEdit.Text;
 		end else
 			// Bij CANCEL moeten we de oude ARI-instelling terugzetten.
 			selPunt^.ARI_toegestaan := ari_oud;
+		ProcesPlan.Sorteer;
+		UpdateLijst;
+		Markeer(selPunt);
 	end;
-	ProcesPlan.Sorteer;
-	UpdateLijst;
-	Markeer(selPunt);
 end;
 
 procedure TstwscProcesPlanFrame.RegelListDblClick(Sender: TObject);

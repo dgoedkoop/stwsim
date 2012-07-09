@@ -12,7 +12,6 @@ type
     Label1: TLabel;
     Label2: TLabel;
 	 rozCheck: TCheckBox;
-    gefaseerdCheck: TCheckBox;
     vanEdit: TEdit;
     Label4: TLabel;
     naarEdit: TEdit;

@@ -76,7 +76,6 @@ type
 		cw:			double;
 		elektrisch: boolean;
 		matmaxsnelheid: integer;	// km/u
-		railmaxsnelheid: integer;
 		maxsnelheid:integer;	// km/u. Materieel + Seinbeeld + Rails
 		el_ok:		boolean;
 
@@ -461,12 +460,9 @@ var
 	elrails: boolean;
 	tmphmaxsnelheid: integer;
 begin
-	railmaxsnelheid := -1;
 	elrails := true;
 	tmpRail := BezetteRails;
 	while assigned(tmpRail) do begin
-		if (railmaxsnelheid = -1) or (tmpRail^.Rail^.MaxSnelheid < railMaxSnelheid) then
-			RailMaxSnelheid := tmpRail^.Rail^.MaxSnelheid;
 		elrails := elrails and tmpRail^.Rail^.elektrif;
 		tmpRail := tmpRail^.volgende;
 	end;
@@ -513,6 +509,9 @@ begin
 
 	maxsnelheid := matmaxsnelheid;
 
+	if maxsnelheid > baanvaksnelheid then
+		maxsnelheid := baanvaksnelheid;
+
 	if doorroodgereden then
 		if not doorroodverderrijden then
 			huidigemaxsnelheid := 0
@@ -525,12 +524,9 @@ begin
 		if (tmphmaxsnelheid < maxsnelheid) and (tmphmaxsnelheid <> -1) then
 			maxsnelheid := tmphmaxsnelheid
 	end else
-   	// De vorige snelheid geldt.
+		// De vorige snelheid geldt.
 		if vorigemaxsnelheid < maxsnelheid then
 			maxsnelheid := vorigemaxsnelheid;
-
-   if maxsnelheid > railmaxsnelheid then
-		maxsnelheid := railmaxsnelheid;
 
 	CalcBezetteRails;
 end;
@@ -660,12 +656,15 @@ begin
 	if not steltbaanvaksnelheidin then begin
 		// Niks te doen? Dan niks doen.
 		if (snelheid = huidigemaxsnelheid) or
-			((snelheid >= baanvaksnelheid) and (huidigemaxsnelheid = baanvaksnelheid) and
-			 (baanvaksnelheid > -1)) then
+			( ((snelheid >= baanvaksnelheid) or (snelheid = -1)) and
+			  (huidigemaxsnelheid = baanvaksnelheid) and
+			  (baanvaksnelheid > -1)
+			) then
 			exit;
 		vorigemaxsnelheid := huidigemaxsnelheid;
 		afstandsindsvorige := 0;
-		if (snelheid <= baanvaksnelheid) or (baanvaksnelheid = -1) then
+		if ((snelheid < baanvaksnelheid) and (snelheid > -1)) or
+			(baanvaksnelheid = -1) then
 			huidigemaxsnelheid := snelheid
 		else
 			huidigemaxsnelheid := baanvaksnelheid;
@@ -681,33 +680,23 @@ begin
 end;
 
 procedure TpTrein.ZieVoorsein;
-var
-	NieuweAdviessnelheid: integer;
 begin
+	if not assigned(Sein) then exit;
 	// Een sein annuleert geen vertraag-opdracht van een bordje.
 	// En omgekeerd ook niet!
-	NieuweAdviessnelheid := sein^.V_Adviessnelheid;
-	if sein^.Autovoorsein then begin
-		if (NieuweAdviessnelheid < V_Adviessnelheid) or
-			((V_Adviessnelheid = -1) and
-			 (NieuweAdviessnelheid >= 0)) then
-			if (NieuweAdviessnelheid > 0) then
-				V_Adviessnelheid := NieuweAdviessnelheid
+	if Sein^.Autovoorsein then begin
+		if Sein^.V_AdviesAuthority.HasAuthority then
+			if Sein^.V_AdviesAuthority.Baanvaksnelheid then
+				V_Adviessnelheid := -1
 			else
-				V_Adviessnelheid := RemwegSnelheid;
-		if NieuweAdviessnelheid = -1 then
-			V_Adviessnelheid := -1;
-	end else begin
-		if (NieuweAdviessnelheid < B_Adviessnelheid) or
-			((B_Adviessnelheid = -1) and
-			 (NieuweAdviessnelheid >= 0)) then
-			if (NieuweAdviessnelheid > 0) then
-				B_Adviessnelheid := NieuweAdviessnelheid
-			else
-				B_Adviessnelheid := RemwegSnelheid;
-		if NieuweAdviessnelheid = -1 then
-			B_Adviessnelheid := -1;
+				V_Adviessnelheid := Sein^.V_AdviesAuthority.Snelheidsbeperking
+		else
+			V_Adviessnelheid := RemwegSnelheid
 	end;
+	if (Sein^.V_Baanmaxsnelheid > 0) and
+		((Sein^.V_Baanmaxsnelheid < B_Adviessnelheid) or
+		(B_Adviessnelheid = -1)) then
+		B_Adviessnelheid := Sein^.V_Baanmaxsnelheid
 end;
 
 end.

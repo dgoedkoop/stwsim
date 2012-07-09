@@ -84,23 +84,26 @@ begin
 		str(nrup, treinnr);
 		exit;
 	end;
-	if length(treinnr) = 1 then begin
-		val(treinnr,i,code);
+	// Strategie A: een nummer
+	val(treinnr,i,code);
+	if code = 0 then begin
 		i := i + nrup;
 		if i >= 0 then
 			str(i, treinnr)
 		else
 			str(-i, treinnr);
 		exit;
+	end else begin
+	// Strategie B: mogelijkerwijs een Engelse code zoals 2A45
+		val(copy(treinnr, length(treinnr)-1, 2), i, code);
+		i := i + nrup;
+		if i >= 0 then
+			str(i, si)
+		else
+			str(-i, si);
+		if length(si)=1 then si := '0'+si;
+		treinnr := copy(treinnr, 1, length(treinnr)-2)+si;
 	end;
-	val(copy(treinnr, length(treinnr)-1, 2), i, code);
-	i := i + nrup;
-	if i >= 0 then
-		str(i, si)
-	else
-		str(-i, si);
-	if length(si)=1 then si := '0'+si;
-	treinnr := copy(treinnr, 1, length(treinnr)-2)+si;
 end;
 
 procedure TstwssDienstregForm.SorteerTreinen;

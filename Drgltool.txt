@@ -1,0 +1,47 @@
+station Shl
+	ppl=Shl
+	spoor 104
+		spoor=104
+	...
+	rijweg R3->104
+		tijd=0:02
+		type=a		// standaardtype is doorkomst
+station Asra
+	ppl=Asra
+	rijweg RS->R1
+		tijd=0:02
+	rijweg R1->RS
+		tijd=0:02
+station Hfdm
+	ppl=Hfd			// Meerdere station in één procesplan
+	...
+
+pad 140
+	verschijnpunt=RS	// Verschijn, en wel op spoor RS
+	mat=1700,Apmz,ARkimbz,Bpmz,Bpmz,Bpmz,Bpmz,Bpmz,Bpmz,Bpmz
+	pad=RS,R1,R3,104	// De route die gevolgd wordt
+	tijden
+		Asra=0:01	// Eén tijd = doorkomst
+		Shl=0:06,-	// Geen vertrektijd, maar wel stoppen
+
+2x trein 144/142			// Twee treinen
+	pad=140				// gebaseerd op dit pad
+	starttijd=19:02/21:03		// verschijnen om deze tijd 
+					// (tijden worden hiermee verhoogd)
+	activiteiten
+		Shl=N:400144/N:400142	// Omnummeren
+
+trein 400149
+	pad=400140
+	starttijd=19:02/21:03		// Trein verschijnt niet, ontstaat door omnummeren
+					// (tijden worden desondanks hiermee verhoogd)
+
+Aan de hand van de dienstregelingbeschrijving (tijden, activiteiten, starttijd) wordt een
+dienstregelingfile gemaakt.
+
+Bij treinen met een verschijnpunt wordt een verschijn-item gemaakt.
+
+Procesplan wordt gemaakt via het pad. Bevat het pad bijv. de items RS,R1 dan wordt gekeken
+of er een rijweg RS->R1 is gedefinieerd en bij welk dienstregelingpunt deze hoort; dan wordt
+in de dienstregeling opgezocht op welk tijdstip we bij dit dienstregelingpunt zijn en wordt
+overeenkomstig de procesplanregel gemaakt.

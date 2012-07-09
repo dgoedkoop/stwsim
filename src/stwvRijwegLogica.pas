@@ -24,6 +24,7 @@ type
 	TRijwegLogica = class
 	private
 		AankSound:	THandle;
+		ARDLock: boolean;
 		procedure HerroepRijwegNu(ActieveRijweg: PvActieveRijwegLijst);
 		function MoetApproachLock(ActieveRijweg: PvActieveRijwegLijst): boolean;
 		procedure StelRijwegInNu(Rijweg: PvRijweg; ROZ, Auto: boolean);
@@ -37,6 +38,8 @@ type
 		procedure HeractiveerVoorgaandeAankondiging(Rijweg: PvRijweg);
 		procedure ControleerAankondigingKnipperen(Rijweg: PvRijweg); overload;
 		procedure ControleerAankondigingKnipperen(Meetpunt: PvMeetpunt); overload;
+		function ActieveRijwegDeleteLock: boolean;
+		procedure ActieveRijwegDeleteUnlock;
 	public
 		// Hulpmiddelen
 		Tabs:		PTabList;
@@ -55,7 +58,7 @@ type
 		// Instellen van rijwegen
 		function DoeRijweg(van, naar: string; ROZ, Auto: boolean): boolean;
 		function StelRijwegIn(Rijweg: PvRijweg; ROZ, Auto: boolean; WatMetActief: TWatMetActief): boolean;
-		function StelPrlRijwegIn(PrlRijweg: PvPrlRijweg; ROZ, gefaseerd: Boolean; Dwang: byte): boolean;
+		function StelPrlRijwegIn(PrlRijweg: PvPrlRijweg; ROZ: Boolean; Dwang: byte): boolean;
 		function ZetWisselOm(Wissel: PvWissel): boolean;
 		function StelWisselIn(Wissel: PvWissel; Stand: TWisselstand): boolean;
 		// Herroepen van rijwegen
@@ -67,7 +70,7 @@ type
 		procedure DoeActieveRijwegen;
 		// Save-load
 		procedure SaveActieveRijwegen(var f: file);
-		procedure LoadActieveRijwegen(var f: file);
+		procedure LoadActieveRijwegen(var f: file; modus: byte);
 		// Gebeurtenissen
 		procedure Aankondigen(Meetpunt: PvMeetpunt);
 		procedure MarkeerBezet(Meetpunt: PvMeetpunt);
@@ -80,6 +83,21 @@ type
 	end;
 
 implementation
+
+function TRijwegLogica.ActieveRijwegDeleteLock;
+begin
+	if ARDLock then
+		result := false
+	else begin
+		ARDLock := true;
+		result := true;
+	end;
+end;
+
+procedure TRijwegLogica.ActieveRijwegDeleteUnlock;
+begin
+	ARDLock := false;
+end;
 
 procedure TRijwegLogica.SetMeetpuntKnipperen;
 var
@@ -500,7 +518,8 @@ end;
 constructor TRijwegLogica.Create;
 begin
 	AankSound := LoadSound('snd_aank');
-   StartupBezig := true;
+	StartupBezig := true;
+	ARDLock := false;
 end;
 
 procedure TRijwegLogica.SaveActieveRijwegen;
@@ -586,6 +605,20 @@ begin
 				stringwrite(f, Sein^.Naam);
 			Sein := Sein^.Volgende;
 		end;
+		SeinCount := 0;
+		Sein := Core^.vAlleSeinen;
+		while assigned(Sein) do begin
+			if Sein^.DoelVanRijweg = ActieveRijweg then
+				inc(SeinCount);
+			Sein := Sein^.Volgende;
+		end;
+		intwrite(f, SeinCount);
+		Sein := Core^.vAlleSeinen;
+		while assigned(Sein) do begin
+			if Sein^.DoelVanRijweg = ActieveRijweg then
+				stringwrite(f, Sein^.Naam);
+			Sein := Sein^.Volgende;
+		end;
 		ActieveRijweg := ActieveRijweg^.Volgende;
 	end;
 end;
@@ -643,6 +676,13 @@ begin
 		for j := 1 to SeinCount do begin
 			stringread(f, SeinID);
 			ZoekSein(Core, SeinID)^.RijwegOnderdeel := ActieveRijweg;
+		end;
+		if modus >= 2 then begin
+			intread(f, SeinCount);
+			for j := 1 to SeinCount do begin
+				stringread(f, SeinID);
+				ZoekSein(Core, SeinID)^.DoelVanRijweg := ActieveRijweg;
+			end;
 		end;
 	end;
 end;
@@ -901,10 +941,16 @@ begin
 
 	// Sein op rood zetten en pending-status bijwerken.
 	if (ActieveRijweg^.Pending = 2) then begin
-		// Zet het sein op rood
-		SendMsg.SendSetSein(ActieveRijweg^.Rijweg^.Sein, 'r');
-		// En de-registreer het.
+		// Deregistreer het sein
 		ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
+		if assigned(ActieveRijweg^.Rijweg^.NaarSein) then
+			ActieveRijweg^.Rijweg^.NaarSein^.DoelVanRijweg := nil;
+		// En zet het op rood. De volgorde van deze twee stappen is zo, omdat
+		// SendSetSein een HandleMessage oproept die ervoor kan zorgen dat het
+		// op rood zetten onmiddellijk een event genereert dat al tot het
+		// repainten van het sein leidt. Voor een correcte weergave moet het
+		// deregistreren dan al gedaan zijn.
+		SendMsg.SendSetSein(ActieveRijweg^.Rijweg^.Sein, 'r');
 		// Verplaats het treinnummer
 		VanMeetpunt := ActieveRijweg^.Rijweg^.Sein^.VanTNVMeetpunt;
 		NaarMeetpunt := ActieveRijweg^.Rijweg^.NaarTNVMeetpunt;
@@ -928,11 +974,14 @@ begin
 		// Stel de pending-status in
 		ActieveRijweg^.Pending := 3;
 		// Bij auto-rijweg opnieuw instellen.
-		if ActieveRijweg^.Autorijweg then
+		if ActieveRijweg^.Autorijweg then begin
 			// Dit werkt gegarandeerd, want de rijweg is immers al ingesteld.
 			// Alle wissels staan al goed en zojuist is enkel een trein
 			// het eerste meetpunt binnengereden.
+			if not RijveiligheidLock then exit;
 			StelRijwegInNu(ActieveRijweg^.Rijweg, ActieveRijweg^.ROZ, true);
+			RijveiligheidUnlock;
+		end;
 	end;
 	// Als het een approach-locking-rijweg is, moeten we die status
 	// ongedaan maken.
@@ -1052,6 +1101,8 @@ var
 begin
 	// Sein de-registreren
 	ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
+	if assigned(ActieveRijweg^.Rijweg^.NaarSein) then
+		ActieveRijweg^.Rijweg^.NaarSein^.DoelVanRijweg := nil;
 	ActieveRijweg^.Rijweg^.Sein^.herroepen := false;
 	Tab := Tabs;
 	while assigned(Tab) do begin
@@ -1131,9 +1182,11 @@ begin
 				ReleaseRichtingMag := false;
 			tmpActieveRijweg := tmpActieveRijweg^.Volgende;
 		end;
-		if ReleaseRichtingMag then
+		if ReleaseRichtingMag and RijveiligheidLock then begin
 			SendMsg.SendRichting(ActieveRijweg^.Rijweg^.Erlaubnis,
 			ActieveRijweg^.Rijweg^.Erlaubnisstand, rwRelease);
+         RijveiligheidUnlock;
+		end;
 	end;
 	// Claims opheffen
 	MeetpuntLijst := ActieveRijweg^.Rijweg^.Meetpunten;
@@ -1234,13 +1287,18 @@ begin
 				MeetpuntLijst := MeetpuntLijst^.Volgende;
 			end;
 		end;
-		if delete then begin
+		// DeleteActieveRijweg geeft de Erlaubnis vrij, wat een communicatie-
+		// functie oproept met HandleMessage wat dan weer een aanroep tot deze
+		// functie tot gevolg zou kunnen hebben. Maar twee keer dezelfde rijweg
+		// proberen te verwijderen gaat fout!
+		if delete and ActieveRijwegDeleteLock then begin
 			DeclaimRijweg(ActieveRijweg);
 
 			// En vervolgens kunnen we de rijweg opruimen.
 			tmpActieveRijweg := ActieveRijweg^.Volgende;
 			DeleteActieveRijweg(Core, ActieveRijweg);
 			ActieveRijweg := tmpActieveRijweg;
+			ActieveRijwegDeleteUnlock;
 		end else
 			ActieveRijweg := ActieveRijweg^.Volgende;
 	end;
@@ -1555,6 +1613,8 @@ begin
 
 	// Registreer (en herteken) het sein
 	Rijweg^.Sein^.RijwegOnderdeel := ActieveRijweg;
+	if assigned(Rijweg^.NaarSein) then
+		Rijweg^.NaarSein^.DoelVanRijweg := ActieveRijweg;
 	Tab := Tabs;
 	while assigned(Tab) do begin
 		Tab^.Gleisplan.PaintSein(Rijweg^.Sein);
@@ -1574,60 +1634,34 @@ end;
 // herroepen rijwegen wordt in deze functie niet gedaan.
 function TRijwegLogica.StelPrlRijwegIn;
 var
-	KanInstellen: 					boolean;
 	RijwegLijst: 					PvRijwegLijst;
 	LaatstIngesteldeRijweg: 	PvRijweg;
 begin
-	if not gefaseerd then begin
-		Prl_IngesteldTot := '';
-		// We mogen geen deelrijwegen instellen.
-		KanInstellen := true;
-		RijwegLijst := PrlRijweg^.Rijwegen;
-		while assigned(RijwegLijst) do begin
-			KanInstellen := KanInstellen and RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
-														RijwegVrij(RijwegLijst^.Rijweg);
-			RijwegLijst := RijwegLijst^.Volgende;
-		end;
-		if KanInstellen then begin
-			// Joepie! Het kan allemaal!
-			RijwegLijst := PrlRijweg^.Rijwegen;
-			while assigned(RijwegLijst) do begin
-				if ROZ and (not assigned(RijwegLijst^.Volgende)) then
-					StelRijwegIn(RijwegLijst^.Rijweg, true, false, wmaOK)
-				else
-					StelRijwegIn(RijwegLijst^.Rijweg, false, false, wmaOK);
-				RijwegLijst := RijwegLijst^.Volgende;
-			end;
-			result := true;
+	// We mogen deelrijwegen instellen
+	LaatstIngesteldeRijweg := nil;
+	RijwegLijst := PrlRijweg^.Rijwegen;
+	while assigned(RijwegLijst) do begin
+		if RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
+			(RijwegVrij(RijwegLijst^.Rijweg) or
+			 (ROZ and not assigned(RijwegLijst^.Volgende))) then begin
+			if ROZ and not assigned(RijwegLijst^.Volgende) then
+				StelRijwegIn(RijwegLijst^.Rijweg, true, false, wmaOK)
+			else
+				StelRijwegIn(RijwegLijst^.Rijweg, false, false, wmaOK);
+			LaatstIngesteldeRijweg := RijwegLijst^.Rijweg;
 		end else
-			result := false;
-	end else begin
-		// We mogen deelrijwegen instellen
-		LaatstIngesteldeRijweg := nil;
-		RijwegLijst := PrlRijweg^.Rijwegen;
-		while assigned(RijwegLijst) do begin
-			if RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
-				(RijwegVrij(RijwegLijst^.Rijweg) or
-				 (ROZ and not assigned(RijwegLijst^.Volgende))) then begin
-				if ROZ and not assigned(RijwegLijst^.Volgende) then
-					StelRijwegIn(RijwegLijst^.Rijweg, true, false, wmaOK)
-				else
-					StelRijwegIn(RijwegLijst^.Rijweg, false, false, wmaOK);
-				LaatstIngesteldeRijweg := RijwegLijst^.Rijweg;
-			end else
-				break;
-			RijwegLijst := RijwegLijst^.Volgende;
-		end;
-		if not assigned(RijwegLijst) then
-			result := true
-		else begin
-			result := false;
-			if assigned(LaatstIngesteldeRijweg) then begin
-				// Niet de hele rijweg kon worden ingesteld, maar een deel wel.
-				Prl_IngesteldTot := KlikpuntSpoor(RijwegLijst^.Rijweg^.Sein^.Van);
-			end else
-				Prl_IngesteldTot := '';
-		end;
+			break;
+		RijwegLijst := RijwegLijst^.Volgende;
+	end;
+	if not assigned(RijwegLijst) then
+		result := true
+	else begin
+		result := false;
+		if assigned(LaatstIngesteldeRijweg) then begin
+			// Niet de hele rijweg kon worden ingesteld, maar een deel wel.
+			Prl_IngesteldTot := KlikpuntSpoor(RijwegLijst^.Rijweg^.Sein^.Van);
+		end else
+			Prl_IngesteldTot := '';
 	end;
 end;
 

@@ -384,6 +384,7 @@ begin
 	s^.VanTNVMeetpunt := nil;
 	s^.HerroepMeetpunten := nil;
 	s^.RijwegOnderdeel := nil;
+	s^.DoelVanRijweg := nil;
 	s^.registered := false;
 	s^.herroepen := false;
 	s^.Volgende := nil;

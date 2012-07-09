@@ -457,6 +457,46 @@ CHANGELOG:
   in de editor over naar procesleiding, dan kon je na opslaan de simulatie niet
   meer openen. Dit is opgelost, ook bestanden waarbij deze fout optreedt kunnen
   nu weer worden gelezen.
+- Als tussen een triggerpunt en een tnv-van-punt nog een sectie zit, dan stelt
+  procesleiding nu ook een rijweg in als dat kan op het moment dat een trein
+  zich in de betreffende sectie bevindt. Deze wijziging kan wel tot gevolg
+  hebben dat evt. een verkeerde rijweg wordt ingesteld als zich op dat moment
+  ook een trein op het triggerpunt bevindt die volgens het procesplan eigenlijk
+  eerst komt.
+
+(0.2.0.31) 7 juli 2012:
+- Bij het laden van een procesplan worden regels met een insteltijd eerder dan
+  de huidige tijd als gedaan gemarkeerd.
+- Procesplannen worden nu in savegames opgeslagen
+
+- Fix: Programma kan nu ook tijdens tijdversnelling worden afgesloten.
+- Fix: Meetpunt waar treinen kunnen verschijnen mag niet kapot gaan.
+- Procesleiding stelt een rijweg die volgt op een andere rijweg nu op tijd in
+  om met 'hoog groen' door te kunnen rijden.
+- Fix: Als een trein na door rood gereden te hebben intussen weer verder mag
+  rijden moet de oorzaak bij stilstand ergens anders worden gezocht dan in het
+  door rood gereden zijn.
+- Fix: Procesleiding kijkt, als het om omnummeren gaat, nu naar de secties die
+  uit de rijweg voortvloeien ipv. dom een sectie met dezelfde naam als het
+  doelspoor van de rijweg te zoeken.
+
+8 juli 2012:
+- In de dienstregelingeditor wordt de methode van het sparen van de treinserie
+  bij het ophogen van de treinnummers nu alleen gebruikt als er een letter
+  in het treinnummer voorkomt. Dus nog steeds is 2A35+1000=2A1035, maar nu is
+  6301+1000=7301.
+- Aangezien we nu seinbeperkingen kunnen instellen en dus ook een
+  rood-rood-schakeling in de simulatie kunnen inbouwen, is het niet meer nodig
+  dat in een procesplan wordt aangegeven of deelrijwegen zijn toegestaan. Die
+  zijn daar nu altijd toegestaan (alleen komt het sein evt. niet uit de stand
+  stop). In savegames wordt nu een dummyvariabele opgeslagen.
+- Fix: Twee race-conditions opgelost, die ervoor konden zorgen dat een sein
+  als rood op het scherm bleef staan (tot een repaint) als een sein werd
+  afgereden en dat de simulatie helemaal kon vastlopen als een rijweg helemaal
+  was afgereden.
+- Fix: Een sein kijkt bij het bepalen van de toegestane snelheid nu slechts tot
+  het eerstvolgende snelheidsbordje, als dat eerder komt dan het eerstvolgende
+  hoofdsein.
 
 BERICHTEN AAN DE MACHINIST:
 

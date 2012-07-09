@@ -14,6 +14,7 @@ type
 		achteruit:			boolean;
 		modus:				integer;
 		startsnelheid:		integer;
+		baanvaksnelheid:  integer;
 		erlaubnis:			string;
 		erlaubnisstand:	byte;
 		Volgende:			PpVerschijnPunt;

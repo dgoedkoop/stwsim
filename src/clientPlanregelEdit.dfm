@@ -4,7 +4,7 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Planregel bewerken'
-  ClientHeight = 265
+  ClientHeight = 240
   ClientWidth = 368
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -54,28 +54,28 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
   end
   object Label6: TLabel
     Left = 16
-    Top = 156
+    Top = 132
     Width = 41
     Height = 13
     Caption = 'Insteltijd:'
   end
   object Label7: TLabel
     Left = 146
-    Top = 156
+    Top = 132
     Width = 3
     Height = 13
     Caption = ':'
   end
   object Label8: TLabel
     Left = 16
-    Top = 180
+    Top = 156
     Width = 73
     Height = 13
     Caption = 'Nieuw nummer:'
   end
   object Label9: TLabel
     Left = 112
-    Top = 180
+    Top = 156
     Width = 178
     Height = 13
     Caption = 'Nummer voor achterblijvend treindeel:'
@@ -94,14 +94,6 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
     Height = 17
     Caption = 'Rijden op Zicht'
     TabOrder = 5
-  end
-  object gefaseerdCheck: TCheckBox
-    Left = 112
-    Top = 104
-    Width = 161
-    Height = 17
-    Caption = 'Gefaseerd instellen toestaan'
-    TabOrder = 6
   end
   object vanEdit: TEdit
     Left = 112
@@ -145,58 +137,58 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
   end
   object instelUurEdit: TEdit
     Left = 112
-    Top = 152
+    Top = 128
+    Width = 33
+    Height = 21
+    TabOrder = 7
+  end
+  object instelMinEdit: TEdit
+    Left = 152
+    Top = 128
     Width = 33
     Height = 21
     TabOrder = 8
   end
-  object instelMinEdit: TEdit
-    Left = 152
-    Top = 152
-    Width = 33
-    Height = 21
-    TabOrder = 9
-  end
   object ariCheck: TCheckBox
     Left = 112
-    Top = 128
+    Top = 104
     Width = 209
     Height = 17
     Caption = 'Automatische Rijweginstelling toestaan'
-    TabOrder = 7
+    TabOrder = 6
   end
   object nieuwNrEdit: TEdit
     Left = 16
-    Top = 200
+    Top = 176
+    Width = 89
+    Height = 21
+    TabOrder = 9
+  end
+  object RestNrEdit: TEdit
+    Left = 112
+    Top = 176
     Width = 89
     Height = 21
     TabOrder = 10
   end
-  object RestNrEdit: TEdit
-    Left = 112
-    Top = 200
-    Width = 89
-    Height = 21
-    TabOrder = 11
-  end
   object Button1: TButton
     Left = 288
-    Top = 232
+    Top = 208
     Width = 75
     Height = 25
     Caption = 'Opslaan'
     Default = True
     ModalResult = 1
-    TabOrder = 12
+    TabOrder = 11
   end
   object CancelBut: TButton
     Left = 208
-    Top = 232
+    Top = 208
     Width = 75
     Height = 25
     Cancel = True
     Caption = 'Annuleren'
     ModalResult = 2
-    TabOrder = 13
+    TabOrder = 12
   end
 end

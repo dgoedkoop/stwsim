@@ -21,6 +21,7 @@ type
 		ZichtbaarLijst:	PpRaillijst;	// Wordt éénmalig bijgewerkt.
 		rijrichting:	byte;			// 0=geen, 1=up, 2=down (voor vrije banen)
 		// Defecten
+		magdefect:  boolean;			// Verschijnpunt mag niet defect.
 		defect:		boolean;
 		// Scenario
 		kortsluitlans: boolean;

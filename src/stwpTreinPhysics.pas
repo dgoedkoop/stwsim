@@ -82,42 +82,42 @@ end;
 
 procedure TpTreinPhysics.LeesSeinbeeld;
 begin
-	// Snelheidsopleggend sein?
-	if Sein^.H_Maxsnelheid <> -1 then begin
-		if (Sein^.Bediend or Sein^.Autosein) then begin
-			// Hoofdsein
-			Trein^.NieuweMaxsnelheid(Sein^.H_Maxsnelheid, false);
-			if (Sein^.H_Maxsnelheid = 0) then begin
-				Trein^.ROZ := true;
-				if Trein^.doorroodopdracht then
-					Trein^.huidigemaxsnelheid := doorroodrozsnelheid
-				else begin
-					Trein^.doorroodgereden := true;
-					Trein^.doorroodgereden_sein := Sein^.naam;
-				end;
-			end else begin
-				Trein^.doorroodgereden := false;
-				if Sein^.Bediend and (Sein^.Bediend_Stand=2) then
-					Trein^.ROZ := true
-				else
-					Trein^.ROZ := false;
+	// Snelheidsbordje?
+	if Sein^.H_Baanmaxsnelheid >= 0 then begin
+		if not Trein^.ROZ then
+			Trein^.NieuweMaxsnelheid(Sein^.H_Baanmaxsnelheid, true);
+		Trein^.B_Adviessnelheid := -1;
+	end;
+
+	// Hoofdsein?
+	if (Sein^.Bediend or Sein^.Autosein) then begin
+		// Hoofdsein
+		if Sein^.H_MovementAuthority.HasAuthority then begin
+			if Sein^.H_MovementAuthority.Baanvaksnelheid then
+				Trein^.NieuweMaxsnelheid(-1, false)
+			else
+				Trein^.NieuweMaxsnelheid(Sein^.H_MovementAuthority.Snelheidsbeperking, false);
+			Trein^.doorroodgereden := false;
+			if Sein^.Bediend and (Sein^.Bediend_Stand=2) then
+				Trein^.ROZ := true
+			else
+				Trein^.ROZ := false;
+		end else begin
+			Trein^.NieuweMaxsnelheid(0, false);
+			Trein^.ROZ := true;
+			if Trein^.doorroodopdracht then
+				Trein^.huidigemaxsnelheid := doorroodrozsnelheid
+			else begin
+				Trein^.doorroodgereden := true;
+				Trein^.doorroodgereden_sein := Sein^.naam;
 			end;
-			// Zodra we langs een of ander hoofdsein zijn gereden,
-			// deze variabelen weer op false zetten!
-			Trein^.doorroodopdracht := false;
-			Trein^.doorroodverderrijden := false;
-		end else
-			// Snelheidsbordje.
-			if not Trein^.ROZ then
-				Trein^.NieuweMaxsnelheid(Sein^.H_Maxsnelheid, true);
-		// Er zijn twee mogelijkheden. Ofwel het is een echt hoofdsein.
-		// Dan geldt een voorsein-adviessnelheid niet meer.
-		// Als het geen echt hoofdsein is dan is het een snelheidsbordje.
-		// Dan geldt een bordje-aankondiging-adviessnelheid niet meer.
-		if IsHoofdsein(Sein) then
-			Trein^.V_Adviessnelheid := -1
-		else
-			Trein^.B_Adviessnelheid := -1;
+		end;
+		// Zodra we langs een of ander hoofdsein zijn gereden,
+		// deze variabelen weer op false zetten!
+		Trein^.doorroodopdracht := false;
+		Trein^.doorroodverderrijden := false;
+		// Voorsein-adviessnelheid wissen.
+		Trein^.V_Adviessnelheid := -1
 	end;
 
 	// Kijk of het een voorsein is.
@@ -215,6 +215,7 @@ var
 	tmpPos:			double;
 
 	HSeinSnelheid: integer;
+	MovementAuthority: THMovementAuthority;
 
 	GevSein:			PpSein;
 	GevTrein:		PpTrein;
@@ -288,22 +289,32 @@ begin
 		Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
 			GevSein, GevSeinAfstand);
 		if assigned(GevSein) then begin
-			remopdracht := false;
-			HSeinSnelheid := GevSein^.H_Maxsnelheid;
-			if (GevSein^.Autosein or GevSein^.Bediend) and (HSeinSnelheid = 0) and
-				Trein^.doorroodopdracht then
-				HSeinSnelheid := doorroodrozsnelheid;
+			MovementAuthority := GevSein^.H_MovementAuthority;
+			if (GevSein^.Autosein or GevSein^.Bediend) then begin
+				if (not MovementAuthority.HasAuthority) and
+				Trein^.doorroodopdracht then begin
+					MovementAuthority.HasAuthority := true;
+					MovementAuthority.Baanvaksnelheid := false;
+					MovementAuthority.Snelheidsbeperking := doorroodrozsnelheid
+				end
+			end else begin
+				MovementAuthority.HasAuthority := true;
+				MovementAuthority.Baanvaksnelheid := true;
+			end;
 			// Is het een station? Dan kijken we naar de naam, of het geldig is.
 			if GevSein^.Perronpunt and assigned(Trein^.Planpunten) then
 				if (Trein^.Planpunten^.Station = GevSein^.Stationsnaam) then
 					if Trein^.Planpunten^.stoppen then
-						HSeinSnelheid := 0;
-			// Is het een snelheidsopleggend sein? Dan is het geldig.
-			if ((HSeinSnelheid < Trein^.snelheid) and (HSeinSnelheid <> -1))
-				or	(HSeinSnelheid = 0) then
-				remopdracht := true;
-			// Berekenen of we voor dit sein alvast moeten gaan afremmen
-			if remopdracht then begin
+						MovementAuthority.HasAuthority := false;
+			// Is het een snelheidsopleggend sein?
+			if (not MovementAuthority.HasAuthority) or
+				((not MovementAuthority.Baanvaksnelheid) and
+				 (MovementAuthority.Snelheidsbeperking < Trein^.snelheid )) then begin
+				// Berekenen of we voor dit sein alvast moeten gaan afremmen
+				if not MovementAuthority.HasAuthority then
+					HSeinSnelheid := 0
+				else
+					HSeinSnelheid := MovementAuthority.Snelheidsbeperking;
 				intAfstand := ((mssnelheid / WensMaxRemvertraging) *
 				(mssnelheid + (HSeinSnelheid / 3.6)) / 2);
 				if basisAfstand + GevSeinAfstand < IntAfstand + 10 then
@@ -810,7 +821,7 @@ begin
 			Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
 				GevSein, GevSeinAfstand);
 			if assigned(GevSein) then begin
-				if (GevSein^.H_Maxsnelheid = 0) and
+				if (not GevSein^.H_MovementAuthority.HasAuthority) and
 					(GevSein^.Autosein or GevSein^.Bediend) then
 					break;
 				KijkAfstand := KijkAfstand - GevSeinAfstand;
@@ -850,10 +861,10 @@ begin
 			waaromstilstaan := stWissel;
 		if not Trein^.el_ok then
 			waaromstilstaan := stStroom;
-		if Trein^.doorroodgereden then
-			waaromstilstaan := stDoorrood;
 		if not Trein^.bedienbaar then
 			waaromstilstaan := stStuurstand;
+		if Trein^.doorroodgereden and not Trein^.doorroodverderrijden then
+			waaromstilstaan := stDoorrood;
 		// Nu hebben we de reden. Kijk of we een bericht moeten sturen.
 		if (waaromstilstaan <> stWeetniet) and (waaromstilstaan <> stStuurstand) then
 			if (not assigned(Core.ZoekTelefoongesprek(Trein)))	// Niet bellen als we al in gesprek zijn

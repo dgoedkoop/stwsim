@@ -20,6 +20,7 @@ type
 		RijwegenNaarSeinBestaan:	boolean;
 		// Dynamische gegevens
 		RijwegOnderdeel: pointer;
+		DoelVanRijweg  : pointer;
 		registered		: boolean;
 		changed			: boolean;
 		herroepen		: boolean;

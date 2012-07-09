@@ -108,7 +108,7 @@ begin
 	if not Sein^.veranderd then exit;
 	Sein^.Veranderd := false;
 	if (sein^.bediend or sein^.autosein) then begin
-		if Sein^.H_Maxsnelheid <> 0 then
+		if Sein^.H_MovementAuthority.HasAuthority then
 			SendPlainString('s:'+Sein^.naam+',g')
 		else
 			SendPlainString('s:'+Sein^.naam+',r');

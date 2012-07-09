@@ -70,7 +70,7 @@ type
 	 voerInBut: TButton;
     cancelBut: TButton;
 	 LaatProcesplanZien: TAction;
-    N2: TMenuItem;
+	 N2: TMenuItem;
     LaatProcesplanZien1: TMenuItem;
     GetScore: TAction;
 	 Prestaties1: TMenuItem;
@@ -94,7 +94,7 @@ type
 	 Hulpmiddelentonen1: TMenuItem;
     DienstEdit: TAction;
 	 Dienstregelingbewerken1: TMenuItem;
-    DoorspoelBut: TButton;
+	 DoorspoelBut: TButton;
 	 PauzePanel: TPanel;
     SimOpenPanel: TPanel;
     SimOpenBut: TBitBtn;
@@ -198,6 +198,7 @@ type
 		rinkelstapjes: integer;
 		// Sim-bediening
 		pauze: 	boolean;
+		app_exit: boolean;
 		gestart:	boolean;
 		closewarn:boolean;
 		// Intern
@@ -255,6 +256,10 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 
 {$R clientRes.res}
 {$R xpthemes.res}
+
+// Mbv. deze define zal de Tijdsversnelling actief blijven tot op pauze wordt
+// gedrukt, en niet reeds afbreken zodra er iets gebeurt.
+// {$DEFINE FastForward}
 
 const
 	MagicCode = 'STWSIM.1';
@@ -634,6 +639,7 @@ begin
 	closewarn := false;
 	gestart := false;
 	pauze := true;
+   app_exit := false;
 end;
 
 procedure TstwsimMainForm.ChangeMeetpunt;
@@ -924,6 +930,7 @@ end;
 
 procedure TstwsimMainForm.AfsluitenExecute(Sender: TObject);
 begin
+	app_exit := true;
 	Close;
 end;
 
@@ -1081,6 +1088,7 @@ begin
 			'Afsluiten', MB_ICONWARNING+MB_YESNO) = mrYes
 	else
 		CanClose := true;
+	app_exit := CanClose;
 end;
 
 procedure TstwsimMainForm.LaatProcesplanZienExecute(Sender: TObject);
@@ -1189,6 +1197,7 @@ var
 	s: string;
 	i,n: integer;
 	Tijd: integer;
+	modus: integer;
 begin
 	result := false;
 	if GameOpenDialog.Execute then begin
@@ -1201,7 +1210,11 @@ begin
 		end;
 		// Lees de MAGIC
 		stringread(f, s);
-		if s <> SaveIOMagic then begin
+		modus := -1;
+		if s = SaveIOMagic then modus := 2;
+{		if s = SaveIOMagic_old1 then modus := 1;
+		if s = SaveIOMagic_old0 then modus := 0;}
+		if modus = -1 then begin
 			Application.Messagebox('Ongeldig bestandstype.', 'Fout', MB_ICONERROR);
 			exit;
 		end;
@@ -1227,7 +1240,7 @@ begin
 		// Overige infrastatus laden
 		pCore.LoadInfraStatus(f);
 		// Actieve rijwegen laden
-		RijwegLogica.LoadActieveRijwegen(f);
+		RijwegLogica.LoadActieveRijwegen(f, modus);
 		LoadWisselStatus(f, vCore);
 		// Scenario laden
 		Scenario.Clear;
@@ -1237,6 +1250,9 @@ begin
 			Scenario.Add(s);
 		end;
 		ScenarioToepassen(false);
+		// Procesplan laden
+		if modus >= 1 then
+			stwscProcesplanForm.LoadStatus(f);
 
 		closefile(f);
 		SGOpenen.Enabled := false;
@@ -1310,6 +1326,8 @@ begin
 		intwrite(f, Scenario.Count);
 		for i := 1 to Scenario.Count do
 			stringwrite(f, Scenario[i-1]);
+		// Procesplan opslaan
+		stwscProcesplanForm.SaveStatus(f);
 
 		closefile(f);
 		result := true;
@@ -1469,8 +1487,13 @@ var
 begin
 	DoorspoelAction.Enabled := false;
 	i := 0;
-	while (not pCore.TreinenDoenIets) and (not pauze) do begin
+	while {$IFNDEF FastForward}(not pCore.TreinenDoenIets) and{$ENDIF}
+		(not pauze) and (not app_exit) do begin
 		DoeStapje;
+		{$IFDEF FastForward}
+		if (i mod tps) = 0 then
+			stwscProcesplanForm.DoeStapje;
+		{$ENDIF}
 		inc(i);
 		if i = tps * 60 then begin
 			Application.ProcessMessages;

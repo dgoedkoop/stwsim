@@ -21,16 +21,16 @@ object stwscProcesplanForm: TstwscProcesplanForm
   object LiPanel: TPanel
     Left = 0
     Top = 25
-    Width = 230
+    Width = 225
     Height = 290
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
   end
   object RePanel: TPanel
-    Left = 230
+    Left = 225
     Top = 25
-    Width = 250
+    Width = 255
     Height = 290
     Align = alRight
     BevelOuter = bvNone
@@ -45,7 +45,7 @@ object stwscProcesplanForm: TstwscProcesplanForm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
-    object Button1: TButton
+    object ProcesplanToevBtn: TButton
       Left = 0
       Top = 0
       Width = 480
@@ -53,7 +53,7 @@ object stwscProcesplanForm: TstwscProcesplanForm
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Procesplan toevoegen'
       TabOrder = 0
-      OnClick = Button1Click
+      OnClick = ProcesplanToevBtnClick
     end
   end
   object OpenDialog: TOpenDialog
