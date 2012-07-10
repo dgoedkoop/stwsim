@@ -1276,14 +1276,17 @@ begin
 		end else if ActieveRijweg^.Pending = 3 then begin
 			// De rijweg is geactiveerd geweest; het sein is alweer op rood.
 			// Ons doel is het opruimen van de rijweg als deze afgehandeld is.
-			// Hij is afgehandeld als de trein de rijweg weer verlaten heeft
-			// - alle meetpunten zijn vrij. Ze mogen nog wel geclaimd zijn. Een
-			// trein kan immers ook halverwege de rijweg zijn omgedraaid.
+			// Hij is afgehandeld als de trein de rijweg weer verlaten heeft -
+			// als dus geen enkel meetpunt meer door ons wordt geclaimd en de
+			// secties ook allemaal vrij zijn (tenzij reeds behorend bij een andere
+			// rijweg).
 			delete := true;
 			MeetpuntLijst := ActieveRijweg^.Rijweg^.Meetpunten;
 			while assigned(MeetpuntLijst) do begin
-				delete := delete and ((MeetpuntLijst^.Meetpunt^.RijwegOnderdeel <>
-					ActieveRijweg) or not MeetpuntLijst^.Meetpunt^.bezet);
+				delete := delete and
+					(MeetpuntLijst^.Meetpunt^.RijwegOnderdeel <> ActieveRijweg) and
+					((not MeetpuntLijst^.Meetpunt^.bezet) or
+					 assigned(MeetpuntLijst^.Meetpunt^.RijwegOnderdeel));
 				MeetpuntLijst := MeetpuntLijst^.Volgende;
 			end;
 		end;
@@ -1433,9 +1436,12 @@ begin
 	result := true;
 
 	Meetpunt := Rijweg^.Meetpunten;
-	if Meetpunt^.Meetpunt^.bezet then begin
-		result := false;
-		exit;
+	while assigned(Meetpunt) do begin
+		if Meetpunt^.Meetpunt^.bezet or assigned(Meetpunt^.Meetpunt^.RijwegOnderdeel) then begin
+			result := false;
+			exit;
+		end;
+		Meetpunt := Meetpunt^.Volgende
 	end;
 end;
 

@@ -257,10 +257,6 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 {$R clientRes.res}
 {$R xpthemes.res}
 
-// Mbv. deze define zal de Tijdsversnelling actief blijven tot op pauze wordt
-// gedrukt, en niet reeds afbreken zodra er iets gebeurt.
-// {$DEFINE FastForward}
-
 const
 	MagicCode = 'STWSIM.1';
 
@@ -774,7 +770,15 @@ procedure TstwsimMainForm.TijdTimerTimer(Sender: TObject);
 			result := '0'+result;
 	end;
 
+type
+	TPerf = record
+		x, y, z: int64;
+	end;
 var
+	start, x: int64;
+	perf: TPerf;
+
+{var}
 	i: integer;
 	VorigeTijd: integer;
 begin
@@ -790,11 +794,18 @@ begin
 	if GetTijd <> VorigeTijd then begin
 		tijdLabel.Caption := TijdStr(GetTijd, false);
 
+		QueryPerformanceCounter(start);
+
 		RijwegLogica.DoeActieveRijwegen;
 		RijwegLogica.DoeOverwegen;
 
+		QueryPerformanceCounter(x); perf.x := x-start; start := x;
+
 		stwscProcesplanForm.DoeStapje;
+		QueryPerformanceCounter(x); perf.y := x-start; start := x;
+
 		stwscProcesplanForm.UpdateLijst;
+		QueryPerformanceCounter(x); perf.z := x-start; start := x;
 
 		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
 			if vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr).status <> rsOK then
@@ -1484,16 +1495,16 @@ end;
 procedure TstwsimMainForm.DoorspoelActionExecute(Sender: TObject);
 var
 	i: integer;
+	infinite: boolean;
 begin
 	DoorspoelAction.Enabled := false;
 	i := 0;
-	while {$IFNDEF FastForward}(not pCore.TreinenDoenIets) and{$ENDIF}
+	infinite := pCore.CheatGeenDefecten;
+	while ((not pCore.TreinenDoenIets) or infinite) and
 		(not pauze) and (not app_exit) do begin
 		DoeStapje;
-		{$IFDEF FastForward}
-		if (i mod tps) = 0 then
-			stwscProcesplanForm.DoeStapje;
-		{$ENDIF}
+		if infinite and ((i mod tps) = 0) then
+				stwscProcesplanForm.DoeStapje;
 		inc(i);
 		if i = tps * 60 then begin
 			Application.ProcessMessages;

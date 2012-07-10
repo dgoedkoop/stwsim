@@ -64,12 +64,16 @@ var
 begin
 	Frame := PPFramesLinks;
 	while assigned(Frame) do begin
-		Frame^.PPFrame.UpdateLijst;
+		if Frame^.PPFrame.ProcesPlan.Gewijzigd then
+			Frame^.PPFrame.UpdateLijst;
+		Frame^.PPFrame.ProcesPlan.Gewijzigd := false;
 		Frame := Frame^.Volgende;
 	end;
 	Frame := PPFramesRechts;
 	while assigned(Frame) do begin
-		Frame^.PPFrame.UpdateLijst;
+		if Frame^.PPFrame.ProcesPlan.Gewijzigd then
+			Frame^.PPFrame.UpdateLijst;
+		Frame^.PPFrame.ProcesPlan.Gewijzigd := false;
 		Frame := Frame^.Volgende;
 	end;
 end;
@@ -80,14 +84,16 @@ var
 begin
 	Frame := PPFramesLinks;
 	while assigned(Frame) do begin
-		if Frame^.PPFrame.ARI then
+		if Frame^.PPFrame.ARI then begin
 			Frame^.PPFrame.ProcesPlan.DoeStapje;
+		end;
 		Frame := Frame^.Volgende;
 	end;
 	Frame := PPFramesRechts;
 	while assigned(Frame) do begin
-		if Frame^.PPFrame.ARI then
+		if Frame^.PPFrame.ARI then begin
 			Frame^.PPFrame.ProcesPlan.DoeStapje;
+		end;
 		Frame := Frame^.Volgende;
 	end;
 end;

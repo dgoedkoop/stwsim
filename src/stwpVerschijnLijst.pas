@@ -2,7 +2,7 @@ unit stwpVerschijnlijst;
 
 interface
 
-uses stwpRails, stwpTreinen, stwvMisc;
+uses stwpRails, stwpMeetpunt, stwpTreinen, stwvMisc;
 
 type
 	PpVerschijnPunt = ^TpVerschijnPunt;
@@ -15,7 +15,7 @@ type
 		modus:				integer;
 		startsnelheid:		integer;
 		baanvaksnelheid:  integer;
-		erlaubnis:			string;
+		erlaubnis:			PpErlaubnis;
 		erlaubnisstand:	byte;
 		Volgende:			PpVerschijnPunt;
 	end;
@@ -41,7 +41,7 @@ type
 
 	PpVerdwijnPunt = ^TpVerdwijnPunt;
 	TpVerdwijnPunt = record
-		railnaam: 			string;
+		rail: 				PpRail;
 		achteruit:			boolean;
 		volgende:			PpVerdwijnPunt;
 	end;

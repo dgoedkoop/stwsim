@@ -61,6 +61,7 @@ type
 		ProcesPlanPuntenKlaar:		PvProcesPlanPunt;
 		KlaarAantal:					integer;
 		ProcesPlanPuntenPending:	PvProcesPlanPunt;
+		Gewijzigd:						boolean;
 		// Externe zaken
 		RijwegLogica:	TRijwegLogica;
 		Core:				PvCore;
@@ -294,6 +295,7 @@ begin
 	Lock := false;
 	ProcesPlanPuntenPending := nil;
 	ProcesPlanPuntenKlaar := nil;
+	Gewijzigd := false;
 	KlaarAantal := 0;
 end;
 
@@ -356,6 +358,7 @@ begin
 		ProcesPlanPunt^.TriggerPunt := nil;
 
 	ProcesPlanPunt^.AnalyseGedaan := true;
+	Gewijzigd := true;
 end;
 
 procedure TProcesPlan.UpdateVolgordeVoorPunt;
@@ -525,6 +528,8 @@ begin
 	inc(KlaarAantal);
 	// En volgordes aanpassen.
 	UpdateVolgordeAfhVanPunt(ProcesPlanPunt);
+
+	Gewijzigd := true;
 end;
 
 procedure TProcesPlan.DoeStapje;
@@ -628,37 +633,9 @@ begin
 		index := 0;
 		readln(f, s);
 		if copy(s,1,1)<>'#' then begin
-			if assigned(PPP) then begin
-				new(PPP^.Volgende);
-				PPP := PPP^.volgende
-			end else begin
-				new(PPP);
-				ProcesPlanPuntenPending := PPP
-			end;
-			PPP^.Treinnr := '';
-			PPP^.ActiviteitSoort := asDoorkomst;
-			PPP^.Plantijd := -1;
-			PPP^.Insteltijd := -1;
-			PPP^.van := '';
-			PPP^.naar := '';
-			PPP^.dwang := 0;
-			PPP^.ROZ := false;
-			PPP^.ARI_toegestaan := true;
-			PPP^.NieuwNummer := '';
-			PPP^.NieuwNummerGedaan := false;
-			PPP^.RestNummer := '';
-			PPP^.RestNummerGedaan := false;
-			PPP^.VolgordeOK := true;
-			PPP^.AnalyseGedaan := false;
-			PPP^.Getriggerd := trNiet;
-			PPP^.TNVVan := nil;
-			PPP^.TNVNaar := nil;
-			PPP^.TriggerPunt := nil;
-			PPP^.PrlRijweg := nil;
-			PPP^.Volgende := nil;
 			while s <> '' do begin
 				// Whitespace van het begin schrappen.
-				while s[1] in ws do
+				while (s <> '') and (s[1] in ws) do
 					s := copy(s, 2, length(s)-1);
 				p := 1;
 				while (p <= length(s)) and not(s[p] in ws) do
@@ -666,7 +643,37 @@ begin
 				waarde := copy(s, 1, p-1);
 				s := copy(s, p+1, length(s)-p);
 				case index of
-					0: PPP^.Treinnr := Waarde;
+					0: if waarde <> '' then begin
+							if assigned(PPP) then begin
+								new(PPP^.Volgende);
+								PPP := PPP^.volgende
+							end else begin
+								new(PPP);
+								ProcesPlanPuntenPending := PPP
+							end;
+							PPP^.Treinnr := '';
+							PPP^.ActiviteitSoort := asDoorkomst;
+							PPP^.Plantijd := -1;
+							PPP^.Insteltijd := -1;
+							PPP^.van := '';
+							PPP^.naar := '';
+							PPP^.dwang := 0;
+							PPP^.ROZ := false;
+							PPP^.ARI_toegestaan := true;
+							PPP^.NieuwNummer := '';
+							PPP^.NieuwNummerGedaan := false;
+							PPP^.RestNummer := '';
+							PPP^.RestNummerGedaan := false;
+							PPP^.VolgordeOK := true;
+							PPP^.AnalyseGedaan := false;
+							PPP^.Getriggerd := trNiet;
+							PPP^.TNVVan := nil;
+							PPP^.TNVNaar := nil;
+							PPP^.TriggerPunt := nil;
+							PPP^.PrlRijweg := nil;
+							PPP^.Volgende := nil;
+							PPP^.Treinnr := Waarde;
+						end;
 					1:	if waarde <> '' then begin
 						case waarde[1] of
 						'd','D': PPP^.ActiviteitSoort := asDoorkomst;
@@ -793,6 +800,7 @@ begin
 		end;
 		LoadPlanpunt(f, PPP);
 	end;
+	Gewijzigd := true;
 end;
 
 procedure TProcesPlan.SavePlanpunt;
@@ -873,6 +881,7 @@ procedure TProcesPlan.Sorteer;
 begin
 	ProcesPlanPuntenPending := Sort_List(ProcesPlanPuntenPending);
 	UpdateVolgordes;
+	Gewijzigd := true;
 end;
 
 end.

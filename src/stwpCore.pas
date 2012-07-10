@@ -58,6 +58,8 @@ const
 
 	zstvhHoofdsein = 1;
 	zstvhSnelheidsbordje = 2;
+	zvsHoofdsein = 1;
+	zvsVoorsein = 2;
 
 type
 	TScoreInfo = record
@@ -143,7 +145,7 @@ type
 
 		procedure ZoekVolgendSein(var Rail: PpRail; var achteruit: boolean; var positie: double;
 			maxafstand: double; var GevSein: PpSein; var GevAfstand: double);
-		procedure ZoekVolgendHoofdsein(Conn: PpRailConn; var GevSein: PpSein; niksmagook: boolean);
+		procedure ZoekVolgendVoorOfHoofdsein(Conn: PpRailConn; var GevSein: PpSein; niksmagook: boolean; flags: byte);
 		procedure ZoekVolgendeWissel(var Rail: PpRail; var achteruit: boolean; var positie: double;
 			maxafstand: double; var GevWissel: PpWissel; var GevAfstand: double);
 		procedure ZoekVolgendeTrein(Trein: PpTrein; maxafstand: double;
@@ -191,6 +193,7 @@ type
 		procedure LaadMatDienstVerschijn(var f: file; wat: TSaveWhat);
 		procedure SaveMatDienstVerschijn(var f: file; wat: TSaveWhat);
 	end;
+
 
 implementation
 
@@ -652,13 +655,16 @@ begin
 	until not assigned(tmpRail);
 end;
 
-procedure TpCore.ZoekVolgendHoofdsein;
+procedure TpCore.ZoekVolgendVoorOfHoofdsein;
 var
 	tmpRail, vRail: PpRail;
 	tmpAchteruit: boolean;
 	tmpConn: PpRailConn;
 begin
-	if niksmagook and IsHierHoofdsein(Conn) then begin
+	if niksmagook and
+	( (IsHierHoofdsein(Conn) and ((flags and zvsHoofdsein) > 0)) or
+	  (IsHierVoorsein(Conn) and ((flags and zvsVoorsein) > 0)) )
+	then begin
 		GevSein := Conn^.Sein;
 		exit;
 	end;
@@ -671,7 +677,8 @@ begin
 			tmpConn := tmpRail.Volgende
 		else
 			tmpConn := tmpRail.Vorige;
-		if IsHierHoofdsein(tmpConn) then begin
+		if (IsHierHoofdsein(tmpConn) and ((flags and zvsHoofdsein) > 0)) or
+			(IsHierVoorsein(tmpConn) and ((flags and zvsVoorsein) > 0)) then begin
 			GevSein := tmpConn^.Sein;
 			exit;
 		end;
@@ -752,7 +759,7 @@ begin
 	tmpPos := Trein^.pos_dist;
    BasisAfstand := 0;
    repeat
- 	   tmpTrein := pAlleTreinen;
+		tmpTrein := pAlleTreinen;
       while assigned(tmpTrein) do begin
 			if tmpTrein <> Trein then begin
 				tmpHRail := tmpTrein^.pos_rail;
@@ -952,7 +959,7 @@ begin
 	// Is het een autovoorsein, dan zoeken we het bijbehorende hoofdsein op
 	// en geven het seinbeeld door.
 	if Sein^.Autovoorsein then begin
-		ZoekVolgendHoofdSein(Sein^.Plaats, Sein2, false);
+		ZoekVolgendVoorOfHoofdSein(Sein^.Plaats, Sein2, false, zvsHoofdsein);
 		if assigned(Sein2) then
 			Sein^.V_AdviesAuthority := Sein2^.H_MovementAuthority
 		else
@@ -960,7 +967,7 @@ begin
 	end;
 
 	// Sowieso eerst maar eens e.e.a. opzoeken.
-	ZoekVolgendHoofdsein(Sein^.Plaats, VolgendSein, false);
+	ZoekVolgendVoorOfHoofdsein(Sein^.Plaats, VolgendSein, false, zvsHoofdsein);
 	if assigned(VolgendSein) then
 		VolgendeMeetpunt := VolgendSein^.B_Meetpunt
 	else
@@ -1067,7 +1074,7 @@ begin
 				end;
 				// Indien nodig een rijrichting instellen.
 				if VolgendeMeetpunt^.rijrichting = 0 then begin
-					ZoekVolgendHoofdsein(VolgendSein^.Plaats, Sein2, false);
+					ZoekVolgendVoorOfHoofdsein(VolgendSein^.Plaats, Sein2, false, zvsHoofdsein);
 					if (not assigned(Sein2)) or (not Sein2^.Autosein) or Sein2^.H_MovementAuthority.HasAuthority then
 						VolgendeMeetpunt^.rijrichting := Sein^.A_Erlaubnisstand;
 				end;
@@ -1280,9 +1287,7 @@ var
 	Plaats: PpVerschijnPunt;
 	// Veiligheid
 	tmpRailL: PpRailLijst;
-	tmpErlaubnis: PpErlaubnis;
 	tmpSein: PpSein;
-	VolgendeAuthority: THMovementAuthority;
 
 	// Treinnummer op juiste plaats zetten!
 	tmpConn: PpRailConn;
@@ -1293,17 +1298,23 @@ begin
 	VerschijnItem := VerschijnLijst;
 	while assigned(VerschijnItem) do begin
 		Plaats := VerschijnItem^.Plaats;
-		if not assigned(Plaats) then begin
+		if not (assigned(Plaats) and assigned(VerschijnItem^.wagons)) then begin
 			VerschijnItem := VerschijnItem^.Volgende;
 			continue;
 		end;
+
+		vt := VerschijnItem^.Tijd;
+		magversch := GetTijd>=vt;
+		if not magversch then
+			// De lijst is gesorteerd op tijd. Zijn we dus aan dit item nog niet
+			// toe, dan zijn we nog aan geen enkel volgend item toe.
+			break;
 
 		tmpRail := Plaats^.Rail;
 		if not assigned(tmpRail) then
 			halt;
 
 		magversch := true;
-		vt := VerschijnItem^.Tijd;
 		rt := VerschijnItem^.Treinweg_Tijd;
 		if VerschijnItem^.gedaan then
 			magversch := false
@@ -1316,7 +1327,6 @@ begin
 		k := Power(0.5, 1/(tps*60));
 		magversch := magversch and ((random>=k) or (not Plaats^.vertragingmag) or CheatGeenDefecten);
 
-		magversch := magversch and (GetTijd>=vt);
 		if magversch then begin
 			// Weg tot volgend sein checken
 			tmpRailL := ZoekSporenTotVolgendHoofdseinR(tmpRail, Plaats^.achteruit);
@@ -1331,19 +1341,19 @@ begin
 				tmpRailL := tmpRailL^.volgende;
 			end;
 
-			tmpErlaubnis := ZoekErlaubnis(Plaats^.erlaubnis);
-			if assigned(tmpErlaubnis) then
-				if (tmpErlaubnis^.richting <> Plaats^.Erlaubnisstand) and
-					tmpErlaubnis^.vergrendeld then
+			if assigned(Plaats^.erlaubnis) then
+				if (Plaats^.erlaubnis^.richting <> Plaats^.Erlaubnisstand) and
+					Plaats^.erlaubnis^.vergrendeld then
 					magversch := false;
 		end;
 
 		if magversch then begin
 			VerschijnItem^.gedaan := true;
 
-			// Stand van het volgende sein opvragen.
-			ZoekVolgendHoofdsein(ZoekVolgendeConn(tmpRail, Plaats^.achteruit), tmpSein, true);
-			VolgendeAuthority := tmpSein^.H_MovementAuthority;
+			// Alvast het volgende sein opvragen.
+			// Mag ook slechts een voorsein zijn, in dat geval doen we straks niks
+			// omdat we dan tot daar eerst maar gewoon baanvaksnelheid rijden.
+			ZoekVolgendVoorOfHoofdsein(ZoekVolgendeConn(tmpRail, Plaats^.achteruit), tmpSein, true, zvsHoofdsein+zvsVoorsein);
 
 			// Nieuwe trein maken
 			new(tmpTrein);
@@ -1381,7 +1391,8 @@ begin
 			// eerstvolgende sein aangeeft.
 			tmpTrein^.baanvaksnelheid := Plaats^.baanvaksnelheid;
 			tmpTrein^.snelheid := Plaats^.startsnelheid;
-			tmpTrein^.ZieVoorsein(tmpSein);
+			if IsHoofdsein(tmpSein) then
+				tmpTrein^.ZieVoorsein(tmpSein);
 			if (tmpTrein^.snelheid > tmpTrein^.V_Adviessnelheid) and
 				(tmpTrein^.V_Adviessnelheid > -1) then
 				tmpTrein^.snelheid := tmpTrein^.V_Adviessnelheid;
@@ -1390,10 +1401,9 @@ begin
 			tmpTrein^.EersteWagon := CopyWagons(VerschijnItem^.wagons);
 
 			// Erlaubnis eventueel claimen.
-			tmpErlaubnis := ZoekErlaubnis(Plaats^.erlaubnis);
-			if assigned(tmpErlaubnis) then
+			if assigned(Plaats^.erlaubnis) then
 				// Checks hebben we eerder al gedaan!
-				StelErlaubnisIn(tmpErlaubnis, Plaats^.erlaubnisstand);
+				StelErlaubnisIn(Plaats^.erlaubnis, Plaats^.erlaubnisstand);
 
 			// Treinnummer instellen
 			if VerschijnItem^.Treinnummer <> '' then begin
@@ -1402,7 +1412,7 @@ begin
 					tmpConn := tmpTrein^.pos_rail^.Vorige
 				else
 					tmpConn := tmpTrein^.pos_rail^.Volgende;
-				ZoekVolgendHoofdsein(tmpConn, Sein, true);
+				ZoekVolgendVoorOfHoofdsein(tmpConn, Sein, true, zvsHoofdsein);
 				tmpConn := Sein^.Plaats;
 				tmpRail2 := tmpConn^.VanRail;
 
@@ -1424,7 +1434,7 @@ begin
 		tmpTrein := pAlleTreinen;
 		while assigned(tmpTrein) do begin
 			tmpTrein^.ZoekEinde(tmpRail, tmpAchteruit, tmpPos);
-			if (tmpRail^.Naam = VerdwijnPunt^.railnaam) and
+			if (tmpRail = VerdwijnPunt^.rail) and
 				(tmpAchteruit = not VerdwijnPunt^.achteruit) then begin
 				// De trein heeft zelfs met het einde de rail bereikt
 
@@ -1954,7 +1964,7 @@ begin
 						tmpVerschijnpunt^.achteruit := false;
 						tmpVerschijnpunt^.modus := 1;
 						tmpVerschijnpunt^.startsnelheid := 0;
-						tmpVerschijnpunt^.erlaubnis := '';
+						tmpVerschijnpunt^.erlaubnis := nil;
 						tmpVerschijnpunt^.erlaubnisstand := 0;
 						tmpVerschijnpunt^.Volgende := pAlleVerschijnpunten;
 						pAlleVerschijnpunten := tmpVerschijnpunt;
@@ -1962,9 +1972,10 @@ begin
 				2: tmpVerschijnpunt^.vertragingmag := (waarde='j') or (waarde='J');
 				3: begin
 						tmpVerschijnpunt^.rail := ZoekRail(waarde);
-						if assigned(tmpVerschijnpunt^.rail) then
-							if assigned(tmpVerschijnpunt^.rail^.Meetpunt) then
-								PpMeetpunt(tmpVerschijnpunt^.rail^.Meetpunt)^.magdefect := false;
+						if not assigned(tmpVerschijnpunt^.rail) then
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
+						if assigned(tmpVerschijnpunt^.rail^.Meetpunt) then
+							PpMeetpunt(tmpVerschijnpunt^.rail^.Meetpunt)^.magdefect := false;
 					end;
 				4: begin
 						val(waarde, tmpVerschijnpunt^.afstand, code);
@@ -1993,14 +2004,20 @@ begin
 						if code <> 0 then
 							begin Leesfout_melding := 'Baanvaksnelheid is geen getal.'; exit end;
 					end;
-				9: tmpVerschijnpunt^.erlaubnis := waarde;
+				9: begin
+						if waarde <> '-' then begin
+							tmpVerschijnpunt^.erlaubnis := ZoekErlaubnis(waarde);
+							if not assigned(tmpVerschijnpunt^.erlaubnis) then
+								begin Leesfout_melding := 'Rijrichtingsveld '+waarde+' niet gevonden.'; exit end;
+						end;
+					end;
 				10: begin
 						if waarde <> '-' then begin
 							val(waarde, tmpVerschijnpunt^.erlaubnisstand, code);
 							if code <> 0 then
 								begin Leesfout_melding := 'Rijrichting is geen getal.'; exit end;
 						end else
-							if tmpVerschijnpunt^.erlaubnis <> '-' then
+							if assigned(tmpVerschijnpunt^.erlaubnis) then
 								begin Leesfout_melding := 'Rijrichting opgegeven zonder bijbehorend rijrichtingsveld.'; exit end;
 				end else
 					begin Leesfout_melding := 'Te veel parameters'; exit end;
@@ -2009,7 +2026,9 @@ begin
 				case index of
 				1: begin
 					new(tmpVerdwijnpunt);
-					tmpVerdwijnpunt^.railnaam := waarde;
+					tmpVerdwijnpunt^.rail := ZoekRail(waarde);
+					if not assigned(tmpVerdwijnpunt^.rail) then
+						begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					tmpVerdwijnpunt^.Volgende := pAlleVerdwijnpunten;
 					pAlleVerdwijnpunten := tmpVerdwijnpunt;
 				end;
@@ -2633,6 +2652,7 @@ var
 	Erlaubnis: 	PpErlaubnis;
 	Overweg:		PpOverweg;
 begin
+
 	DoeVerschijnen;
 
 	// Wissels doen
@@ -2644,6 +2664,7 @@ begin
 	end;
 
 	DoeMeetpunten;
+
 	DoeSeinen;
 
 	// Erlaubnisse bijwerken

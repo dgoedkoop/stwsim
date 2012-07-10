@@ -468,6 +468,8 @@ CHANGELOG:
 - Bij het laden van een procesplan worden regels met een insteltijd eerder dan
   de huidige tijd als gedaan gemarkeerd.
 - Procesplannen worden nu in savegames opgeslagen
+- Ook is de volgorde van weergeven van procesplannen nu gewijzigd, dat gaat nu
+  van boven naar beneden.
 
 - Fix: Programma kan nu ook tijdens tijdversnelling worden afgesloten.
 - Fix: Meetpunt waar treinen kunnen verschijnen mag niet kapot gaan.
@@ -496,7 +498,40 @@ CHANGELOG:
   was afgereden.
 - Fix: Een sein kijkt bij het bepalen van de toegestane snelheid nu slechts tot
   het eerstvolgende snelheidsbordje, als dat eerder komt dan het eerstvolgende
-  hoofdsein.
+  hoofdsein. Want vanaf daar is een evt. snelheidsbeperking van een sein toch
+  niet meer geldig.
+
+(0.2.0.32) 9 juli 2012:
+- Het hele snelhedensysteem van de seinen verbeterd. Het concept van de
+  baanvaksnelheid is nu consistent doorgevoerd. Bij rails met baanvaksnelheid
+  hoeft de snelheid niet meer te worden opgegeven ('-') en seinen kunnen nu ook
+  echt groen (dwz. rijden met baanvaksnelheid) aangeven. Wel moet bij verschijn-
+  punten nu extra de baanvaksnelheid worden aangegeven.
+- Fix: Procesleiding stelt alleen rijwegen in als deze vrij zijn. Dat een sectie
+  vrij moet zijn houdt vanaf nu ook in dat deze niet door een andere rijweg
+  geclaimd mag zijn. Een samengestelde rijweg mag namelijk niet een tweede
+  deelrijweg alvast kunnen instellen als die reeds voor een andere samengestelde
+  rijweg is ingesteld maar die andere trein nog niet de eerste sectie heeft
+  bezet.
+
+10 juli 2012:
+- Fix: Bij een verschijnpunt een foutmelding geven als de rail niet bestaat
+- Fix: Trein niet laten verschijnen als hij helemaal geen enkel materieel heeft
+- Bij gebruik van de geen-defecten-cheat wordt de tijdversnelling nu niet
+  meer afgekapt zodra een trein iets gaat doen. Handig om snel een
+  dienstregeling door te testen die van een procesplan is voorzien.
+- Fix: Treinen die verschijnen kunnen gewoon baanvaksnelheid rijden als
+  het eerstvolgende hoofdsein een beperking oplegt maar daarvoor eerst nog
+  een voorsein komt.
+- Bijhouden of een procesplan bij elk stapje is gewijzigd, en alleen bij
+  wijziging de hele lijst bijwerken op het beeldscherm. Daarbij werd weliswaar
+  ook gekeken per regel of er iets is veranderd, maar het opvragen van de items
+  uit een listbox-control gaat blijkbaar heel langzaam.
+- Fix: Bij het kijken of een rijweg vrij is (procesleiding) naar alle secties
+  kijken ipv. alleen maar naar de eerste.
+- Fix: Bij het kijken of een afgereden rijweg opgeruimd kan worden, eisen dat
+  geen enkele sectie meer door die rijweg is geclaimd. Dit om de volgordedwang
+  ook daadwerkelijk effect te laten hebben.
 
 BERICHTEN AAN DE MACHINIST:
 

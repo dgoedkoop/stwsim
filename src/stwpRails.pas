@@ -81,6 +81,7 @@ function RailOpLijst(Rail: PpRail; Lijst: PpRailLijst): boolean;
 function ZoekRail(pAlleRails: PpRailLijst; Naam: string): PpRail;
 
 function IsHierHoofdsein(Conn: PpRailConn): boolean;
+function IsHierVoorsein(Conn: PpRailConn): boolean;
 function IsHierSnelheidsbordje(Conn: PpRailConn): boolean;
 
 function ZoekOmgekeerdeConnectie(Conn: PpRailConn): PpRailConn;
@@ -243,6 +244,11 @@ end;
 function IsHierHoofdsein;
 begin
 	result := IsHoofdsein(PpSein(Conn^.sein));
+end;
+
+function IsHierVoorsein;
+begin
+	result := IsVoorsein(PpSein(Conn^.sein));
 end;
 
 function IsHierSnelheidsbordje;

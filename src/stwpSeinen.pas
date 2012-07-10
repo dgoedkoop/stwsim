@@ -69,6 +69,7 @@ type
 	end;
 
 function IsHoofdsein(Sein: PpSein): boolean;
+function IsVoorsein(Sein: PpSein): boolean;
 function IsSnelheidsbordje(Sein: PpSein): boolean;
 function AuthorityIdentical(eerste, tweede: THMovementAuthority): boolean;
 procedure SaveMA(var f: file; MA: THMovementAuthority);
@@ -108,6 +109,14 @@ function IsHoofdsein;
 begin
 	if assigned(sein) then
 		result := Sein^.Bediend or Sein^.Autosein or (Sein^.H_Baanmaxsnelheid = 0)
+	else
+		result := false;
+end;
+
+function IsVoorsein;
+begin
+	if assigned(sein) then
+		result := Sein^.Autovoorsein
 	else
 		result := false;
 end;
