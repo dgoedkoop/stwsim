@@ -2,7 +2,7 @@ unit clientSendMsg;
 
 interface
 
-uses stwvSporen, stwvMeetpunt, stwvSeinen, stwsimComm, stwvTreinComm;
+uses stwvSporen, stwvMeetpunt, stwvSeinen, stwvTreinInfo, stwsimComm, stwvTreinComm;
 
 type
 	TvReturnedStatus = (rsWacht, rsOK, rsError);
@@ -25,6 +25,7 @@ type
 		procedure SendSetSein(Sein: PvSein; stand: string);
 		procedure SendSetOverweg(Overweg: PvOverweg; gesloten: boolean);
 		procedure SendSetTreinnr(Meetpunt: PvMeetpunt; treinnr: string);
+		procedure SendVertraging(TreinInfo: TvTreinInfo);
 
 		procedure SendBel(naar: TvMessageWie);
 		procedure SendOpnemen(naar: TvMessageWie);
@@ -108,6 +109,20 @@ end;
 procedure TvSendMsg.SendSetTreinnr;
 begin
 	SendRawStr('m:'+Meetpunt^.meetpuntID+','+treinnr,true)
+end;
+
+procedure TvSendMsg.SendVertraging;
+var
+	vertrstr: string;
+	vertrtstr: string;
+begin
+	str(TreinInfo.Vertraging, vertrstr);
+	case TreinInfo.Vertragingsoort of
+	vsExact: vertrtstr := 'ex';
+	vsSchatting: vertrtstr := 'st';
+	else exit
+	end;
+	SendRawStr('ti:'+TreinInfo.Treinnummer+',v,'+vertrtstr+','+vertrstr, true);
 end;
 
 procedure TvSendMsg.SendBel;

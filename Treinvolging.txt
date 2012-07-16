@@ -1,0 +1,50 @@
+TREIN-INFORMATIE-SYSTEEM (voor versie na 1.0)
+
+Per trein wordt bijgehouden in de fysieke simulatie:
+- Treinnummer
+- Vertraging
+
+Per meetpunt wordt bijgehouden in de fysieke simulatie:
+- De aanwezige treinen
+- De laatst gebruikte richting
+
+Bij het verplaatsen van een treinnummer in de fysieke simulatie:
+- Via de aangegeven rijrichting van het sein dat op rood springt, weten we
+  of bij de van-sectie het eerste of juist het laatste treinnummer gepakt moet
+  worden;
+- Via de in te stellen rijrichting danwel de in het doelsein opgeslagen
+  rijrichting weten we of we het treinnummer bij de nieuwe sectie aan het begin
+  of juist aan het eind moeten invoegen;
+- Als bij de bron de richting onbekend is, nemen we het laagste treinnummer
+  en wissen de rest;
+- Als bij het doel de richting onbekend is, doen we niks als in de sectie een
+  lager treinnummer voorkomt. Anders overschrijven we de geregistreerde nummers.
+
+Procesleiding kan verschillende verzoeken doen:
+- Nummer treinnr X in treinnr Y om. Simpel.
+- Splits treinnr X in treinnr Y en Z. Hiervoor wordt de laatst gebruikte
+  richting gebruikt.
+- Combineer treinnr X en treinnr Y; rij verder als trein Z. Simpel.
+
+Handmatig kan ook het volgende:
+- Wis treinnr X
+- Voeg treinnr X in. Kan alleen als er nog geen treinnr staat.
+
+Berichten:
+t,<meetpunt>,n,<oud>,<nieuw>
+t,<meetpunt>,s,<oud>,<nieuw1>,<nieuw2> (genegeerd indien richting onbekend)
+t,<meetpunt>,c,<oud1>,<oud2>,<nieuw>
+t,<meetpunt>,x
+t,<meetpunt>,i,<treinnr> (overschrijft alles indien reeds nrs aanwezig)
+
+Omgekeerd zal de simulatie terugsturen:
+t,<meetpunt>,d,<richting>,<treinnr>[,<treinnr>,...]
+richting: 0=onbekend, 1=up, 2=down
+De treinnummers zijn gesorteerd behorend bij de aangeduide richting.
+Bij pure richtingswisseling wordt gestuurd:
+t,<meeptunt>,r,<richting>
+
+In de virtuele simulatie moet per meetpunt worden bijgehouden:
+- Bij elk treinnr-venster: welke rangorde bij richting 1=up? (standaard: 1)
+- Wat is het hoogste rangorde-nr van de treinnr-vensters? (standaard: 0)
+- Actuele treinnr's en richting (in feite kopie van wat de fysieke sim weet)

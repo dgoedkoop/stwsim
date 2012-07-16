@@ -10,7 +10,7 @@ uses
   stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
   stwvProcesPlan, stwsimComm, stwpCore, serverSendMsg, serverReadMsg,
   stwpTreinen, stwvTreinComm, stwpTreinPhysics, stwpMonteurPhysics,
-  stwpCommPhysics;
+  stwpCommPhysics, stwvTreinInfo;
 
 type
 	TUpdateChg = record
@@ -230,6 +230,7 @@ type
 		procedure ChangeSein(Sein: PvSein);
 		procedure ChangeErlaubnis(Erlaubnis: PvErlaubnis);
 		procedure ChangeOverweg(Overweg: PvOverweg);
+		procedure TreinInfo(TreinInfoData: TvTreinInfo);
 		procedure smsg(tekst: string);
 		procedure TelefoonGaat(van: TvMessageWie);
 		procedure TelefoonOpgenomen(van: TvMessageWie);
@@ -603,6 +604,7 @@ begin
 	vReadMsg.ChangeSeinEvent := ChangeSein;
 	vReadMsg.ChangeRichtingEvent := ChangeErlaubnis;
 	vReadMsg.ChangeOverwegEvent := ChangeOverweg;
+	vReadMsg.TreinInfoEvent := TreinInfo;
 	vReadMsg.smsgEvent := smsg;
 	vReadMsg.TelefoonBelEvent := TelefoonGaat;
 	vReadMsg.TelefoonOpneemEvent := TelefoonOpgenomen;
@@ -695,6 +697,11 @@ begin
 	Overweg^.Changed := false;
 end;
 
+procedure TstwsimMainForm.TreinInfo;
+begin
+   stwscProcesplanForm.TreinInfo(TreinInfoData);
+end;
+
 procedure TstwsimMainForm.smsg;
 begin
 	if tekst <> '--' then
@@ -772,10 +779,10 @@ procedure TstwsimMainForm.TijdTimerTimer(Sender: TObject);
 
 type
 	TPerf = record
-		x, y, z: int64;
+		x, y: real;
 	end;
 var
-	start, x: int64;
+	start, x, freq: int64;
 	perf: TPerf;
 
 {var}
@@ -794,18 +801,20 @@ begin
 	if GetTijd <> VorigeTijd then begin
 		tijdLabel.Caption := TijdStr(GetTijd, false);
 
-		QueryPerformanceCounter(start);
 
 		RijwegLogica.DoeActieveRijwegen;
 		RijwegLogica.DoeOverwegen;
 
-		QueryPerformanceCounter(x); perf.x := x-start; start := x;
+		QueryPerformanceCounter(start);
+		QueryPerformanceFrequency(freq);
 
 		stwscProcesplanForm.DoeStapje;
-		QueryPerformanceCounter(x); perf.y := x-start; start := x;
+
+		QueryPerformanceCounter(x); perf.x := (x-start)/freq*1000 ; start := x;
 
 		stwscProcesplanForm.UpdateLijst;
-		QueryPerformanceCounter(x); perf.z := x-start; start := x;
+
+		QueryPerformanceCounter(x); perf.y := (x-start)/freq*1000; start := x;
 
 		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
 			if vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr).status <> rsOK then
@@ -1222,8 +1231,8 @@ begin
 		// Lees de MAGIC
 		stringread(f, s);
 		modus := -1;
-		if s = SaveIOMagic then modus := 2;
-{		if s = SaveIOMagic_old1 then modus := 1;
+		if s = SaveIOMagic then modus := 3;
+{		if s = SaveIOMagic_old1 then modus := 2;
 		if s = SaveIOMagic_old0 then modus := 0;}
 		if modus = -1 then begin
 			Application.Messagebox('Ongeldig bestandstype.', 'Fout', MB_ICONERROR);
@@ -1251,7 +1260,7 @@ begin
 		// Overige infrastatus laden
 		pCore.LoadInfraStatus(f);
 		// Actieve rijwegen laden
-		RijwegLogica.LoadActieveRijwegen(f, modus);
+		RijwegLogica.LoadActieveRijwegen(f);
 		LoadWisselStatus(f, vCore);
 		// Scenario laden
 		Scenario.Clear;

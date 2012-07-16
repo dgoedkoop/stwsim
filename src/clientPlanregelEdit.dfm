@@ -133,6 +133,7 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
       'Vertrek'
       'Aankomst'
       'Korte stop'
+      'Rangeren'
       '0')
   end
   object instelUurEdit: TEdit

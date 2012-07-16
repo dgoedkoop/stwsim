@@ -105,11 +105,11 @@ begin
 		end else begin
 			Trein^.NieuweMaxsnelheid(0, false);
 			Trein^.ROZ := true;
-			if Trein^.doorroodopdracht then
+			if Trein^.doorroodopdracht and (Trein^.doorroodopd_sein = Sein) then
 				Trein^.huidigemaxsnelheid := doorroodrozsnelheid
 			else begin
 				Trein^.doorroodgereden := true;
-				Trein^.doorroodgereden_sein := Sein^.naam;
+				Trein^.doorroodgereden_sein := Sein;
 			end;
 		end;
 		// Zodra we langs een of ander hoofdsein zijn gereden,
@@ -269,13 +269,13 @@ begin
 		// We rijden echt te hard, dus vol remmen.
 		kracht := -Trein^.remkracht
 	else
-		if Trein^.Snelheid > wenssnelheid + 2 then
+		if Trein^.Snelheid > wenssnelheid + (SnelheidTargetAfwijking/2) then
 			// We rijden harder dan we willen. Voorzichtig remmen.
 			kracht := -remkrachtwens
 		else
-			if Trein^.Snelheid >= wenssnelheid  then
+			if Trein^.Snelheid >= wenssnelheid - (SnelheidTargetAfwijking/2) then
 				// We rijden op de juiste snelheid. Lekker doortuffen dus.
-				kracht := round(-totaalwrijving);
+				kracht := round(totaalwrijving);
 
 	// CRITERIUM 3 - Wat zien we voor ons?
 	// Een station? Een rood of andersoortig snelheidsverlagend sein?
@@ -292,11 +292,13 @@ begin
 			MovementAuthority := GevSein^.H_MovementAuthority;
 			if (GevSein^.Autosein or GevSein^.Bediend) then begin
 				if (not MovementAuthority.HasAuthority) and
-				Trein^.doorroodopdracht then begin
-					MovementAuthority.HasAuthority := true;
-					MovementAuthority.Baanvaksnelheid := false;
-					MovementAuthority.Snelheidsbeperking := doorroodrozsnelheid
-				end
+				Trein^.doorroodopdracht then
+					if Trein^.doorroodopd_sein = GevSein then begin
+						MovementAuthority.HasAuthority := true;
+						MovementAuthority.Baanvaksnelheid := false;
+						MovementAuthority.Snelheidsbeperking := doorroodrozsnelheid
+					end else
+						Trein^.doorroodopdracht := false
 			end else begin
 				MovementAuthority.HasAuthority := true;
 				MovementAuthority.Baanvaksnelheid := true;
@@ -386,7 +388,7 @@ begin
 	if mssnelheid < 0 then	// Als we heel hard remmen gaan we niet achteruit rijden!
 		mssnelheid := 0;
 	Trein^.snelheid := mssnelheid * 3.6;
-	if Trein^.snelheid < 0.03 then Trein^.snelheid := 0;
+	if Trein^.snelheid <= SnelheidTargetAfwijking then Trein^.snelheid := 0;
 
 	// Trein verplaatsen
 	tmpConn := nil;
@@ -872,33 +874,34 @@ begin
 				 and (waaromstilstaan in [stTrein, stStroom, stWissel, stWeetniet])) then begin	// ... en het iets is waar maar 1 keer over gebeld moet worden.
 				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, Waaromstilstaan in [stStroom, stDoorrood, stWissel]);
 				Gesprek^.OphangenErg := Waaromstilstaan in [stSein, stDoorrood];
+				Gesprek^.tekstX := 'Hallo, met de machinist van trein ' +Trein^.Treinnummer+'. ';
 				case Waaromstilstaan of
 				stSein: begin
-					Gesprek^.tekstX := 'Ik sta al even voor rood sein '+GevSein^.naam+'. Vergeet u mij niet?';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik sta al even voor rood sein '+GevSein^.naam+'. Vergeet u mij niet?';
 					Gesprek^.tekstXsoort := pmsStoptonend;
 				end;
 				stTrein: begin
-					Gesprek^.tekstX := 'Er staat al even een trein voor mij. Vergeet u die niet?';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Er staat al even een trein voor mij. Vergeet u die niet?';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stStroom: begin
-					Gesprek^.tekstX := 'Ik sta hier met een elektrische trein zonder stroom!';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik sta hier met een elektrische trein zonder stroom!';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stDoorrood: begin
-					Gesprek^.tekstX := 'Ik ben door rood sein '+Trein^.doorroodgereden_sein+' gereden!';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik ben door rood sein '+Trein^.doorroodgereden_sein^.naam+' gereden!';
 					Gesprek^.tekstXsoort := pmsSTSpassage;
 				end;
 				stWissel: begin
-					Gesprek^.tekstX := 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stStuurstand: begin
-					Gesprek^.tekstX := 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand.';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand.';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end
 				else
-					Gesprek^.tekstX := 'Ik bel u op omdat ik stil sta maar weet niet waarom!?';
+					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik bel u op omdat ik stil sta maar weet niet waarom!?';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				new(PpTreinTelefoonSoort(Gesprek^.userdata));

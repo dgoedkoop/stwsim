@@ -3,7 +3,7 @@ unit clientReadMsg;
 interface
 
 uses lists, stwvCore, clientSendMsg, stwvMeetpunt, stwvSeinen,
-	stwvSporen, stwvScore, stwvTreinComm;
+	stwvSporen, stwvTreinInfo, stwvScore, stwvTreinComm;
 
 const
 	LF = #$0A;
@@ -19,6 +19,7 @@ type
 	TChangeMeetpuntEvent = procedure(Meetpunt: PvMeetpunt; Oudebezet: boolean; Oudetreinnr: string) of object;
 	TChangeRichtingEvent = procedure(Erlaubnis: PvErlaubnis) of object;
 	TChangeOverwegEvent = procedure(Overweg: PvOverweg) of object;
+	TTreinInfoEvent = procedure(TreinInfo: TvTreinInfo) of object;
 	TsmsgEvent = procedure(tekst: string) of object;
 
 	TTelefoonBelEvent = procedure(van: TvMessageWie) of object;
@@ -45,6 +46,7 @@ type
 		ChangeMeetpuntEvent: TChangeMeetpuntEvent;
 		ChangeRichtingEvent: TChangeRichtingEvent;
 		ChangeOverwegEvent: TChangeOverwegEvent;
+		TreinInfoEvent: TTreinInfoEvent;
 		smsgEvent: TsmsgEvent;
 		TelefoonBelEvent: TTelefoonBelEvent;
 		TelefoonOpneemEvent: TTelefoonOpneemEvent;
@@ -81,6 +83,7 @@ begin
 	ChangeWisselEvent := nil;
 	ChangeSeinEvent := nil;
 	ChangeMeetpuntEvent := nil;
+	TreinInfoEvent := nil;
 	smsgEvent := nil;
 	TelefoonBelEvent := nil;
 	TelefoonOpneemEvent := nil;
@@ -118,6 +121,9 @@ var
 	u,m,s, code: integer;
 	// Voor erlaubnis
 	stand, vergrendeld: string;
+	// Voor treininfo
+	TreinInfo: TvTreinInfo;
+	TiWat, vertrstr: string;
 begin
 	p := pos(':', msg);
 	if p <> 0 then begin
@@ -257,6 +263,14 @@ begin
 					DefectSeinEvent(Sein, sbGeel);
 			end;
 		end;
+	end else if cmd = 'ti' then begin
+		SplitOff(tail, TreinInfo.Treinnummer, tail);
+		SplitOff(tail, TiWat, vertrstr);
+		if TiWat = 'st' then TreinInfo.Vertragingsoort := vsSchatting;
+		if TiWat = 'ex' then TreinInfo.Vertragingsoort := vsExact;
+		val(vertrstr, TreinInfo.Vertraging, code);
+		if assigned(TreinInfoEvent) then
+			TreinInfoEvent(TreinInfo);
 	end else if cmd = 't' then begin
 		SplitOff(tail, us, tail);
 		SplitOff(tail, ms, ss);

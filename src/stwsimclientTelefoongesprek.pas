@@ -48,7 +48,7 @@ uses stwsimclientNieuweDienst, stwsimClientNieuwPlanpunt,
 {$R *.DFM}
 
 const
-	stsp   = 'Aanwijzing STS-passage verstrekken';
+	stsp   = 'Aanwijzing STS-passage verstrekken...';
 	stspa  = 'Aanwijzing STS-passage intrekken';
 	vnstsp = 'Rijd voorzichtig op zicht verder.';
 	wtt2   = 'Wacht nog even, u kunt zometeen verder.';
@@ -130,6 +130,8 @@ begin
 	end else
 	if Soort = vmsTreinSTSpassage then begin
 		watList.Items.Add(vnstsp);
+		watList.Items.Add(wtt2);
+		watList.Items.Add(wtt5);
 		GesprekStatus := gsVerwachtAntwoord;
 	end else
 	if Soort = vmsVraagOK then begin
@@ -170,7 +172,16 @@ begin
 	msg := '';
 	nieuwemetwie := metwie;
 	wat := watList.Items[watList.ItemIndex];
-	if wat = stsp then 	msg := 'stsp';
+	if wat = stsp then begin
+		stwscStringInputForm.Caption := 'Aanwijzing STS-passage';
+		stwscStringInputForm.Inputlabel.Caption := 'Seinnummer:';
+		stwscStringInputForm.InputEdit.Text := '';
+		if stwscStringInputForm.showmodal = mrOK then
+			if CheckInput(stwscStringInputForm.InputEdit.Text) then
+				msg := 'stsp,'+stwscStringInputForm.InputEdit.Text
+			else
+				Application.MessageBox('Ongeldige invoer.','Fout',mb_iconerror);
+	end;
 	if wat = stspa then	msg := 'stspa';
 	if wat = vnstsp then msg := 'vnstsp';
 	if wat = wtt2 then msg := 'wtt,2';
@@ -180,6 +191,7 @@ begin
 	if wat = raw then begin
 		stwscStringInputForm.Caption := 'Rijplanpunt annuleren';
 		stwscStringInputForm.Inputlabel.Caption := 'Station:';
+		stwscStringInputForm.InputEdit.Text := '';
 		if stwscStringInputForm.showmodal = mrOK then
 			if CheckInput(stwscStringInputForm.InputEdit.Text) then
 				msg := 'ra,'+stwscStringInputForm.InputEdit.Text
@@ -262,6 +274,7 @@ begin
 	if wat = rw then begin
 		stwscStringInputForm.Caption := 'Wissel repareren';
 		stwscStringInputForm.Inputlabel.Caption := 'Wissel:';
+		stwscStringInputForm.InputEdit.Text := '';
 		if stwscStringInputForm.showmodal = mrOK then
 			if CheckInput(stwscStringInputForm.InputEdit.Text) then
 				msg := 'w,'+stwscStringInputForm.InputEdit.Text

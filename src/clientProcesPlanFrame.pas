@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, stwvProcesPlan, stwvCore, stwvMisc, stwpTijd, stwvRijwegen;
+  StdCtrls, ExtCtrls, stwvProcesPlan, stwvCore, stwvMisc, stwpTijd,
+  stwvTreinInfo, stwvRijwegen, ActnList, Menus;
 
 type
   TstwscProcesPlanFrame = class(TFrame)
@@ -17,10 +18,27 @@ type
     TitelPanel: TPanel;
     titelLabel: TLabel;
     HistList: TListBox;
-    procedure ExecButClick(Sender: TObject);
-    procedure DelButClick(Sender: TObject);
-    procedure EditButClick(Sender: TObject);
+    PopupMenu: TPopupMenu;
+    ActionList: TActionList;
+    VoernuuitAct: TAction;
+    BewerkAct: TAction;
+    DelAct: TAction;
+    VVAct: TAction;
+    Voernuuit1: TMenuItem;
+	 Verwerkvertraging1: TMenuItem;
+    Bewerk1: TMenuItem;
+    Verwijder1: TMenuItem;
     procedure RegelListDblClick(Sender: TObject);
+    procedure VoernuuitActExecute(Sender: TObject);
+    procedure BewerkActExecute(Sender: TObject);
+    procedure DelActExecute(Sender: TObject);
+    procedure VVActExecute(Sender: TObject);
+    procedure RegelListMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure RegelListDrawItem(Control: TWinControl; Index: Integer;
+      Rect: TRect; State: TOwnerDrawState);
+    procedure HistListDrawItem(Control: TWinControl; Index: Integer;
+      Rect: TRect; State: TOwnerDrawState);
 	private
 		{ Private declarations }
 		selPunt:	PvProcesPlanPunt;
@@ -63,10 +81,11 @@ begin
 	result := ProcesPlan.ProcesPlanPuntenPending;
 	for i := 1 to RegelList.ItemIndex do
 		result := result^.Volgende;
-	if MkLijstString(result) <> RegelList.Items[RegelList.ItemIndex] then begin
-		result := nil;
-		exit;
-	end;
+	// Deze check is wel fijn om te kijken of de listbox wel up-to-date is, maar
+	// gezien alle items in feite 'leeg' zijn uit snelheidsoverwegingen, kan
+	// deze check niet worden uitgevoerd.
+{	if MkLijstString(result) <> RegelList.Items[RegelList.ItemIndex] then
+		result := nil;}
 end;
 
 procedure TstwscProcesPlanFrame.Markeer;
@@ -81,10 +100,28 @@ end;
 function TstwscProcesPlanFrame.MkLijstString;
 var
 	s: string;
+	tstr: string;
+	vstr: string;
 begin
-	s := Pad(PPP^.Treinnr, 8, #32, vaVoor) + '  ';
+	if PPP^.GemetenVertraging > PPP^.VerwerkteVertraging then
+		tstr := '!'
+	else if PPP^.Bewerkt then
+		tstr := '+'
+	else
+		tstr := '';
+	if PPP^.GemetenVertraging <> 0 then begin
+		str(PPP^.GemetenVertraging, vstr);
+		if PPP^.GemetenVertraging > 0 then
+			vstr := '+'+vstr;
+		if PPP^.GemetenVertragingSoort = vsSchatting then
+			vstr := 'V'+vstr;
+	end;
+
+	s := s + Pad(tstr, 1, #32, vaVoor);
+	s := s + Pad(PPP^.Treinnr, 7, #32, vaVoor) + '  ';
 	s := s + Pad(ActiviteitSoortStr(PPP^.ActiviteitSoort), 3, #32, vaAchter);
 	s := s + Pad(TijdStr(PPP^.Plantijd, false), 8, #32, vaAchter);
+	s := s + Pad(vstr, 5, #32, vaAchter);
 	s := s + Pad(TijdStr(PPP^.Insteltijd, false), 8, #32, vaAchter);
 	s := s + Pad(PPP^.van, 7, #32, vaAchter);
 	s := s + Pad(PPP^.naar, 7, #32, vaAchter);
@@ -104,20 +141,20 @@ var
 	PPP: 		PvProcesPlanPunt;
 	s:			string;
 begin
+	// Hier werken we de inhoud niet bij. Kost veel te veel rekentijd. Dat doen
+	// we wel op het moment dat we een item tekenen.
+	RegelList.Items.BeginUpdate;
 	i := 0;
 	PPP := ProcesPlan.ProcesPlanPuntenPending;
 	while assigned(PPP) do begin
-		s := MkLijstString(PPP);
-		if RegelList.Items.Count > i then begin
-			if RegelList.Items[i] <> s then
-				RegelList.Items[i] := s
-		end else
-			RegelList.Items.Add(s);
 		inc(i);
 		PPP := PPP^.Volgende;
 	end;
+	while RegelList.Items.Count < i do
+		RegelList.Items.Add('');
 	while RegelList.Items.Count > i do
 		RegelList.Items.Delete(i);
+	RegelList.Items.EndUpdate;
 
 	if ProcesPlan.KlaarAantal <= 5 then
 		Aantal := ProcesPlan.KlaarAantal
@@ -140,7 +177,12 @@ begin
 	end;
 end;
 
-procedure TstwscProcesPlanFrame.ExecButClick(Sender: TObject);
+procedure TstwscProcesPlanFrame.RegelListDblClick(Sender: TObject);
+begin
+	BewerkActExecute(Sender);
+end;
+
+procedure TstwscProcesPlanFrame.VoernuuitActExecute(Sender: TObject);
 begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then
@@ -149,16 +191,7 @@ begin
 	UpdateLijst;
 end;
 
-procedure TstwscProcesPlanFrame.DelButClick(Sender: TObject);
-begin
-	selPunt := FindSelected;
-	if assigned(selPunt) then
-		if Application.MessageBox('Deze planregel echt verwijderen?', 'Planregel verwijderen', MB_YESNO+MB_ICONWARNING) = mrYes then
-			ProcesPlan.MarkeerKlaar(selPunt);
-	UpdateLijst;
-end;
-
-procedure TstwscProcesPlanFrame.EditButClick(Sender: TObject);
+procedure TstwscProcesPlanFrame.BewerkActExecute(Sender: TObject);
 var
 	u,m,s, code: integer;
 	us, ms: string;
@@ -175,7 +208,8 @@ begin
 		asVertrek:   stwscPlanregelEditForm.actBox.ItemIndex := 1;
 		asAankomst:  stwscPlanregelEditForm.actBox.ItemIndex := 2;
 		asKortestop: stwscPlanregelEditForm.actBox.ItemIndex := 3;
-		asNul:       stwscPlanregelEditForm.actBox.ItemIndex := 4;
+		asRangeren:  stwscPlanregelEditForm.actBox.ItemIndex := 4;
+		asNul:       stwscPlanregelEditForm.actBox.ItemIndex := 5;
 		end;
 		stwscPlanregelEditForm.vanEdit.Text := selPunt^.van;
 		stwscPlanregelEditForm.naarEdit.Text := selPunt^.naar;
@@ -222,7 +256,8 @@ begin
 			1: selPunt^.ActiviteitSoort := asVertrek;
 			2: selPunt^.ActiviteitSoort := asAankomst;
 			3: selPunt^.ActiviteitSoort := asKortestop;
-			4: selPunt^.ActiviteitSoort := asNul;
+			4: selPunt^.ActiviteitSoort := asRangeren;
+			5: selPunt^.ActiviteitSoort := asNul;
 			end;
 			selPunt^.van := Van;
 			selPunt^.naar := Naar;
@@ -231,6 +266,8 @@ begin
 			selPunt^.ARI_toegestaan := stwscPlanregelEditForm.ariCheck.Checked;
 			selPunt^.NieuwNummer := stwscPlanregelEditForm.nieuwNrEdit.Text;
 			selPunt^.RestNummer := stwscPlanregelEditForm.RestNrEdit.Text;
+			selPunt^.AnalyseGedaan := false;
+			selPunt^.Bewerkt := true;
 		end else
 			// Bij CANCEL moeten we de oude ARI-instelling terugzetten.
 			selPunt^.ARI_toegestaan := ari_oud;
@@ -240,9 +277,95 @@ begin
 	end;
 end;
 
-procedure TstwscProcesPlanFrame.RegelListDblClick(Sender: TObject);
+procedure TstwscProcesPlanFrame.DelActExecute(Sender: TObject);
 begin
-	EditButClick(Sender);
+	selPunt := FindSelected;
+	if assigned(selPunt) then
+		if Application.MessageBox('Deze planregel echt verwijderen?', 'Planregel verwijderen', MB_YESNO+MB_ICONWARNING) = mrYes then
+			ProcesPlan.MarkeerKlaar(selPunt);
+	UpdateLijst;
+end;
+
+procedure TstwscProcesPlanFrame.VVActExecute(Sender: TObject);
+begin
+	selPunt := FindSelected;
+	if assigned(selPunt) then begin
+		selPunt^.Insteltijd := selPunt^.Insteltijd +
+			MkTijd(0, selPunt^.GemetenVertraging - selPunt^.VerwerkteVertraging, 0);
+		selPunt^.VerwerkteVertraging := selPunt^.GemetenVertraging;
+		selPunt^.Bewerkt := true;
+		ProcesPlan.Sorteer;
+		UpdateLijst;
+	end;
+end;
+
+procedure TstwscProcesPlanFrame.RegelListMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+	APoint: TPoint;
+	Index: integer;
+begin
+	if Button = mbRight then begin
+		APoint.X := X;
+		APoint.Y := Y;
+		Index := RegelList.ItemAtPos(APoint, True);
+		if Index > -1 then
+			RegelList.ItemIndex := Index;
+	end;
+end;
+
+procedure TstwscProcesPlanFrame.RegelListDrawItem(Control: TWinControl;
+  Index: Integer; Rect: TRect; State: TOwnerDrawState);
+var
+	TopDif: Integer;
+	PPP: PvProcesPlanPunt;
+	i: integer;
+begin
+	with (Control as TListbox) do begin
+		PPP := ProcesPlan.ProcesPlanPuntenPending;
+		for i := 1 to index do
+			if assigned(PPP) then
+				PPP := PPP^.Volgende;
+		// Als een ander item geselecteerd wordt, dan wordt geen DrawItem-oproep
+		// gedaan voor het oude, gedeselecteerde item. Daarom kunnen we maar beter
+		// geselecteerde items niet markeren.
+{		if Index <> RegelList.ItemIndex then}
+			Canvas.Brush.Color := clBlack
+{		else
+			Canvas.Brush.Color := clHighlight};
+		if GetTijd >= PPP^.Insteltijd - MkTijd(0,1,0) then
+			if GetTijd >= PPP^.Insteltijd + MkTijd(0,1,0) then
+				Canvas.Font.Color := clRed
+			else
+				Canvas.Font.Color := clYellow
+		else
+			Canvas.Font.Color := clWhite;
+		TopDif := (ItemHeight div 2) - (Canvas.TextHeight(#32) div 2);
+		// Dit kan, maar zorgt bij het 'smooth scrolling' voor allerlei ellende.
+		// Beter van niet dus.
+{		if Items[Index] <> MkLijstString(PPP) then
+			Items[Index] := MkLijstString(PPP);}
+		Canvas.TextRect(Rect, Rect.Left+2, Rect.Top + TopDif, MkLijstString(PPP){Items[Index]});
+	end;
+end;
+
+procedure TstwscProcesPlanFrame.HistListDrawItem(Control: TWinControl;
+  Index: Integer; Rect: TRect; State: TOwnerDrawState);
+var
+	TopDif: Integer;
+begin
+	with (Control as TListbox) do begin
+		// Als een ander item geselecteerd wordt, dan wordt geen DrawItem-oproep
+		// gedaan voor het oude, gedeselecteerde item. Daarom kunnen we maar beter
+		// geselecteerde items niet markeren.
+{		if Index <> RegelList.ItemIndex then}
+			Canvas.Brush.Color := clBlack
+{		else
+			Canvas.Brush.Color := clHighlight};
+		Canvas.Font.Color := clTeal;
+		TopDif := (ItemHeight div 2) - (Canvas.TextHeight(#32) div 2);
+		Canvas.TextRect(Rect, Rect.Left+2, Rect.Top + TopDif, Items[Index]);
+	end;
 end;
 
 end.

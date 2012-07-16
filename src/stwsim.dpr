@@ -56,7 +56,9 @@ uses
   stwvSporen in 'stwvSporen.pas',
   stwvTNV in 'stwvTNV.pas',
   stwvGleisplan in 'stwvGleisplan.pas',
-  stwvSeinen in 'stwvSeinen.pas';
+  stwvSeinen in 'stwvSeinen.pas',
+  stwpTreinInfo in 'stwpTreinInfo.pas',
+  stwvTreinInfo in 'stwvTreinInfo.pas';
 
 {$R *.RES}
 

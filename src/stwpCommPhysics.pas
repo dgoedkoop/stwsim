@@ -101,7 +101,10 @@ begin
 	if Gesprek^.Status in [tgsSS, tgsSS2] then
 		Gesprek^.Status := tgsE
 	else
-		Gesprek^.Status := tgsH;
+		// Niet ophangen als we nog even netjes het laatste stukje van het gesprek
+		// moeten afmaken.
+		if not (Gesprek^.Status in [tgsG4,tgsG5]) then
+			Gesprek^.Status := tgsH;
 
 	VoerStapjeUit(Gesprek);
 end;

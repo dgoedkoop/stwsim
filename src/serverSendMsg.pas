@@ -3,7 +3,7 @@ unit serverSendMsg;
 interface
 
 uses lists, stwpMeetpunt, stwpSeinen, stwpRails, stwpTreinen, stwpOverwegen,
-	stwsimComm, stwpDatatypes;
+	stwpTreinInfo, stwsimComm, stwpDatatypes;
 
 const
 	LF = #$0A;
@@ -22,6 +22,7 @@ type
 		procedure SendWisselMsg(Wissel: PpWissel);
 		procedure SendSeinMsg(Sein: PpSein);
 		procedure SendOverwegMsg(Overweg: PpOverweg);
+		procedure SendTreinInfo(TreinInfo: PpTreinInfo);
 
 		procedure SendBel(van: PpTrein); overload;
 		procedure SendBel(van: string); overload;
@@ -126,6 +127,22 @@ begin
 		SendPlainString('o:'+Overweg^.Naam+',o')
 	else if Overweg^.Status = 3 then
 		SendPlainString('o:'+Overweg^.Naam+',s');
+end;
+
+procedure TpSendMsg.SendTreinInfo;
+var
+	vertrstr: string;
+	vertrtstr: string;
+begin
+	if not TreinInfo^.gewijzigd then exit;
+	TreinInfo^.gewijzigd := false;
+	str(TreinInfo^.Vertraging, vertrstr);
+	case TreinInfo^.Vertragingtype of
+	vtExact: vertrtstr := 'ex';
+	vtSchatting: vertrtstr := 'st';
+	else exit
+	end;
+	SendPlainString('ti:'+TreinInfo^.Treinnummer+','+vertrtstr+','+vertrstr);
 end;
 
 procedure TpSendMsg.SendBel(van: PpTrein);

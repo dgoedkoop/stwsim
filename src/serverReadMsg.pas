@@ -5,7 +5,7 @@ interface
 uses lists, stwpCore, serverSendMsg, stwpSeinen, stwpMeetpunt,
 	stwpRails, stwpTreinen, sysutils, stwpRijplan, stwpTijd, stwpOverwegen,
 	stwsimComm, stwpDatatypes, stwpTelefoongesprek, stwpMonteur,
-	stwpMonteurPhysics, stwpCommPhysics;
+	stwpMonteurPhysics, stwpCommPhysics, stwpTreinInfo;
 
 const
 	LF = #$0A;
@@ -199,6 +199,10 @@ var
 	// Broadcast-bericht
 	RailLijst: PpRailLijst;
 	Trein: PpTrein;
+	// Treininfo
+	vertrsoort: string;
+	minuten: integer;
+	TreinInfo: PpTreinInfo;
 begin
 	p := pos(':', msg);
 	if p <> 0 then begin
@@ -326,7 +330,7 @@ begin
 			if Trein^.huidigemaxsnelheid = 0 then
 				statusstr := statusstr + ' - STS gepasseerd';
 			if Trein^.doorroodopdracht then
-				statusstr := statusstr + ' - bezit aanwijzing STS-passage';
+				statusstr := statusstr + ' - bezit aanwijzing STS-passage voor sein '+Trein^.doorroodopd_sein^.naam;
 			statusstr := statusstr + ')';
 			if Trein^.Vertraging = 0 then
 				statusstr := statusstr + ' (op tijd)';
@@ -454,7 +458,13 @@ begin
 						end else if tcmd = 'stsp' then begin	// StopTonend Sein Passeren
 							SendOK;
 							CommPhysics.AntwoordGegeven(Gesprek);
-							Trein^.doorroodopdracht := true;
+							SplitOff(tail, nummer, tail);
+							tmpSein := Core.ZoekSein(nummer);
+							if assigned(tmpSein) then begin
+								Trein^.doorroodopdracht := true;
+								Trein^.doorroodopd_sein := tmpSein;
+							end else
+								Gesprek^.tekstOK := 'Sorry, maar volgens mij bestaat sein '+nummer+' niet.';
 						end else if tcmd = 'stspa' then begin	// STSP-opdracht Annuleren
 							SendOK;
 							CommPhysics.AntwoordGegeven(Gesprek);
@@ -580,6 +590,26 @@ begin
 			end;
 			tmpMeetpunt := tmpMeetpunt^.Volgende;
 		end;
+	end else if cmd = 'ti' then begin
+		SplitOff(tail, nummer, tail);
+		SplitOff(tail, wat, tail);
+		if wat = 'v' then begin
+			SplitOff(tail, vertrsoort, tail);
+			val(tail, minuten, code);
+			if (vertrsoort = 'st') or (vertrsoort = 'ex') then
+				if code = 0 then begin
+					TreinInfo := Core.ZoekOfMaakTreininfo(nummer);
+					if vertrsoort = 'st' then
+						ScoreVertraging(TreinInfo, minuten, vtSchatting);
+					if vertrsoort = 'ex' then
+						ScoreVertraging(TreinInfo, minuten, vtExact);
+					SendOK;
+				end else
+					SendError('delay is invalid number.')
+			else
+				SendError('invalid delay type.')
+		end else
+			SendError('invalid type of train information.')
 	end else if cmd = 'score' then begin
 		SendOK;
 		SendMsg.SendPlainString('score:start');

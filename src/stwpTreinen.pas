@@ -59,8 +59,9 @@ type
 		defecttot			: integer;
 
 		doorroodgereden:		boolean;
-		doorroodgereden_sein:string;
+		doorroodgereden_sein:PpSein;
 		doorroodopdracht:		boolean;
+		doorroodopd_sein:		PpSein;
 		doorroodverderrijden:boolean;
 
 		vorigewaaromstilstaan:	TWaaromStilstaan;

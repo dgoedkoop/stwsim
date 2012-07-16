@@ -1,5 +1,5 @@
 object stwscProcesplanForm: TstwscProcesplanForm
-  Left = 194
+  Left = 195
   Top = 108
   Width = 488
   Height = 349

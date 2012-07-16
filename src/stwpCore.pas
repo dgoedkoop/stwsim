@@ -5,12 +5,12 @@ interface
 uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 	stwpTreinen, stwpSternummer, stwpVerschijnLijst, serverSendMsg,
 	stwpTijd, stwpRijplan, stwpOverwegen, stwvMisc, stwpDatatypes,
-	stwpTelefoongesprek, stwpMonteur;
+	stwpTelefoongesprek, stwpMonteur, stwpTreinInfo;
 
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.9';
+	SaveIOMagic			= 'STWSIMSAVE.10';
 
 	tps					= 10;
 
@@ -25,13 +25,14 @@ const
 	kopstaartbotsingafstand=5;		// Hoe dicht moeten de treinen op elkaar komen
 											// (en niet meer kunnen remmen) voor we een
 											// kopstaartbotsing registreren?
+	SnelheidTargetAfwijking=0.05;	// Met hoe veel snelheidsverschil zijn we tevreden?										
 	Treinvooruitblik		=	250;
 	WensMaxRemvertraging =  1.0;
 	berichtsturenwachten	=	1;		// Bericht sturen na zoveel minuten voor rood.
 	doorroodrozsnelheid  = 40;
 
-	wisseldefectkans 					= 1/200;
-	wisselechtdefectkans				= 1/3;	// in de overige gevallen helpt omzetten
+	wisseldefectkans 					= 1/400;
+	wisselechtdefectkans				= 1/5;	// in de overige gevallen helpt omzetten
 	wisseldefectonderwegmintijd	= 10;
 	wisseldefectonderwegmaxtijd	= 20;
 	wisseldefectreparatiemintijd	= 3;
@@ -100,6 +101,7 @@ type
 		Stoptijd:				integer;
 		// Dynamische gegevens: Treinen
 		pAlleTreinen:			PpTrein;
+		pAlleTreinInfo:		PpTreinInfo;
 		// Dynamische gegevens: cheat
 		CheatGeenDefecten:	boolean;
 		//
@@ -131,6 +133,8 @@ type
 		function ZoekWissel(naam: string): PpWissel;
 		function ZoekOverweg(naam: string): PpOverweg;
 		function ZoekTrein(nummer: string): PpTrein;
+		function ZoekOfMaakTreininfo(treinnr: string): PpTreinInfo;
+		procedure DeleteTreininfo(treinnr: string);
 		function CopyDienst(Dienst: PpTreindienst): PpRijplanPunt;
 		function CopyDienstFrom(nummer, beginstation: string): PpRijplanPunt;
 		function CopyWagons(WagonConn: PpWagonConn): PpWagonConn;
@@ -183,6 +187,7 @@ type
 		procedure ZendSeinen;
 		procedure DoeMeetpunten;
 		procedure ZendMeetpunten;
+		procedure ZendTreinInfo;
 		function TreinenDoenIets: boolean;
 		procedure DoeStapje;
 		procedure StartUp;
@@ -213,6 +218,7 @@ begin
 	pAlleDiensten			:= nil;
 	VerschijnLijst			:= nil;
 	pAlleTreinen			:= nil;
+	pAlleTreinInfo			:= nil;
 
    CheatGeenDefecten    := false;
 
@@ -444,6 +450,61 @@ begin
 			result := tmpTrein;
 		tmpTrein := tmpTrein^.Volgende;
 	end;
+end;
+
+function TpCore.ZoekOfMaakTreininfo;
+var
+	tmpTreinInfo: PpTreinInfo;
+begin
+	result := nil;
+	tmpTreinInfo := pAlleTreinInfo;
+	while assigned(tmpTreinInfo) do begin
+		if tmpTreinInfo^.Treinnummer = treinnr then begin
+			result := tmpTreinInfo;
+			break;
+		end;
+		tmpTreinInfo := tmpTreinInfo^.Volgende;
+	end;
+	if not assigned(result) then begin
+		if not assigned(pAlleTreinInfo) then begin
+			new(pAlleTreinInfo);
+			tmpTreinInfo := pAlleTreinInfo;
+		end else begin
+			tmpTreinInfo := pAlleTreinInfo;
+			while assigned(tmpTreinInfo^.volgende) do
+				tmpTreinInfo := tmpTreinInfo^.Volgende;
+			new(tmpTreinInfo^.Volgende);
+			tmpTreinInfo := tmpTreinInfo^.Volgende;
+		end;
+		tmpTreinInfo^.Treinnummer := treinnr;
+		tmpTreinInfo^.Vertraging := 0;
+		tmpTreinInfo^.Vertragingtype := vtSchatting;
+		tmpTreinInfo^.gewijzigd := false;
+		tmpTreinInfo^.Volgende := nil;
+		result := tmpTreinInfo;
+	end;
+end;
+
+procedure TpCore.DeleteTreininfo;
+var
+	tmpTreinInfo: PpTreinInfo;
+	vorigeTreinInfo: PpTreinInfo;
+begin
+	tmpTreinInfo := pAlleTreinInfo;
+	vorigeTreinInfo := nil;
+	while assigned(tmpTreinInfo) do begin
+		if tmpTreinInfo^.Treinnummer = treinnr then
+			break;
+		vorigeTreinInfo := tmpTreinInfo;
+		tmpTreinInfo := tmpTreinInfo^.Volgende;
+	end;
+	if not assigned(tmpTreinInfo) then
+		exit;
+	if assigned(vorigeTreinInfo) then
+		vorigeTreinInfo^.Volgende := tmpTreinInfo^.Volgende
+	else
+		pAlleTreinInfo := tmpTreinInfo^.Volgende;
+	dispose(tmpTreinInfo);
 end;
 
 function TpCore.CopyDienst;
@@ -1001,7 +1062,11 @@ begin
 		while assigned(tmpRail) do begin
 			if assigned(tmpRail^.Rail^.Meetpunt) then begin
 				Meetpunt := tmpRail^.Rail^.Meetpunt;
-				RailsBezet := RailsBezet or Meetpunt^.Bezet;
+				// We moeten het meetpunt negeren als het een meetpunt is dat van
+				// voor tot achter het sein doorloopt. Sein moet ook in dat geval
+				// namelijk wel op groen kunnen als er een trein vlak voor staat.
+				if Meetpunt <> Sein^.B_Meetpunt then
+					RailsBezet := RailsBezet or Meetpunt^.Bezet;
 			end;
 			tmpRail := tmpRail^.volgende;
 		end;
@@ -1090,13 +1155,18 @@ begin
 		case Sein^.Bediend_Stand of
 			0: Sein^.H_MovementAuthority.HasAuthority := false;
 			1: begin
-				// Kijk of de rails na het autosein vrij zijn.
+				// Kijk of de rails na het sein vrij zijn.
 				RailsBezet := false;
 				tmpRail := SporenTotVolgendSeinLijst;
 				while assigned(tmpRail) do begin
 					if assigned(tmpRail^.Rail^.Meetpunt) then begin
 						Meetpunt := tmpRail^.Rail^.Meetpunt;
-						RailsBezet := RailsBezet or Meetpunt^.Bezet;
+						// We moeten het meetpunt negeren als het een meetpunt is dat
+						// van voor tot achter het sein doorloopt. Sein moet ook in
+						// dat geval namelijk wel op groen kunnen als er een trein
+						// vlak voor staat.
+						if Meetpunt <> Sein^.B_Meetpunt then
+							RailsBezet := RailsBezet or Meetpunt^.Bezet;
 					end;
 					tmpRail := tmpRail^.volgende;
 				end;
@@ -1282,6 +1352,7 @@ var
 	magversch: boolean;
 
 	VerschijnItem: PpVerschijnItem;
+	tmpVerschijnItem: PpVerschijnItem;
 	VerdwijnPunt: PpVerdwijnPunt;
 	vt, rt: integer;
 	Plaats: PpVerschijnPunt;
@@ -1294,6 +1365,8 @@ var
 	Sein: PpSein;
 	tmpRail2: PpRail;
 	Meetpunt: PpMeetpunt;
+	// Vertraging
+	TreinInfo: PpTreinInfo;
 begin
 	VerschijnItem := VerschijnLijst;
 	while assigned(VerschijnItem) do begin
@@ -1391,8 +1464,15 @@ begin
 			// eerstvolgende sein aangeeft.
 			tmpTrein^.baanvaksnelheid := Plaats^.baanvaksnelheid;
 			tmpTrein^.snelheid := Plaats^.startsnelheid;
-			if IsHoofdsein(tmpSein) then
-				tmpTrein^.ZieVoorsein(tmpSein);
+			if IsHoofdsein(tmpSein) then begin
+				if tmpSein^.H_MovementAuthority.HasAuthority then
+					if tmpSein^.H_MovementAuthority.Baanvaksnelheid then
+						tmpTrein^.V_Adviessnelheid := -1
+					else
+						tmpTrein^.V_Adviessnelheid := tmpSein^.H_MovementAuthority.Snelheidsbeperking
+				else
+					tmpTrein^.V_Adviessnelheid := RemwegSnelheid
+			end;
 			if (tmpTrein^.snelheid > tmpTrein^.V_Adviessnelheid) and
 				(tmpTrein^.V_Adviessnelheid > -1) then
 				tmpTrein^.snelheid := tmpTrein^.V_Adviessnelheid;
@@ -1422,6 +1502,22 @@ begin
 				Meetpunt^.veranderd := true;
 			end;
 
+			// Vertraging bijwerken van onszelf en van evt. andere treinen die
+			// eerder hadden moeten verschijnen.
+			TreinInfo := ZoekOfMaakTreininfo(VerschijnItem^.Treinnummer);
+			ScoreVertraging(TreinInfo, round((GetTijd-VerschijnItem^.Tijd)/60), vtSchatting);
+			tmpVerschijnItem := VerschijnLijst;
+			while assigned(tmpVerschijnItem) and
+				(tmpVerschijnItem <> VerschijnItem) do begin
+				// Als tmpVerschijnItem = VerschijnItem, dan hebben we alle eerdere
+				// items gehad.
+				if not tmpVerschijnItem.gedaan then begin
+					TreinInfo := ZoekOfMaakTreininfo(tmpVerschijnItem^.Treinnummer);
+					ScoreVertraging(TreinInfo, round((GetTijd+MkTijd(0,1,0)-tmpVerschijnItem^.Tijd)/60), vtSchatting);
+				end;
+				tmpVerschijnItem := tmpVerschijnItem^.Volgende;
+			end;
+
 			// En e.e.a. bijwerken
 			DoeMeetpunten;
 			DoeSeinen;
@@ -1447,6 +1543,9 @@ begin
 					end;
 					VerschijnItem := VerschijnItem^.Volgende;
 				end;
+
+				// Vertragingsinformatie verwijderen
+				DeleteTreininfo(tmpTrein^.Treinnummer);
 
 				// Nu de trein wissen
 				// We moeten dit netjes op deze manier afhandelen omdat er nog
@@ -2295,13 +2394,25 @@ var
 	ErlaubnisCount,
 	SeinenCount,
 	WisselCount,
-	OverwegenCount: integer;
+	OverwegenCount,
+	TreinInfoCount: integer;
 	Meetpunt:		PpMeetpunt;
 	Erlaubnis:		PpErlaubnis;
 	Sein:				PpSein;
 	Wissel:			PpWissel;
 	Overweg:			PpOverweg;
+	TreinInfo:		PpTreinInfo;
 	i: integer;
+
+	function VertragingTypeNaarByte(Soort: TpVertragingType): byte;
+	begin
+		case Soort of
+			vtExact: result := 1;
+			vtSchatting: result := 2;
+			else result := 255;
+		end;
+	end;
+
 begin
 	// Aantallen uitrekenen
 	MeetpuntCount := 0;
@@ -2333,6 +2444,12 @@ begin
 	while assigned(Overweg) do begin
 		inc(OverwegenCount);
 		Overweg := Overweg^.Volgende;
+	end;
+	TreinInfoCount := 0;
+	TreinInfo := pAlleTreinInfo;
+	while assigned(TreinInfo) do begin
+		inc(TreinInfoCount);
+		TreinInfo := TreinInfo^.Volgende;
 	end;
 
 	intwrite(f, MeetpuntCount);
@@ -2389,6 +2506,15 @@ begin
 		Overweg := Overweg^.Volgende;
 	end;
 
+	intwrite(f, TreinInfoCount);
+	TreinInfo := pAlleTreinInfo;
+	for i := 1 to TreinInfoCount do begin
+		stringwrite(f, TreinInfo^.Treinnummer);
+		intwrite(f, TreinInfo^.Vertraging);
+		bytewrite(f, VertragingTypeNaarByte(TreinInfo^.Vertragingtype));
+		TreinInfo := TreinInfo^.Volgende;
+	end;
+
 	bytewrite	(f, Ord(pMonteur.Status));
 	intwrite		(f, pMonteur.VolgendeStatusTijd);
 	bytewrite	(f, Ord(pMonteur.Opdracht.Wat));
@@ -2411,20 +2537,34 @@ var
 	ErlaubnisCount,
 	SeinenCount,
 	WisselCount,
-	OverwegenCount:integer;
+	OverwegenCount,
+	TreinInfoCount:integer;
 	MeetpuntNaam,
 	ErlaubnisNaam,
 	SeinNaam,
 	WisselNaam,
-	OverwegNaam: 	string;
+	OverwegNaam,
+	Treinnummer: 	string;
 	Meetpunt:		PpMeetpunt;
 	Erlaubnis:		PpErlaubnis;
 	Sein:				PpSein;
 	Wissel:			PpWissel;
 	Overweg:			PpOverweg;
+	TreinInfo:		PpTreinInfo;
+	x:					byte;
 	i: integer;
 	ordnr:			byte;
 	monteur:			boolean;
+
+	function ByteNaarVertragingType(x: byte): TpVertragingType;
+	begin
+		case x of
+			1: result := vtExact;
+			2: result := vtSchatting;
+			else result := vtSchatting;
+		end;
+	end;
+
 begin
 	intread(f, MeetpuntCount);
 	for i := 1 to MeetpuntCount do begin
@@ -2469,6 +2609,14 @@ begin
 		stringread(f, OverwegNaam);	Overweg := ZoekOverweg(OverwegNaam);
 		byteread  (f, Overweg^.Status);
 		intread   (f, Overweg^.VolgendeStatusTijd);
+	end;
+
+	intread(f, TreinInfoCount);
+	for i := 1 to TreinInfoCount do begin
+		stringread(f, Treinnummer);   TreinInfo := ZoekOfMaakTreininfo(Treinnummer);
+		intread(f, TreinInfo^.Vertraging);
+		byteread(f, x); TreinInfo^.Vertragingtype := ByteNaarVertragingType(x);
+		TreinInfo^.gewijzigd := true;
 	end;
 
 	byteread		(f, ordnr);	pMonteur.Status := TpMonteurStatus(ordnr);
@@ -2617,6 +2765,17 @@ begin
 	end;
 end;
 
+procedure TpCore.ZendTreinInfo;
+var
+	TreinInfo: PpTreinInfo;
+begin
+	TreinInfo := pAlleTreinInfo;
+	while assigned(TreinInfo) do begin
+		SendMsg^.SendTreinInfo(TreinInfo);
+		TreinInfo := TreinInfo^.Volgende;
+	end;
+end;
+
 procedure TpCore.ZendSeinen;
 var
 	Sein:		PpSein;
@@ -2678,6 +2837,7 @@ begin
 
 	ZendMeetpunten;
 	ZendSeinen;
+   ZendTreinInfo;
 
 	// Overwegen doen
 	Overweg := pAlleOverwegen;

@@ -1,5 +1,5 @@
 object stwsimMainForm: TstwsimMainForm
-  Left = 215
+  Left = 216
   Top = 167
   Width = 729
   Height = 547

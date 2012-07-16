@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   clientProcesPlanFrame, stwvProcesplan, stwvRijwegLogica, stwvCore, stwvLog,
-  clientSendMsg, stwvMeetpunt, stwvMisc, StdCtrls, ExtCtrls;
+  clientSendMsg, stwvMeetpunt, stwvMisc, stwvSeinen, stwvTreinInfo, StdCtrls,
+  stwpTijd, ExtCtrls;
 
 type
 	TLinksRechts = (lrLinks, lrRechts);
@@ -33,6 +34,7 @@ type
 		PPFramesRechts:	PFrameList;
 		FramesLinks,
 		FramesRechts:		integer;
+		VorigeTijd:		integer;
 	public
 		RijwegLogica:	TRijwegLogica;
 		Core:				PvCore;
@@ -45,6 +47,7 @@ type
 		procedure DoeStapje;
 		procedure TreinnummerNieuw(Meetpunt: PvMeetpunt);
 		procedure TreinnummerWeg(Meetpunt: PvMeetpunt);
+		procedure TreinInfo(TreinInfoData: TvTreinInfo);
 		function CreateFrame(Filename: string; waar: tLinksRechts): PFrameList;
 		procedure RecalcSizes;
 		procedure SaveStatus(var f: file);
@@ -81,12 +84,20 @@ end;
 procedure TstwscProcesplanForm.DoeStapje;
 var
 	Frame: PFrameList;
+	minuutstap: boolean;
+	u,m,s,ou,om,os: integer;
 begin
+	FmtTijd(GetTijd, u,m,s);
+	FmtTijd(VorigeTijd, ou,om,os);
+	VorigeTijd := GetTijd;
+	minuutstap := om <> m;
 	Frame := PPFramesLinks;
 	while assigned(Frame) do begin
 		if Frame^.PPFrame.ARI then begin
 			Frame^.PPFrame.ProcesPlan.DoeStapje;
 		end;
+		if minuutstap then
+			Frame^.PPFrame.RegelList.Invalidate;
 		Frame := Frame^.Volgende;
 	end;
 	Frame := PPFramesRechts;
@@ -94,6 +105,8 @@ begin
 		if Frame^.PPFrame.ARI then begin
 			Frame^.PPFrame.ProcesPlan.DoeStapje;
 		end;
+		if minuutstap then
+			Frame^.PPFrame.RegelList.Invalidate;
 		Frame := Frame^.Volgende;
 	end;
 end;
@@ -126,6 +139,22 @@ begin
 	Frame := PPFramesRechts;
 	while assigned(Frame) do begin
 		Frame^.PPFrame.ProcesPlan.TreinnummerWeg(Meetpunt);
+		Frame := Frame^.Volgende;
+	end;
+end;
+
+procedure TstwscProcesplanForm.TreinInfo;
+var
+	Frame: PFrameList;
+begin
+	Frame := PPFramesLinks;
+	while assigned(Frame) do begin
+		Frame^.PPFrame.ProcesPlan.TreinInfo(TreinInfoData);
+		Frame := Frame^.Volgende;
+	end;
+	Frame := PPFramesRechts;
+	while assigned(Frame) do begin
+		Frame^.PPFrame.ProcesPlan.TreinInfo(TreinInfoData);
 		Frame := Frame^.Volgende;
 	end;
 end;
@@ -273,6 +302,7 @@ begin
 	PPFramesRechts := nil;
 	FramesLinks := 0;
 	FramesRechts := 0;
+	VorigeTijd := -1;
 end;
 
 procedure TstwscProcesplanForm.FormResize(Sender: TObject);

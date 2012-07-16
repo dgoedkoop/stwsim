@@ -6,7 +6,7 @@ interface
 
 uses Windows, Forms, clientSendMsg, stwvGleisplan, stwvRijwegen,
 	stwvRijveiligheid, stwvCore, stwvLog, stwvHokjes, stwvMeetpunt, stwvSporen,
-	stwpTijd, stwvSternummer, stwvSeinen, stwvMisc;
+	stwpTijd, stwvSternummer, stwvSeinen, stwvMisc, stwvTreinInfo;
 
 type
 	PTablist = ^TTablist;
@@ -48,6 +48,7 @@ type
 		SendMsg:	TvSendMsg;
 		// Teruggave
 		Prl_IngesteldTot: string;
+		Prl_EersteTNVStap: PvMeetpunt;
 		StartupBezig: boolean;
 
 		constructor Create;
@@ -70,7 +71,7 @@ type
 		procedure DoeActieveRijwegen;
 		// Save-load
 		procedure SaveActieveRijwegen(var f: file);
-		procedure LoadActieveRijwegen(var f: file; modus: byte);
+		procedure LoadActieveRijwegen(var f: file);
 		// Gebeurtenissen
 		procedure Aankondigen(Meetpunt: PvMeetpunt);
 		procedure MarkeerBezet(Meetpunt: PvMeetpunt);
@@ -677,12 +678,10 @@ begin
 			stringread(f, SeinID);
 			ZoekSein(Core, SeinID)^.RijwegOnderdeel := ActieveRijweg;
 		end;
-		if modus >= 2 then begin
-			intread(f, SeinCount);
-			for j := 1 to SeinCount do begin
-				stringread(f, SeinID);
-				ZoekSein(Core, SeinID)^.DoelVanRijweg := ActieveRijweg;
-			end;
+		intread(f, SeinCount);
+		for j := 1 to SeinCount do begin
+			stringread(f, SeinID);
+			ZoekSein(Core, SeinID)^.DoelVanRijweg := ActieveRijweg;
 		end;
 	end;
 end;
@@ -1141,8 +1140,11 @@ begin
 		if ActieveRijweg^.Pending < 2 then begin
 			// Het sein staat nog niet op groen -> meteen herroepen.
 			HerroepRijwegNu(ActieveRijweg);
-			DeclaimRijweg(ActieveRijweg);
-			DeleteActieveRijweg(Core, ActieveRijweg);
+			if ActieveRijwegDeleteLock then begin
+				DeclaimRijweg(ActieveRijweg);
+				DeleteActieveRijweg(Core, ActieveRijweg);
+				ActieveRijwegDeleteUnlock;
+			end;
 		end;
 		if ActieveRijweg^.Pending = 2 then begin
 			// Het sein is op groen gezet.
@@ -1290,10 +1292,10 @@ begin
 				MeetpuntLijst := MeetpuntLijst^.Volgende;
 			end;
 		end;
-		// DeleteActieveRijweg geeft de Erlaubnis vrij, wat een communicatie-
-		// functie oproept met HandleMessage wat dan weer een aanroep tot deze
-		// functie tot gevolg zou kunnen hebben. Maar twee keer dezelfde rijweg
-		// proberen te verwijderen gaat fout!
+		// DeclaimRijweg geeft de Erlaubnis vrij, wat een communicatie-functie
+		// oproept met HandleMessage wat dan weer een aanroep tot deze functie
+		// tot gevolg zou kunnen hebben. Maar twee keer dezelfde rijweg proberen
+		// te verwijderen gaat fout!
 		if delete and ActieveRijwegDeleteLock then begin
 			DeclaimRijweg(ActieveRijweg);
 
@@ -1645,6 +1647,7 @@ var
 begin
 	// We mogen deelrijwegen instellen
 	LaatstIngesteldeRijweg := nil;
+	Prl_EersteTNVStap := nil;
 	RijwegLijst := PrlRijweg^.Rijwegen;
 	while assigned(RijwegLijst) do begin
 		if RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
@@ -1655,6 +1658,8 @@ begin
 			else
 				StelRijwegIn(RijwegLijst^.Rijweg, false, false, wmaOK);
 			LaatstIngesteldeRijweg := RijwegLijst^.Rijweg;
+			if not assigned(Prl_EersteTNVStap) then
+				Prl_EersteTNVStap := RijwegLijst^.Rijweg^.NaarTNVMeetpunt;
 		end else
 			break;
 		RijwegLijst := RijwegLijst^.Volgende;
@@ -1738,9 +1743,11 @@ var
 	gesplitst: PString;
 	tmpstr: PString;
 	count,p: integer;
+	code: integer;
 	// Voor wisseldingen omdat daar geen eigen functie voor bestaat
 	wissel: PvWissel;
-
+	// Voor treininfo
+	TreinInfo: TvTreinInfo;
 begin
 	new(tmpstr);
 	gesplitst := tmpstr;
@@ -1809,6 +1816,18 @@ begin
 				Wissel^.rijwegverh := not Wissel^.rijwegverh
 			else
 				Log.Log('Wissel niet gevonden.');
+		end else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'tv' then begin
+		if count = 3 then begin
+			TreinInfo.Treinnummer := gesplitst^.v^.s;
+			val(gesplitst^.v^.v^.s, TreinInfo.Vertraging, code);
+			TreinInfo.Vertragingsoort := vsExact;
+			if code = 0 then
+				SendMsg.SendVertraging(TreinInfo)
+			else
+				Log.Log('Opgegeven vertraging is geen geldig aantal minuten.');
 		end else
 			Log.Log('Verkeerd aantal argumenten opgegeven.');
 	end else
