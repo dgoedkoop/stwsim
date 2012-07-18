@@ -41,13 +41,22 @@ type
 
 implementation
 
-uses Forms;
+uses Forms{, Windows, Messages};
+
+{const
+	WM_RETURNED_OK = WM_USER+1;
+	WM_RETURNED_ERR = WM_USER+2;}
 
 procedure TvSendMsg.SetReturned;
 begin
-	if success then Returned.status := rsOK
-	else Returned.Status := rsError;
 	Returned.MSG := msg;
+	if success then begin
+		Returned.status := rsOK;
+{		SendMessage(Application.Handle, WM_RETURNED_OK, 0, 0)}
+	end else begin
+		Returned.Status := rsError;
+{		SendMessage(Application.Handle, WM_RETURNED_ERR, 0, 0)}
+	end;
 end;
 
 function TvSendMsg.SendRawStr;

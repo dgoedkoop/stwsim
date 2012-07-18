@@ -7,13 +7,14 @@ uses stwpCore, stwpTreinen, stwpRails, stwpSeinen, stwpRijplan, stwpTijd,
 
 type
 	PpTreinTelefoonSoort = ^TpTreinTelefoonSoort;
-	TpTreinTelefoonSoort = (ttsInfo, ttsStilstaan, ttsKannietweg);
+	TpTreinTelefoonSoort = (ttsInfo, ttsStilstaan, ttsStilstaanStation, ttsKannietweg);
 
 	PpTreinPhysics = ^TpTreinPhysics;
 	TpTreinPhysics = class
 	private
 		Core:	PpCore;
 		CommPhysics: PpCommPhysics;
+		function HalloTekst(Trein: PpTrein): string;
 		procedure LeesSeinbeeld(Trein: PpTrein; Sein: PpSein);
 		procedure HerkenFlankbotsingen(Trein: PpTrein);
 		procedure BeweegTrein(Trein: PpTrein);
@@ -39,6 +40,12 @@ begin
 	Self.Core := Core;
 	Self.CommPhysics := CommPhysics;
 end;
+
+function TpTreinPhysics.HalloTekst;
+begin
+	result := 'Hallo, met de machinist van trein ' +Trein^.Treinnummer+'. ';
+end;
+
 
 procedure TpTreinPhysics.DoeTreinen;
 var
@@ -398,7 +405,8 @@ begin
 		Trein^.pos_dist := Trein^.pos_dist + (mssnelheid / tps);
 
 	// Afstand sinds vorige snelheidswijziging bijwerken
-	Trein^.afstandsindsvorige := Trein^.afstandsindsvorige + (mssnelheid / tps);
+	Trein^.afstandsindsvorige_h := Trein^.afstandsindsvorige_h + (mssnelheid / tps);
+	Trein^.afstandsindsvorige_b := Trein^.afstandsindsvorige_b + (mssnelheid / tps);
 
 	while (Trein^.pos_dist < 0) or (Trein^.pos_dist > Trein^.pos_rail^.Lengte) do begin
 		OudeRail := Trein^.pos_rail;
@@ -595,8 +603,10 @@ begin
 		tmpTrein^.huidigemaxsnelheid := Trein^.huidigemaxsnelheid;
 		tmpTrein^.V_Adviessnelheid := Trein^.V_Adviessnelheid;
 		tmpTrein^.B_Adviessnelheid := Trein^.B_Adviessnelheid;
-		tmpTrein^.vorigemaxsnelheid := Trein^.vorigemaxsnelheid;
-		tmpTrein^.afstandsindsvorige := Trein^.afstandsindsvorige - Trein^.lengte + tmpTrein^.lengte;
+		tmpTrein^.vorigemaxhsnelheid := Trein^.vorigemaxhsnelheid;
+		tmpTrein^.vorigebaanvaksnelheid := Trein^.vorigebaanvaksnelheid;
+		tmpTrein^.afstandsindsvorige_h := Trein^.afstandsindsvorige_h - Trein^.lengte + tmpTrein^.lengte;
+		tmpTrein^.afstandsindsvorige_b := Trein^.afstandsindsvorige_b - Trein^.lengte + tmpTrein^.lengte;
 		// Afgekoppelde trein eventueel omkeren.
 		if Trein^.StationModusPlanpunt^.loskoppelen_keren then
 			tmpTrein^.DraaiOm(not AfkoppelenVanOmgekeerdeTrein);
@@ -640,10 +650,24 @@ begin
 end;
 
 procedure TpTreinPhysics.ControleerVertrektijd;
+type
+	TProbleem = (tpOK, tpSein, tpTrein);
 var
 	vt, mt:		integer;
 	wasdefect:	boolean;
 	gesprek:		PpTelefoongesprek;
+	Vertreksein:boolean;
+	Waaromstilstaan:	TWaaromStilstaan;
+	// Sein zoeken
+	tmpRail:		PpRail;
+	tmpAchteruit:boolean;
+	tmpPos:		double;
+	GevSein:		PpSein;
+	tmpAfstand: double;
+	GevSeinAfstand:	double;
+	// Trein zoeken
+	GevTrein:	PpTrein;
+	GevTreinAfstand: double;
 begin
 	// Als de vertrektijd bereikt is gaan we rijden.
 	if assigned(Trein^.StationModusPlanpunt) and (Trein^.StationModusPlanpunt^.Vertrek <> -1) then
@@ -668,30 +692,88 @@ begin
 	end else
 		wasdefect := false;
 	if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) then begin
-		if (not wasdefect) and Core.GaatDefect(treindefectkans) then begin
-			Trein^.defect := true;
-			Trein^.defecttot := GetTijd + MkTijd(0,treindefectmintijd,0) +
-				round(random * (treindefectmaxtijd-treindefectmintijd)*60);
-
-			gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
-			gesprek^.tekstXsoort := pmsVraagOK;
-			new(PpTreinTelefoonSoort(gesprek^.userdata));
-			PpTreinTelefoonSoort(gesprek^.userdata)^ := ttsKannietweg;
-			if assigned(Trein^.StationModusPlanpunt) and
-				(Trein^.StationModusPlanpunt^.Perron <> '') and
-				(Trein^.StationModusPlanpunt^.Perron <> '0') then
-				gesprek^.tekstX := treindefectberichtstart+treindefectberichten[round(random*treindefectberichtaantal-1)+1]
+		tmpRail := Trein^.pos_rail;
+		tmpAchteruit := Trein^.achteruit;
+		tmpPos := Trein^.pos_dist;
+		GevSeinAfstand := 0;
+		repeat
+			Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, Treinvooruitblik, GevSein, tmpAfstand);
+			GevSeinAfstand := GevSeinAfstand + tmpAfstand;
+		until (not assigned(GevSein)) or IsHoofdsein(GevSein);
+		Core.ZoekVolgendeTrein(Trein, Treinvooruitblik, GevTrein, GevTreinAfstand, tmpAchteruit);
+		Waaromstilstaan := stWeetniet;
+		if assigned(GevSein) and IsHoofdsein(GevSein) then
+			if GevSein^.H_MovementAuthority.HasAuthority then
+				Vertreksein := true
 			else
-				// Als we niet bij een perron staan is 'hij doet het niet'
-				// het enige zinvolle excuus.
-				gesprek^.tekstX := treindefectberichtstart+treindefectberichten[1];
-		end else begin
-			Trein^.modus := tmRijden;
-			Trein^.Vertraging := (GetTijd - vt) div 60;
-			Trein^.kannietwegvoor := -1;
-			dispose(Trein^.StationModusPlanpunt);
-			Trein^.StationModusPlanpunt := nil;
+				if Trein^.doorroodopdracht and (GevSein = trein^.doorroodopd_sein) then
+					Vertreksein := true
+				else begin
+					Vertreksein := false;
+					Waaromstilstaan := stSein
+				end
+		else
+			Vertreksein := true;
+		if assigned(GevTrein) and (GevTreinAfstand < GevSeinAfstand) then begin
+			Vertreksein := false;
+			Waaromstilstaan := stTrein
 		end;
+		if Vertreksein then begin
+			// In principe komen we op deze plek maar één keer en wordt de modus
+			// hier op tmRijden gezet. Tenzij er uiteraard iets mis gaat. Hoe
+			// dan ook, eerst maar eens een evt. telefoongesprek wissen over dat
+			// we nog geen vertreksein hebben.
+			Gesprek := ZoekTelefoongesprek(Trein, ttsStilstaanStation);
+			if assigned(Gesprek) then
+				CommPhysics.ProbleemOpgelost(Gesprek);
+			if (not wasdefect) and Core.GaatDefect(treindefectkans) then begin
+				Trein^.defect := true;
+				Trein^.defecttot := GetTijd + MkTijd(0,treindefectmintijd,0) +
+					round(random * (treindefectmaxtijd-treindefectmintijd)*60);
+
+				gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
+				gesprek^.tekstXsoort := pmsVraagOK;
+				new(PpTreinTelefoonSoort(gesprek^.userdata));
+				PpTreinTelefoonSoort(gesprek^.userdata)^ := ttsKannietweg;
+				if assigned(Trein^.StationModusPlanpunt) and
+					(Trein^.StationModusPlanpunt^.Perron <> '') and
+					(Trein^.StationModusPlanpunt^.Perron <> '0') then
+					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart+treindefectberichten[round(random*treindefectberichtaantal-1)+1]
+				else
+					// Als we niet bij een perron staan is 'hij doet het niet'
+					// het enige zinvolle excuus.
+					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart+treindefectberichten[1];
+			end else begin
+				// We kunnen echt echt vertrekken
+				Trein^.modus := tmRijden;
+				Trein^.Vertraging := (GetTijd - vt) div 60;
+				Trein^.kannietwegvoor := -1;
+				dispose(Trein^.StationModusPlanpunt);
+				Trein^.StationModusPlanpunt := nil;
+			end
+		end else
+			if not assigned(Core.ZoekTelefoongesprek(Trein))
+				and not ((waaromstilstaan = Trein^.vorigewaaromstilstaan) // En niet bellen als we hier al over hebben gebeld...
+				and (waaromstilstaan = stTrein)) then begin	// ... en het iets is waar maar 1 keer over gebeld moet worden.
+				// De uitrijder staat op rood en we hebben daar nog geen
+				// telefoongesprek over lopen. Dus opbellen. En bij vertrek bellen
+				// we ook echt meteen, want de machinist wil geen vertraging.
+				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
+				Gesprek^.OphangenErg := true;
+				new(PpTreinTelefoonSoort(Gesprek^.userdata));
+				PpTreinTelefoonSoort(Gesprek^.userdata)^ := ttsStilstaanStation;
+				case Waaromstilstaan of
+					stSein: begin
+						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar sein '+GevSein^.naam+' toont nog steeds stop.';
+						Gesprek^.tekstXsoort := pmsStoptonend;
+					end;
+					stTrein: begin
+						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar er staat nog een trein voor ons.';
+						Gesprek^.tekstXsoort := pmsVraagOK;
+					end;
+				end;
+				Trein^.vorigewaaromstilstaan := waaromstilstaan;
+			end;
 	end;
 end;
 
@@ -874,46 +956,46 @@ begin
 				 and (waaromstilstaan in [stTrein, stStroom, stWissel, stWeetniet])) then begin	// ... en het iets is waar maar 1 keer over gebeld moet worden.
 				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, Waaromstilstaan in [stStroom, stDoorrood, stWissel]);
 				Gesprek^.OphangenErg := Waaromstilstaan in [stSein, stDoorrood];
-				Gesprek^.tekstX := 'Hallo, met de machinist van trein ' +Trein^.Treinnummer+'. ';
 				case Waaromstilstaan of
 				stSein: begin
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik sta al even voor rood sein '+GevSein^.naam+'. Vergeet u mij niet?';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta al even voor rood sein '+GevSein^.naam+'. Vergeet u mij niet?';
 					Gesprek^.tekstXsoort := pmsStoptonend;
 				end;
 				stTrein: begin
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Er staat al even een trein voor mij. Vergeet u die niet?';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Er staat al even een trein voor mij. Vergeet u die niet?';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stStroom: begin
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik sta hier met een elektrische trein zonder stroom!';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta hier met een elektrische trein zonder stroom!';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stDoorrood: begin
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik ben door rood sein '+Trein^.doorroodgereden_sein^.naam+' gereden!';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik ben door rood sein '+Trein^.doorroodgereden_sein^.naam+' gereden!';
 					Gesprek^.tekstXsoort := pmsSTSpassage;
 				end;
 				stWissel: begin
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stStuurstand: begin
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand.';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand.';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end
 				else
-					Gesprek^.tekstX := Gesprek^.tekstX + 'Ik bel u op omdat ik stil sta maar weet niet waarom!?';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik bel u op omdat ik stil sta maar weet niet waarom!?';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				new(PpTreinTelefoonSoort(Gesprek^.userdata));
 				PpTreinTelefoonSoort(Gesprek^.userdata)^ := ttsStilstaan;
 				Trein^.vorigewaaromstilstaan := waaromstilstaan;
 			end;
-	end else begin
-		Gesprek := ZoekTelefoongesprek(Trein, ttsStilstaan);
-		if assigned(Gesprek) then
-			CommPhysics.ProbleemOpgelost(Gesprek);
-		Trein^.vorigewaaromstilstaan := stUndef;
-	end;
+	end else
+		if Trein^.modus = tmRijden then begin
+			Gesprek := ZoekTelefoongesprek(Trein, ttsStilstaan);
+			if assigned(Gesprek) then
+				CommPhysics.ProbleemOpgelost(Gesprek);
+			Trein^.vorigewaaromstilstaan := stUndef;
+		end;
 end;
 
 end.

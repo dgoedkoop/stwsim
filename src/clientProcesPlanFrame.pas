@@ -42,6 +42,7 @@ type
 	private
 		{ Private declarations }
 		selPunt:	PvProcesPlanPunt;
+		PendingLijst: TStringList;
 		function MkLijstString(PPP: PvProcesPlanPunt): string;
 		function FindSelected: PvProcesPlanPunt;
 		procedure Markeer(PPP: PvProcesPlanPunt);
@@ -52,6 +53,7 @@ type
 		FName:			string;
 		ProcesPlan:		TProcesPlan;
 		Core:				PvCore;
+		constructor Create(AOwner: TComponent); override;
 		procedure UpdateLijst;
 		property ARI: boolean read GetARI write SetARI default true;
 	end;
@@ -61,6 +63,12 @@ implementation
 uses clientPlanregelEdit;
 
 {$R *.DFM}
+
+constructor TstwscProcesPlanFrame.Create;
+begin
+	inherited Create(AOwner);
+	PendingLijst := TStringList.Create;
+end;
 
 function TstwscProcesPlanFrame.GetARI;
 begin
@@ -81,11 +89,8 @@ begin
 	result := ProcesPlan.ProcesPlanPuntenPending;
 	for i := 1 to RegelList.ItemIndex do
 		result := result^.Volgende;
-	// Deze check is wel fijn om te kijken of de listbox wel up-to-date is, maar
-	// gezien alle items in feite 'leeg' zijn uit snelheidsoverwegingen, kan
-	// deze check niet worden uitgevoerd.
-{	if MkLijstString(result) <> RegelList.Items[RegelList.ItemIndex] then
-		result := nil;}
+	if MkLijstString(result) <> PendingLijst.Strings[RegelList.ItemIndex] then
+		result := nil;
 end;
 
 procedure TstwscProcesPlanFrame.Markeer;
@@ -103,14 +108,15 @@ var
 	tstr: string;
 	vstr: string;
 begin
-	if PPP^.GemetenVertraging > PPP^.VerwerkteVertraging then
+	if round(PPP^.GemetenVertraging/60) > round(PPP^.VerwerkteVertraging/60) then
 		tstr := '!'
 	else if PPP^.Bewerkt then
 		tstr := '+'
 	else
 		tstr := '';
-	if PPP^.GemetenVertraging <> 0 then begin
-		str(PPP^.GemetenVertraging, vstr);
+	if (PPP^.GemetenVertraging >= 30) or
+	   (PPP^.GemetenVertraging <= -31) then begin
+		str(round(PPP^.GemetenVertraging/60), vstr);
 		if PPP^.GemetenVertraging > 0 then
 			vstr := '+'+vstr;
 		if PPP^.GemetenVertragingSoort = vsSchatting then
@@ -150,10 +156,14 @@ begin
 		inc(i);
 		PPP := PPP^.Volgende;
 	end;
-	while RegelList.Items.Count < i do
+	while RegelList.Items.Count < i do begin
 		RegelList.Items.Add('');
-	while RegelList.Items.Count > i do
+		PendingLijst.Add('');
+	end;
+	while RegelList.Items.Count > i do begin
 		RegelList.Items.Delete(i);
+		PendingLijst.Delete(i);
+	end;
 	RegelList.Items.EndUpdate;
 
 	if ProcesPlan.KlaarAantal <= 5 then
@@ -186,7 +196,7 @@ procedure TstwscProcesPlanFrame.VoernuuitActExecute(Sender: TObject);
 begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then
-		if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt) then
+		if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt, false) then
 			ProcesPlan.MarkeerKlaar(selPunt);
 	UpdateLijst;
 end;
@@ -198,6 +208,7 @@ var
 	van, naar: string;
 	Dwang: byte;
 	ari_oud: boolean;
+	nwtijd: integer;
 begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then begin
@@ -249,7 +260,11 @@ begin
 				Application.MessageBox('Ongeldige rijweg opgegeven','Fout',MB_ICONERROR);
 				exit;
 			end;
-			selPunt^.Insteltijd := MkTijd(u,m,0);
+			nwtijd := MkTijd(u,m,0);
+			if selPunt^.Insteltijd <> nwtijd then begin
+				selPunt^.VerwerkteVertraging := selPunt^.VerwerkteVertraging + nwtijd - selPunt^.Insteltijd;
+				selPunt^.Insteltijd := nwtijd;
+			end;
 			selPunt^.Treinnr := stwscPlanregelEditForm.treinnrEdit.Text;
 			case stwscPlanregelEditForm.actBox.ItemIndex of
 			0: selPunt^.ActiviteitSoort := asDoorkomst;
@@ -291,7 +306,7 @@ begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then begin
 		selPunt^.Insteltijd := selPunt^.Insteltijd +
-			MkTijd(0, selPunt^.GemetenVertraging - selPunt^.VerwerkteVertraging, 0);
+			selPunt^.GemetenVertraging - selPunt^.VerwerkteVertraging;
 		selPunt^.VerwerkteVertraging := selPunt^.GemetenVertraging;
 		selPunt^.Bewerkt := true;
 		ProcesPlan.Sorteer;
@@ -326,6 +341,7 @@ begin
 		for i := 1 to index do
 			if assigned(PPP) then
 				PPP := PPP^.Volgende;
+		if not assigned(PPP) then exit;
 		// Als een ander item geselecteerd wordt, dan wordt geen DrawItem-oproep
 		// gedaan voor het oude, gedeselecteerde item. Daarom kunnen we maar beter
 		// geselecteerde items niet markeren.
@@ -341,11 +357,9 @@ begin
 		else
 			Canvas.Font.Color := clWhite;
 		TopDif := (ItemHeight div 2) - (Canvas.TextHeight(#32) div 2);
-		// Dit kan, maar zorgt bij het 'smooth scrolling' voor allerlei ellende.
-		// Beter van niet dus.
-{		if Items[Index] <> MkLijstString(PPP) then
-			Items[Index] := MkLijstString(PPP);}
-		Canvas.TextRect(Rect, Rect.Left+2, Rect.Top + TopDif, MkLijstString(PPP){Items[Index]});
+		if PendingLijst.Strings[Index] <> MkLijstString(PPP) then
+			PendingLijst.Strings[Index] := MkLijstString(PPP);
+		Canvas.TextRect(Rect, Rect.Left+2, Rect.Top + TopDif, PendingLijst.Strings[Index]);
 	end;
 end;
 

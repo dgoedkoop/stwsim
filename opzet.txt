@@ -12,7 +12,7 @@ CHANGELOG:
 - Een trein kan naar een andere trein toe rijden en vlak voor deze stoppen.
 
 12 augustus:
-- Een trein kan in het procesplan kijken of we bij dit station echt moeten
+- Een trein kan in het rijplan kijken of we bij dit station echt moeten
   stoppen
 - Een trein kan aan de erop volgende trein vastkoppelen
 - Een trein kan omkeren
@@ -568,6 +568,31 @@ CHANGELOG:
 - Fix: In de velden voor al uitgevoerde planregels kan nu geen regel meer
   geselecteerd worden.
 - Nogmaals snelheidsoptimalisatie bij het weergeven van procesplannen.
+- In procesplannen kan nu ook een dwangnummer worden genoemd in de kolom voor
+  bijzonderheden.
+
+(0.2.0.34) 17 juli 2012:
+- Fix: De simulatie liep, door de gebrekkige precisie van de standaard Windows
+  timer, iets te langzaam.
+- Fix: Door asynchroon werken kon soms een rijweg twee keer (genest) worden
+  gedeactiveerd, met als gevolg dat het treinnummer bij de oude sectie werd
+  weggehaald, vervolgens een sternummer werd gegenereerd en dan pas het correcte
+  treinnummer op de nieuwe plek werd gezet.
+- 'R' voor rangeerbewegingen in procesplannen
+
+18 juli 2012:
+- Volgordecheck in procesleiding niet doen als een regel handmatig wordt
+  uitgevoerd
+- Meten van vertraging gaat nu intern met secondenprecisie
+- Fix: Bij het bewerken van een planpunt wordt nu ook bijgewerkt hoeveel
+  vertraging is verwerkt, als de insteltijd wordt gewijzingd.
+- Fix: Bij het wachten met optrekken tot de hele trein een bepaald punt voorbij
+  is, moet natuurlijk ook onderscheid worden gemaakt tussen de baanvaksnelheid
+  en snelheidsbeperkingen die door de seinen worden opgelegd.
+- Fix: Bij een probleem waardoor het vertrek zich vertraagt, moet de machinist
+  ook even netjes hallo zeggen.
+- Niet van een station vertrekken als we een rood uitrijsein zien. En de
+  treindienstleider in dat geval bellen.
 
 BERICHTEN AAN DE MACHINIST:
 

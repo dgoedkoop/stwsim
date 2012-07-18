@@ -940,6 +940,9 @@ begin
 
 	// Sein op rood zetten en pending-status bijwerken.
 	if (ActieveRijweg^.Pending = 2) then begin
+		// Stel de pending-status in zodat we het onderstaande niet door
+		// asynchroon gebeuren dubbel doen.
+		ActieveRijweg^.Pending := 3;
 		// Deregistreer het sein
 		ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
 		if assigned(ActieveRijweg^.Rijweg^.NaarSein) then
@@ -970,8 +973,6 @@ begin
 					if (NaarMeetpunt^.treinnummer = '') or (copy(NaarMeetpunt^.treinnummer,1,1)='*') then
 						SendMsg.SendSetTreinnr(NaarMeetpunt, Sternummer);
 		end;
-		// Stel de pending-status in
-		ActieveRijweg^.Pending := 3;
 		// Bij auto-rijweg opnieuw instellen.
 		if ActieveRijweg^.Autorijweg then begin
 			// Dit werkt gegarandeerd, want de rijweg is immers al ingesteld.
@@ -1747,6 +1748,7 @@ var
 	// Voor wisseldingen omdat daar geen eigen functie voor bestaat
 	wissel: PvWissel;
 	// Voor treininfo
+	x: integer;
 	TreinInfo: TvTreinInfo;
 begin
 	new(tmpstr);
@@ -1822,7 +1824,8 @@ begin
 	if gesplitst^.s = 'tv' then begin
 		if count = 3 then begin
 			TreinInfo.Treinnummer := gesplitst^.v^.s;
-			val(gesplitst^.v^.v^.s, TreinInfo.Vertraging, code);
+			val(gesplitst^.v^.v^.s, x, code);
+			TreinInfo.Vertraging := MkTijd(0,x,0);
 			TreinInfo.Vertragingsoort := vsExact;
 			if code = 0 then
 				SendMsg.SendVertraging(TreinInfo)

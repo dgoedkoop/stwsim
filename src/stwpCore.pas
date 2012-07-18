@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.10';
+	SaveIOMagic			= 'STWSIMSAVE.11';
 
 	tps					= 10;
 
@@ -829,7 +829,8 @@ begin
 				tmpTrein^.ZoekEinde(tmpTRail, tmpTAchteruit, tmpTPos);
 				// Kijk naar de kop
 				if (tmpRail = tmpHRail) and (tmpAchteruit <> tmpHAchteruit) and
-					((tmpHPos >= tmpPos) xor tmpAchteruit) then begin
+					(((tmpHPos >= tmpPos) and not tmpAchteruit) or
+					 ((tmpHPos <= tmpPos) and tmpAchteruit)) then begin
 					tmpAfstand := abs(tmpHPos - tmpPos) + BasisAfstand;
 					if ((tmpAfstand < GevAfstand) or (GevAfstand = -1))
 						and (tmpAfstand < maxafstand) then begin
@@ -840,7 +841,8 @@ begin
 				end;
 				// Kijk naar de staart
 				if (tmpRail = tmpTRail) and (tmpAchteruit <> tmpTAchteruit) and
-					((tmpTPos >= tmpPos) xor tmpAchteruit) then begin
+					(((tmpTPos >= tmpPos) and not tmpAchteruit) or
+					 ((tmpTPos <= tmpPos) and tmpAchteruit)) then begin
 					tmpAfstand := abs(tmpTPos - tmpPos) + BasisAfstand;
 					if ((tmpAfstand < GevAfstand) or (GevAfstand = -1))
 						and (tmpAfstand < maxafstand) then begin
@@ -1505,7 +1507,7 @@ begin
 			// Vertraging bijwerken van onszelf en van evt. andere treinen die
 			// eerder hadden moeten verschijnen.
 			TreinInfo := ZoekOfMaakTreininfo(VerschijnItem^.Treinnummer);
-			ScoreVertraging(TreinInfo, round((GetTijd-VerschijnItem^.Tijd)/60), vtSchatting);
+			ScoreVertraging(TreinInfo, GetTijd-VerschijnItem^.Tijd, vtSchatting);
 			tmpVerschijnItem := VerschijnLijst;
 			while assigned(tmpVerschijnItem) and
 				(tmpVerschijnItem <> VerschijnItem) do begin
@@ -1513,7 +1515,7 @@ begin
 				// items gehad.
 				if not tmpVerschijnItem.gedaan then begin
 					TreinInfo := ZoekOfMaakTreininfo(tmpVerschijnItem^.Treinnummer);
-					ScoreVertraging(TreinInfo, round((GetTijd+MkTijd(0,1,0)-tmpVerschijnItem^.Tijd)/60), vtSchatting);
+					ScoreVertraging(TreinInfo, GetTijd+MkTijd(0,1,0)-tmpVerschijnItem^.Tijd, vtSchatting);
 				end;
 				tmpVerschijnItem := tmpVerschijnItem^.Volgende;
 			end;

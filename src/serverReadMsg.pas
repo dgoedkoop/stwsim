@@ -201,7 +201,7 @@ var
 	Trein: PpTrein;
 	// Treininfo
 	vertrsoort: string;
-	minuten: integer;
+	seconden: integer;
 	TreinInfo: PpTreinInfo;
 begin
 	p := pos(':', msg);
@@ -595,14 +595,14 @@ begin
 		SplitOff(tail, wat, tail);
 		if wat = 'v' then begin
 			SplitOff(tail, vertrsoort, tail);
-			val(tail, minuten, code);
+			val(tail, seconden, code);
 			if (vertrsoort = 'st') or (vertrsoort = 'ex') then
 				if code = 0 then begin
 					TreinInfo := Core.ZoekOfMaakTreininfo(nummer);
 					if vertrsoort = 'st' then
-						ScoreVertraging(TreinInfo, minuten, vtSchatting);
+						ScoreVertraging(TreinInfo, seconden, vtSchatting);
 					if vertrsoort = 'ex' then
-						ScoreVertraging(TreinInfo, minuten, vtExact);
+						ScoreVertraging(TreinInfo, seconden, vtExact);
 					SendOK;
 				end else
 					SendError('delay is invalid number.')

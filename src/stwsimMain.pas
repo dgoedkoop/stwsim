@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons,
+  StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons, mmsystem,
   stwvMeetpunt, clientReadMsg, clientSendMsg, stwvCore,
   stwvGleisplan, stwvHokjes, stwvSporen, stwpTijd, stwvRijwegen, stwvSeinen,
   stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
@@ -204,6 +204,7 @@ type
 		// Intern
 		FormShown: boolean;
 		TimeSet: boolean;
+		TijdUitgevoerdTot: cardinal;
 	public
 		// Beginnen
 		procedure LoadInfra(var f: file);
@@ -777,7 +778,7 @@ procedure TstwsimMainForm.TijdTimerTimer(Sender: TObject);
 			result := '0'+result;
 	end;
 
-type
+{type
 	TPerf = record
 		x, y: real;
 	end;
@@ -785,17 +786,30 @@ var
 	start, x, freq: int64;
 	perf: TPerf;
 
-{var}
+		QueryPerformanceCounter(start);
+		QueryPerformanceFrequency(freq);
+		QueryPerformanceCounter(x); perf.x := (x-start)/freq*1000 ; start := x;}
+
+var
 	i: integer;
-	VorigeTijd: integer;
+	VorigeTijd:		integer;
+	msPerStapje:	word;
+	Stapjes: 		word;
+	Versnelling:	word;
 begin
 	if (not gestart) or pauze then exit;
 
 	VorigeTijd := GetTijd;
 
-	if TijdTimer.Interval <> (1000 div tps) then
-		TijdTimer.Interval := 1000 div tps;
-	for i := 1 to SpeedTrack.Position do
+	msPerStapje := 1000 div tps;
+	if TijdTimer.Interval <> msPerStapje then
+		TijdTimer.Interval := msPerStapje;
+
+	Versnelling := SpeedTrack.Position;
+	Stapjes := (timeGetTime - TijdUitgevoerdTot) * versnelling div msPerStapje;
+	TijdUitgevoerdTot := TijdUitgevoerdTot + stapjes * msPerStapje div versnelling;
+
+	for i := 1 to Stapjes do
 		DoeStapje;
 
 	if GetTijd <> VorigeTijd then begin
@@ -805,20 +819,16 @@ begin
 		RijwegLogica.DoeActieveRijwegen;
 		RijwegLogica.DoeOverwegen;
 
-		QueryPerformanceCounter(start);
-		QueryPerformanceFrequency(freq);
-
+		// Deze functie kan relatief veel tijd kosten. Dat gebeurt als een rijweg
+		// wordt ingesteld, maar dat kan natuurlijk ook veel tijd kosten aangezien
+		// dat asynchroon gebeurt.
 		stwscProcesplanForm.DoeStapje;
-
-		QueryPerformanceCounter(x); perf.x := (x-start)/freq*1000 ; start := x;
 
 		stwscProcesplanForm.UpdateLijst;
 
-		QueryPerformanceCounter(x); perf.y := (x-start)/freq*1000; start := x;
-
 		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
 			if vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr).status <> rsOK then
-         	stwscTreinStatusForm.ModalResult := mrOK;
+				stwscTreinStatusForm.ModalResult := mrOK;
 	end;
 end;
 
@@ -1494,6 +1504,7 @@ begin
 		RijwegVoerin.Enabled := false;
 		RijwegHo.Enabled := false
 	end else begin
+		TijdUitgevoerdTot := timeGetTime;
 		UpdateChg.Vannaar := true;
 		UpdateControls;
 	end;

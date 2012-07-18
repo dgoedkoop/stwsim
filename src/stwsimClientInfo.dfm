@@ -97,8 +97,7 @@ object stwscInfoForm: TstwscInfoForm
       Font.Style = []
       Lines.Strings = (
         'StwSim'
-        'Copyright © 2007-2011, Daan Goedkoop. '
-        'Alle rechten voorbehouden.'
+        'Copyright © 2007-2012, Daan Goedkoop. '
         ''
         'StwSim mag gratis gebruikt worden voor  '
         'privé-doeleinden. Het gebruik voor commerciële of '
@@ -106,16 +105,12 @@ object stwscInfoForm: TstwscInfoForm
         'het programma is niet toegestaan.'
         ''
         'De correctheid van StwSim kan niet worden '
-        'gegarandeerd. Gebruik van StwSim voor '
-        'veiligheidskritische toepassingen is daarom niet '
+        'gegarandeerd. Gebruik van StwSim in'
+        'veiligheidsrelevante situaties is daarom niet'
         'toegestaan.'
         ''
-        'StwSim wordt geleverd zonder enige garantie, in '
-        'welke vorm dan ook. Het gebruik ervan geschiedt '
-        'op eigen risico. De auteur accepteert geen enkele '
-        'aansprakelijkheid voor welke schade dan ook die '
-        'direct of indirect door StwSim zou kunnen zijn '
-        'veroorzaakt.')
+        'Voor het overige is garantie eveneens uitgesloten. '
+        'Het gebruik van StwSim geschiedt op eigen risico.')
       ParentFont = False
       ReadOnly = True
       ScrollBars = ssVertical

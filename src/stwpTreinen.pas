@@ -101,8 +101,10 @@ type
 		huidigemaxsnelheid:	integer;	// Huidige max. snelheid in km/u. Sein.
 		// Het volgende is nodig omdat een snelheidsverhoging pas geldt wanneer
 		// de hele trein het snelheidsverhogingspunt voorbij is gereden.
-		vorigemaxsnelheid:	integer;	// Vorige max. snelheid
-		afstandsindsvorige:	double;	// Aantal meters sinds verandering.
+		vorigebaanvaksnelheid:	integer;
+		vorigemaxhsnelheid:		integer;
+		afstandsindsvorige_b:	double;	// Aantal meters sinds verandering.
+		afstandsindsvorige_h:	double;	// Aantal meters sinds verandering.
 
 		V_Adviessnelheid:	integer;	// De adviessnelheid van het vorige
 											//	voorsein, bijvoorbeeld 40 km/u bij een
@@ -260,8 +262,10 @@ begin
 	intwrite (f, Trein^.vertraging);
 	intwrite (f, Trein^.baanvaksnelheid);
 	intwrite (f, Trein^.huidigemaxsnelheid);
-	intwrite (f, Trein^.vorigemaxsnelheid);
-	doublewrite(f, Trein^.afstandsindsvorige);
+	intwrite (f, Trein^.vorigemaxhsnelheid);
+	intwrite (f, Trein^.vorigebaanvaksnelheid);
+	doublewrite(f, Trein^.afstandsindsvorige_h);
+	doublewrite(f, Trein^.afstandsindsvorige_b);
 	intwrite (f, Trein^.V_Adviessnelheid);
 	intwrite (f, Trein^.B_Adviessnelheid);
 	intwrite (f, Trein^.S_Adviessnelheid);
@@ -301,8 +305,10 @@ begin
 	intread (f, Trein^.vertraging);
 	intread (f, Trein^.baanvaksnelheid);
 	intread (f, Trein^.huidigemaxsnelheid);
-	intread (f, Trein^.vorigemaxsnelheid);
-	doubleread(f, Trein^.afstandsindsvorige);
+	intread (f, Trein^.vorigemaxhsnelheid);
+	intread (f, Trein^.vorigebaanvaksnelheid);
+	doubleread(f, Trein^.afstandsindsvorige_h);
+	doubleread(f, Trein^.afstandsindsvorige_b);
 	intread (f, Trein^.V_Adviessnelheid);
 	intread (f, Trein^.B_Adviessnelheid);
 	intread (f, Trein^.S_Adviessnelheid);
@@ -363,7 +369,8 @@ begin
 	snelheid := 0;
 	vorigeaankomstvertraging := 0;
 	vertraging := 0;
-	vorigemaxsnelheid := -1;
+	vorigebaanvaksnelheid := -1;
+	vorigemaxhsnelheid := -1;
 	huidigemaxsnelheid := -1;
 	baanvaksnelheid := -1;
 	B_Adviessnelheid := -1;
@@ -449,7 +456,8 @@ begin
 		huidigemaxsnelheid := RemwegSnelheid;
 		V_Adviessnelheid := -1;
 		B_Adviessnelheid := -1;
-		vorigemaxsnelheid := -1;
+		vorigemaxhsnelheid := -1;
+		vorigebaanvaksnelheid := -1;
 	end;
 end;
 
@@ -460,6 +468,7 @@ var
 	tmpRail: PpRailLijst;
 	elrails: boolean;
 	tmphmaxsnelheid: integer;
+	tmpbaanvaksnelheid: integer;
 begin
 	elrails := true;
 	tmpRail := BezetteRails;
@@ -510,24 +519,29 @@ begin
 
 	maxsnelheid := matmaxsnelheid;
 
-	if maxsnelheid > baanvaksnelheid then
-		maxsnelheid := baanvaksnelheid;
+	if (afstandsindsvorige_h <= lengte) and (vorigemaxhsnelheid < huidigemaxsnelheid) and
+		(vorigemaxhsnelheid <> -1) then
+		tmphmaxsnelheid := vorigemaxhsnelheid
+	else
+		tmphmaxsnelheid := huidigemaxsnelheid;
+
+	if (afstandsindsvorige_b <= lengte) and (vorigebaanvaksnelheid < baanvaksnelheid) and
+		(vorigebaanvaksnelheid <> -1) then
+		tmpbaanvaksnelheid := vorigebaanvaksnelheid
+	else
+		tmpbaanvaksnelheid := baanvaksnelheid;
+
+	if (maxsnelheid > tmphmaxsnelheid) and (tmphmaxsnelheid > -1) then
+		maxsnelheid := tmphmaxsnelheid;
+
+	if (maxsnelheid > tmpbaanvaksnelheid) and (tmpbaanvaksnelheid > -1) then
+		maxsnelheid := tmpbaanvaksnelheid;
 
 	if doorroodgereden then
 		if not doorroodverderrijden then
 			huidigemaxsnelheid := 0
 		else
 			huidigemaxsnelheid := RemwegSnelheid;
-	if (afstandsindsvorige > lengte) or (vorigemaxsnelheid >= huidigemaxsnelheid) or
-		(vorigemaxsnelheid = -1) then begin
-		tmphmaxsnelheid := huidigemaxsnelheid;
-		// De huidige snelheid geldt.
-		if (tmphmaxsnelheid < maxsnelheid) and (tmphmaxsnelheid <> -1) then
-			maxsnelheid := tmphmaxsnelheid
-	end else
-		// De vorige snelheid geldt.
-		if vorigemaxsnelheid < maxsnelheid then
-			maxsnelheid := vorigemaxsnelheid;
 
 	CalcBezetteRails;
 end;
@@ -662,8 +676,8 @@ begin
 			  (baanvaksnelheid > -1)
 			) then
 			exit;
-		vorigemaxsnelheid := huidigemaxsnelheid;
-		afstandsindsvorige := 0;
+		vorigemaxhsnelheid := huidigemaxsnelheid;
+		afstandsindsvorige_h := 0;
 		if ((snelheid < baanvaksnelheid) and (snelheid > -1)) or
 			(baanvaksnelheid = -1) then
 			huidigemaxsnelheid := snelheid
@@ -671,12 +685,15 @@ begin
 			huidigemaxsnelheid := baanvaksnelheid;
 	end else begin
 		if (huidigemaxsnelheid <> snelheid) then begin
-			vorigemaxsnelheid := huidigemaxsnelheid;
-			afstandsindsvorige := 0;
+			vorigemaxhsnelheid := huidigemaxsnelheid;
+			afstandsindsvorige_h := 0;
 			huidigemaxsnelheid := snelheid
 		end;
-		if snelheid <> baanvaksnelheid then;
+		if snelheid <> baanvaksnelheid then begin
+			vorigebaanvaksnelheid := baanvaksnelheid;
+			afstandsindsvorige_b := 0;
 			baanvaksnelheid := snelheid;
+		end;
 	end;
 end;
 

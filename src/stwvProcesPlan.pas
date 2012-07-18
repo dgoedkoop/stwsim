@@ -89,7 +89,7 @@ type
 		procedure LoadBinair(var f: file);
 		procedure SaveBinair(var f: file);
 		// Gebeurtenissen
-		function ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt: PvProcesPlanPunt): boolean;
+		function ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt: PvProcesPlanPunt; CheckVolgorde: boolean): boolean;
 		procedure DoeStapje;
 		procedure TreinnummerNieuw(Meetpunt: PvMeetpunt);
 		procedure TreinnummerWeg(Meetpunt: PvMeetpunt);
@@ -462,7 +462,7 @@ var
 begin
 	result := false;
 
-	if not ProcesPlanPunt^.VolgordeOK then exit;
+	if CheckVolgorde and not ProcesPlanPunt^.VolgordeOK then exit;
 
 	UpdatePlanpunt(ProcesPlanPunt);
 
@@ -561,6 +561,8 @@ begin
 	ProcesPlanPunt^.Volgende := ProcesPlanPuntenKlaar;
 	ProcesPlanPuntenKlaar := ProcesPlanPunt;
 	inc(KlaarAantal);
+
+
 	// En volgordes aanpassen.
 	UpdateVolgordeAfhVanPunt(ProcesPlanPunt);
 
@@ -591,7 +593,7 @@ begin
 					Log.Log(ProcesPlanPunt^.Treinnr+' '+ActiviteitSoortStr(ProcesPlanPunt^.ActiviteitSoort)+' uitgezet voor ARI; vertraging te groot.');
 				end else
 					// Dit is een procesplanpunt waarvoor we iets moeten doen.
-					klaar := ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt)
+					klaar := ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt, true)
 			else
 				// De planregels zijn op insteltijd gesorteerd. De eerste planregel
 				// met een insteltijd in de toekomst betekent dus dat we kunnen
@@ -611,7 +613,6 @@ end;
 procedure TProcesPlan.TreinnummerNieuw;
 var
 	ProcesPlanPunt: PvProcesPlanPunt;
-	vertraging: integer;
 	TreinInfo: TvTreinInfo;
 begin
 	// Registreer vertraging
@@ -620,15 +621,13 @@ begin
 		if (ProcesPlanPunt^.EersteTNVStap = Meetpunt) and
 			(ProcesPlanPunt^.Treinnr = Meetpunt^.treinnummer) then begin
 			// Bereken vertraging
-			vertraging := GetTijd - ProcesPlanPunt^.Plantijd;
 			TreinInfo.Treinnummer := ProcesPlanPunt^.Treinnr;
 			TreinInfo.Vertragingsoort := vsExact;
-			TreinInfo.Vertraging := round(vertraging / 60);
+			TreinInfo.Vertraging := GetTijd - ProcesPlanPunt^.Plantijd;
 			// Werk onszelf bij
-			if ProcesPlanPunt^.GemetenVertraging <> TreinInfo.Vertraging then begin
-				ProcesPlanPunt^.GemetenVertraging := TreinInfo.Vertraging;
+			if round(ProcesPlanPunt^.GemetenVertraging/60) <> round(TreinInfo.Vertraging/60) then
 				Gewijzigd := true;
-			end;
+			ProcesPlanPunt^.GemetenVertraging := TreinInfo.Vertraging;
 			if ProcesPlanPunt^.GemetenVertragingSoort <> TreinInfo.Vertragingsoort then begin
 				ProcesPlanPunt^.GemetenVertragingSoort := TreinInfo.Vertragingsoort;
 				Gewijzigd := true;
