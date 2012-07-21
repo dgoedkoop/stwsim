@@ -1541,10 +1541,12 @@ begin
 	result := false;
 	if not RijveiligheidLock then exit;
 	// Nu stellen we de rijweg in, inclusief wissels en rijrichting
-	StelRijwegInNu(Rijweg, ROZ, Auto);
-	RijveiligheidUnlock;
-
-	result := true;
+	try
+		StelRijwegInNu(Rijweg, ROZ, Auto);
+		result := true
+	finally
+		RijveiligheidUnlock;
+	end;
 end;
 
 function TRijwegLogica.DoeRijweg;
@@ -1579,7 +1581,11 @@ var
 	StandenLijstEind: PWisselstandLijst;
 	ExtraLijst: PWisselstandLijst;
 begin
-	ActieveRijweg := AddActieveRijweg(Core, Rijweg, ROZ, Auto);
+	// We gaan eerst de dingen instellen via SendMsg
+
+	// Claim de rijrichting.
+	if assigned(Rijweg^.Erlaubnis) then
+		SendMsg.SendRichting(Rijweg^.Erlaubnis, Rijweg^.Erlaubnisstand, rwClaim);
 
 	// Zet de wissels goed
 	Standenlijst := nil;
@@ -1616,9 +1622,10 @@ begin
 	end;
 	WisselstandenLijstDispose(StandenLijst);
 
-	// Claim de rijrichting
-	if assigned(Rijweg^.Erlaubnis) then
-		SendMsg.SendRichting(Rijweg^.Erlaubnis, Rijweg^.Erlaubnisstand, rwClaim);
+	// Is dat allemaal goedgegaan, dan kunnen we alles ook echt als geclaimd gaan
+	// registreren.
+
+	ActieveRijweg := AddActieveRijweg(Core, Rijweg, ROZ, Auto);
 
 	// Registreer (en herteken) het sein
 	Rijweg^.Sein^.RijwegOnderdeel := ActieveRijweg;
@@ -1654,10 +1661,17 @@ begin
 		if RijwegKan(RijwegLijst^.Rijweg, ROZ, Core.vFlankbeveiliging) and
 			(RijwegVrij(RijwegLijst^.Rijweg) or
 			 (ROZ and not assigned(RijwegLijst^.Volgende))) then begin
-			if ROZ and not assigned(RijwegLijst^.Volgende) then
-				StelRijwegIn(RijwegLijst^.Rijweg, true, false, wmaOK)
-			else
-				StelRijwegIn(RijwegLijst^.Rijweg, false, false, wmaOK);
+			try
+				if ROZ and not assigned(RijwegLijst^.Volgende) then
+					StelRijwegIn(RijwegLijst^.Rijweg, true, false, wmaOK)
+				else
+					StelRijwegIn(RijwegLijst^.Rijweg, false, false, wmaOK);
+			except
+				on EVCommandRefused do begin
+					Log.Log('Instellen van rijweg van rijweg onverwacht mislukt.');
+					break;
+				end;
+			end;
 			LaatstIngesteldeRijweg := RijwegLijst^.Rijweg;
 			if not assigned(Prl_EersteTNVStap) then
 				Prl_EersteTNVStap := RijwegLijst^.Rijweg^.NaarTNVMeetpunt;
@@ -1766,75 +1780,80 @@ begin
 		tmpstr^.v := nil;
 		count := count + 1;
 	end;
-	if gesplitst^.s = 'n' then begin
-		if count = 3 then
-			DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,false,false)
-		else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'roz' then begin
-		if count = 3 then
-			DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,true,false)
-		else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'a' then begin
-		if count = 3 then
-			DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,false,true)
-		else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'h' then begin
-		if count = 2 then
-			HerroepRijweg('s'+gesplitst^.v.s)
-		else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'ib' then begin
-		if count = 2 then begin
-			wissel := ZoekWissel(Core,gesplitst^.v^.s);
-			if assigned(wissel) then begin
-				if not ZetWisselOm(Wissel) then
-					Log.Log('Wissel '+Wissel^.WisselID+' kan niet worden omgezet.');
+	try
+		if gesplitst^.s = 'n' then begin
+			if count = 3 then
+				DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,false,false)
+			else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
+		end else
+		if gesplitst^.s = 'roz' then begin
+			if count = 3 then
+				DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,true,false)
+			else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
+		end else
+		if gesplitst^.s = 'a' then begin
+			if count = 3 then
+				DoeRijweg('r'+gesplitst^.v.s,'r'+gesplitst^.v.v.s,false,true)
+			else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
+		end else
+		if gesplitst^.s = 'h' then begin
+			if count = 2 then
+				HerroepRijweg('s'+gesplitst^.v.s)
+			else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
+		end else
+		if gesplitst^.s = 'ib' then begin
+			if count = 2 then begin
+				wissel := ZoekWissel(Core,gesplitst^.v^.s);
+				if assigned(wissel) then begin
+					if not ZetWisselOm(Wissel) then
+						Log.Log('Wissel '+Wissel^.WisselID+' kan niet worden omgezet.');
+				end else
+					Log.Log('Element niet gevonden.');
 			end else
-				Log.Log('Element niet gevonden.');
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
 		end else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'vhb' then begin
-		if count = 2 then begin
-			wissel := ZoekWissel(Core,gesplitst^.v^.s);
-			if assigned(wissel) then
-				Wissel^.Groep^.bedienverh := not Wissel^.Groep^.bedienverh
-			else
-				Log.Log('Wissel niet gevonden.');
+		if gesplitst^.s = 'vhb' then begin
+			if count = 2 then begin
+				wissel := ZoekWissel(Core,gesplitst^.v^.s);
+				if assigned(wissel) then
+					Wissel^.Groep^.bedienverh := not Wissel^.Groep^.bedienverh
+				else
+					Log.Log('Wissel niet gevonden.');
+			end else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
 		end else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'vhr' then begin
-		if count = 2 then begin
-			wissel := ZoekWissel(Core,gesplitst^.v^.s);
-			if assigned(wissel) then
-				Wissel^.rijwegverh := not Wissel^.rijwegverh
-			else
-				Log.Log('Wissel niet gevonden.');
+		if gesplitst^.s = 'vhr' then begin
+			if count = 2 then begin
+				wissel := ZoekWissel(Core,gesplitst^.v^.s);
+				if assigned(wissel) then
+					Wissel^.rijwegverh := not Wissel^.rijwegverh
+				else
+					Log.Log('Wissel niet gevonden.');
+			end else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
 		end else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-	if gesplitst^.s = 'tv' then begin
-		if count = 3 then begin
-			TreinInfo.Treinnummer := gesplitst^.v^.s;
-			val(gesplitst^.v^.v^.s, x, code);
-			TreinInfo.Vertraging := MkTijd(0,x,0);
-			TreinInfo.Vertragingsoort := vsExact;
-			if code = 0 then
-				SendMsg.SendVertraging(TreinInfo)
-			else
-				Log.Log('Opgegeven vertraging is geen geldig aantal minuten.');
+		if gesplitst^.s = 'tv' then begin
+			if count = 3 then begin
+				TreinInfo.Treinnummer := gesplitst^.v^.s;
+				val(gesplitst^.v^.v^.s, x, code);
+				TreinInfo.Vertraging := MkTijd(0,x,0);
+				TreinInfo.Vertragingsoort := vsExact;
+				if code = 0 then
+					SendMsg.SendVertraging(TreinInfo)
+				else
+					Log.Log('Opgegeven vertraging is geen geldig aantal minuten.');
+			end else
+				Log.Log('Verkeerd aantal argumenten opgegeven.');
 		end else
-			Log.Log('Verkeerd aantal argumenten opgegeven.');
-	end else
-		Log.Log('Ongeldig commando opgegeven.');
+			Log.Log('Ongeldig commando opgegeven.');
+	except
+		on EVCommandRefused do
+			Log.Log('Commando werd onverwacht geweigerd.');
+	end;
 end;
 
 end.

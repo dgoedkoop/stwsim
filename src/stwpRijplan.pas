@@ -72,9 +72,9 @@ begin
 		result := result +
 					Pad(MinSecStr(Punt^.minwachttijd),9, #32, vaVoor)+
 					'    '+
-					Pad(jnStr(Punt^.stoppen), 7, #32, vaAchter);
+					Pad(jnStr(Punt^.stoppen), 2, #32, vaAchter);
 
-	result := result + '    '+
+	result := result + '     '+
 					Pad(jnStr(Punt^.samenvoegen), 8, #32, vaAchter)+
 					Pad(jnStr(Punt^.keren), 4, #32, vaAchter);
 	if Punt^.nieuwetrein then

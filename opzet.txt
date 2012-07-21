@@ -579,13 +579,14 @@ CHANGELOG:
   weggehaald, vervolgens een sternummer werd gegenereerd en dan pas het correcte
   treinnummer op de nieuwe plek werd gezet.
 - 'R' voor rangeerbewegingen in procesplannen
+- Kans op defect en kans op niet in controle komen van wissels wat verkleind.
 
 18 juli 2012:
 - Volgordecheck in procesleiding niet doen als een regel handmatig wordt
   uitgevoerd
 - Meten van vertraging gaat nu intern met secondenprecisie
 - Fix: Bij het bewerken van een planpunt wordt nu ook bijgewerkt hoeveel
-  vertraging is verwerkt, als de insteltijd wordt gewijzingd.
+  vertraging is verwerkt, als de insteltijd wordt gewijzigd.
 - Fix: Bij het wachten met optrekken tot de hele trein een bepaald punt voorbij
   is, moet natuurlijk ook onderscheid worden gemaakt tussen de baanvaksnelheid
   en snelheidsbeperkingen die door de seinen worden opgelegd.
@@ -593,6 +594,20 @@ CHANGELOG:
   ook even netjes hallo zeggen.
 - Niet van een station vertrekken als we een rood uitrijsein zien. En de
   treindienstleider in dat geval bellen.
+
+20 juli 2012:
+- Fix: Simulatie echt goed op pauze zetten tijdens het bewerken van de
+  dienstregeling. (Bij het opslaan van een save-game werd dit al wel correct
+  gedaan)
+- Fix: Uitlijning van enkele kolommen bij het bewerken van de dienstregeling van
+  een trein gecorrigeerd.
+
+21 juli 2012:
+- Fix: Als de client-kant nu recursief iets verstuurt naar de server, wordt nu
+  een stack bijgehouden bij het opslaan van het antwoord van de server, zodat
+  correct wordt geregistreerd welke 'ok' of 'err' nou precies waarbij hoort.
+- Fix: Herkennen en afhandelen als een rijweg volgens RijwegKan maar
+  uiteindelijk toch niet daadwerkelijk kan worden ingesteld.
 
 BERICHTEN AAN DE MACHINIST:
 

@@ -192,6 +192,7 @@ type
 		selMeetpunt: PvMeetpunt;
 		selWissel:	 PvWissel;
 		selSein:		 PvSein;
+		selTNVPunt:  PvMeetpunt;
 		// Telefoon
 		rinkelen: boolean;
 		rinkelsound: THandle;
@@ -279,6 +280,9 @@ begin
 			// Foutmelding weergeven.
 			Application.MessageBox('Er is een interne fout opgetreden. De simulatie kan niet verder gaan.'+#13#10+#13#10+
 				'U kunt nog wel proberen de simulatie op te slaan.','Fout',MB_ICONERROR);
+		end;
+		on E: EVCommandRefused do begin
+			Application.MessageBox(pchar('Fout opgetreden: '+E.Message), 'Fout', 0);
 		end;
 	end;
 end;
@@ -504,17 +508,17 @@ begin
 		UpdateChg.Vannaar := false;
 	end;
 	if UpdateChg.Menus then begin
-		TreinStatus.Visible := assigned(selMeetpunt);
-		TreinInterpose.Visible := assigned(selMeetpunt);
-		TreinBellen.Visible := assigned(selMeetpunt);
+		TreinStatus.Visible := assigned(selTNVPunt);
+		TreinInterpose.Visible := assigned(selTNVPunt);
+		TreinBellen.Visible := assigned(selTNVPunt);
 		WisselSwitch.Visible := assigned(selWissel);
 		WisselBedienVerh.Visible := assigned(selWissel);
 		WisselRijwegVerh.Visible := assigned(selWissel);
 
-		if assigned(selMeetpunt) then begin
-			TreinStatus.Enabled := selMeetpunt^.treinnummer <> '';
+		if assigned(selTNVPunt) then begin
+			TreinStatus.Enabled := selTNVPunt^.treinnummer <> '';
 			TreinInterpose.Enabled := true;
-			TreinBellen.Enabled := selMeetpunt^.treinnummer <> '';
+			TreinBellen.Enabled := selTNVPunt^.treinnummer <> '';
 		end else begin
 			TreinStatus.Enabled := false;
 			TreinInterpose.Enabled := false;
@@ -880,9 +884,12 @@ begin
 	selMeetpunt := nil;
 	selWissel := nil;
 	selSein := nil;
+	selTNVPunt := nil;
 	case selHokje.Soort of
 		1: begin
 			selMeetpunt := PvHokjeSpoor(selHokje.grdata)^.Meetpunt;
+			if assigned(selHokje.Dyndata) then
+				selTNVPunt := selHokje.dyndata^.Meetpunt;
 		end;
 		3: begin
 			selSein := PvHokjeSein(selHokje.grdata)^.Sein;
@@ -890,6 +897,8 @@ begin
 		5: begin
 			selWissel := PvHokjeWissel(selHokje.grdata)^.Wissel;
 			selMeetpunt := PvHokjeWissel(selHokje.grdata)^.Meetpunt;
+			if assigned(selHokje.Dyndata) then
+				selTNVPunt := selHokje.dyndata^.Meetpunt;
 		end;
 	end;
 	UpdateChg.Menus := true;
@@ -899,9 +908,9 @@ end;
 procedure tstwsimMainForm.GleisplanClick(Sender: TObject);
 begin
 	case selHokje.Soort of
-		1: begin
-			if assigned(selMeetpunt) then
-				if selMeetpunt^.treinnummer <> '' then
+		1, 5: begin
+			if assigned(selTNVPunt) then
+				if selTNVPunt^.treinnummer <> '' then
                TreinStatus.Execute;
 		end;
 		2: begin
@@ -949,12 +958,12 @@ end;
 
 procedure TstwsimMainForm.TreinInterposeExecute(Sender: TObject);
 begin
-	if assigned(selMeetpunt) then begin
+	if assigned(selTNVPunt) then begin
 		stwscStringInputForm.Caption := 'Treinnummer wijzigen';
 		stwscStringInputForm.Inputlabel.Caption := 'Nieuw treinnummer:';
-		stwscStringInputForm.InputEdit.Text := selMeetpunt^.treinnummer;
+		stwscStringInputForm.InputEdit.Text := selTNVPunt^.treinnummer;
 		if stwscStringInputForm.showModal = mrOK then
-			vSendMsg.SendSetTreinnr(selMeetpunt, stwscStringInputForm.InputEdit.Text);
+			vSendMsg.SendSetTreinnr(selTNVPunt, stwscStringInputForm.InputEdit.Text);
 	end;
 end;
 
@@ -965,17 +974,17 @@ begin
 end;
 
 procedure TstwsimMainForm.TreinStatusExecute(Sender: TObject);
-var
-	resultaat: TvReturned;
 begin
-	if assigned(selMeetpunt) then begin
-		stwscTreinStatusForm.Treinnr := selMeetpunt^.treinnummer;
+	if assigned(selTNVPunt) then begin
+		stwscTreinStatusForm.Treinnr := selTNVPunt^.treinnummer;
 		stwscTreinStatusForm.Wissen;
-		resultaat := vSendMsg.SendGetTreinStatus(selMeetpunt^.treinnummer);
-		if resultaat.status = rsOK then
+		try
+			vSendMsg.SendGetTreinStatus(selTNVPunt^.treinnummer);
 			stwscTreinStatusForm.ShowModal
-		else if ((resultaat.status = rsError) and (resultaat.msg = unknowntrainerror+'.')) then
-			Application.MessageBox(pchar('Trein '+selMeetpunt^.treinnummer+' is niet bekend.'), 'Fout', 0);
+		except
+			on E: EVTrainNotFound do
+				Application.MessageBox(pchar(E.Message), 'Fout', MB_OK+MB_ICONWARNING)
+		end;
 	end;
 end;
 
@@ -1060,11 +1069,11 @@ end;
 
 procedure TstwsimMainForm.TreinBellenExecute(Sender: TObject);
 begin
-	if assigned(selMeetpunt) then
+	if assigned(selTNVPunt) then
 		if selMeetpunt^.treinnummer <> '' then
 			if stwscTelefoongesprekForm.GesprekStatus = gsOpgehangen then begin
 				stwscTelefoongesprekForm.metwie.wat := 't';
-				stwscTelefoongesprekForm.metwie.ID := selMeetpunt^.treinnummer;
+				stwscTelefoongesprekForm.metwie.ID := selTNVPunt^.treinnummer;
 				stwscTelefoongesprekForm.GesprekInit;
 				vSendMsg.SendBel(stwscTelefoongesprekForm.metwie);
 				stwscTelefoongesprekForm.GaatOver;
@@ -1550,9 +1559,11 @@ var
 	oudepauze: boolean;
 begin
 	oudepauze := pauze;
-	pauze := true;
+	if not pauze then
+		PauzeActionExecute(Self);
 	stwssDienstregForm.ShowModal;
-	pauze := oudepauze;
+	if not oudepauze then
+		PauzeActionExecute(Self);
 end;
 
 procedure TstwsimMainForm.FormResize(Sender: TObject);

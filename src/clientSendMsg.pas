@@ -2,21 +2,32 @@ unit clientSendMsg;
 
 interface
 
-uses stwvSporen, stwvMeetpunt, stwvSeinen, stwvTreinInfo, stwsimComm, stwvTreinComm;
+uses sysutils, stwvSporen, stwvMeetpunt, stwvSeinen, stwvTreinInfo, stwsimComm,
+	stwvTreinComm;
+
+const
+	unknowntrainerror = 'unknown train';
 
 type
 	TvReturnedStatus = (rsWacht, rsOK, rsError);
+	PvReturned = ^TvReturned;
 	TvReturned = record
 		status:	TvReturnedStatus;
 		msg:		string;
+		volgende:PvReturned;
 	end;
 
 	RichtingWat = (rwClaim, rwRelease);
 
+	EVCommandRefused = class(Exception);
+	EVTrainNotFound = class(Exception);
+
 	TvSendMsg = class
 	private
-		Returned: TvReturned;
-		function SendRawStr(s: string; displayError: boolean): TvReturned;
+		ReturnedList: PvReturned;
+		procedure SendRawStr(s: string);
+		function PushReturned: PvReturned;
+		function PopReturned: PvReturned;
 	public
 		// Dit MOET ingesteld worden:
 		SimComm:	TStringComm;
@@ -41,39 +52,55 @@ type
 
 implementation
 
-uses Forms{, Windows, Messages};
+uses Forms;
 
-{const
-	WM_RETURNED_OK = WM_USER+1;
-	WM_RETURNED_ERR = WM_USER+2;}
+function TvSendMsg.PushReturned;
+begin
+	new(result);
+	result^.volgende := ReturnedList;
+	ReturnedList := result;
+end;
+
+function TvSendMsg.PopReturned;
+begin
+	result := ReturnedList;
+	if assigned(ReturnedList) then
+		ReturnedList := ReturnedList^.volgende;
+end;
 
 procedure TvSendMsg.SetReturned;
+var
+	Returned: PvReturned;
 begin
-	Returned.MSG := msg;
+	Returned := PushReturned;
+	Returned^.MSG := msg;
 	if success then begin
-		Returned.status := rsOK;
-{		SendMessage(Application.Handle, WM_RETURNED_OK, 0, 0)}
+		Returned^.status := rsOK;
 	end else begin
-		Returned.Status := rsError;
-{		SendMessage(Application.Handle, WM_RETURNED_ERR, 0, 0)}
+		Returned^.Status := rsError;
 	end;
 end;
 
-function TvSendMsg.SendRawStr;
+procedure TvSendMsg.SendRawStr;
+var
+	Returned: PvReturned;
+	tmpReturned: TvReturned;
 begin
-	Returned.status := rsWacht;
 	SimComm.SendStringToServer(s);
 	repeat
-		Application.HandleMessage
-	until Returned.status in [rsOK, rsError];
-	if (Returned.Status = rsError) and DisplayError then
-		Application.MessageBox(pchar('Fout opgetreden: '+Returned.msg), 'Fout', 0);
-	result := Returned;
+		Application.HandleMessage;
+		Returned := PopReturned
+	until assigned(Returned);
+	tmpReturned := Returned^;
+	dispose(Returned);
+
+	if Returned^.Status = rsError then
+		raise EVCommandRefused.Create(tmpReturned.msg);
 end;
 
 procedure TvSendMsg.SendString;
 begin
-	SendRawStr(s,true);
+	SendRawStr(s);
 end;
 
 procedure TvSendMsg.SendWissel;
@@ -84,24 +111,24 @@ begin
 	// Wissel omzetten
 	Wissel^.WensStand := Stand;
 	if Wissel^.WensStand = wsRechtdoor then
-		SendRawStr('w:'+Wissel^.WisselID+',r',true)
+		SendRawStr('w:'+Wissel^.WisselID+',r')
 	else
-		SendRawStr('w:'+Wissel^.WisselID+',a',true);
+		SendRawStr('w:'+Wissel^.WisselID+',a');
 end;
 
 procedure TvSendMsg.SendSetSein;
 begin
 	Sein^.Stand_wens := stand;
-	SendRawStr('s:'+Sein^.Naam+','+Sein^.Stand_wens,true)
+	SendRawStr('s:'+Sein^.Naam+','+Sein^.Stand_wens)
 end;
 
 procedure TvSendMsg.SendSetOverweg;
 begin
 	Overweg^.Gesloten_Wens := Gesloten;
 	if Gesloten then
-		SendRawStr('o:'+Overweg^.Naam+',s',true)
+		SendRawStr('o:'+Overweg^.Naam+',s')
 	else
-		SendRawStr('o:'+Overweg^.Naam+',o',true);
+		SendRawStr('o:'+Overweg^.Naam+',o');
 end;
 
 procedure TvSendMsg.SendRichting;
@@ -110,14 +137,14 @@ var
 begin
 	str(richting, richtingstr);
 	if (hoe = rwClaim) then
-		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',c,'+richtingstr,true)
+		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',c,'+richtingstr)
 	else if (hoe = rwRelease) then
-		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',r,'+richtingstr,true)
+		SendRawStr('e:'+Erlaubnis^.erlaubnisID+',r,'+richtingstr)
 end;
 
 procedure TvSendMsg.SendSetTreinnr;
 begin
-	SendRawStr('m:'+Meetpunt^.meetpuntID+','+treinnr,true)
+	SendRawStr('m:'+Meetpunt^.meetpuntID+','+treinnr)
 end;
 
 procedure TvSendMsg.SendVertraging;
@@ -131,39 +158,39 @@ begin
 	vsSchatting: vertrtstr := 'st';
 	else exit
 	end;
-	SendRawStr('ti:'+TreinInfo.Treinnummer+',v,'+vertrtstr+','+vertrstr, true);
+	SendRawStr('ti:'+TreinInfo.Treinnummer+',v,'+vertrtstr+','+vertrstr);
 end;
 
 procedure TvSendMsg.SendBel;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_bel:r',true);
+		SendRawStr('comm_bel:r');
 	if naar.wat = 't' then
-		SendRawStr('comm_bel:t,'+naar.ID,true);
+		SendRawStr('comm_bel:t,'+naar.ID);
 end;
 
 procedure TvSendMsg.SendOpnemen;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_opn:r',true);
+		SendRawStr('comm_opn:r');
 	if naar.wat = 't' then
-		SendRawStr('comm_opn:t,'+naar.ID,true);
+		SendRawStr('comm_opn:t,'+naar.ID);
 end;
 
 procedure TvSendMsg.SendMsg;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_msg:r,'+msg,true);
+		SendRawStr('comm_msg:r,'+msg);
 	if naar.wat = 't' then
-		SendRawStr('comm_msg:t,'+naar.ID+','+msg,true);
+		SendRawStr('comm_msg:t,'+naar.ID+','+msg);
 end;
 
 procedure TvSendMsg.SendOphangen;
 begin
 	if naar.wat = 'r' then
-		SendRawStr('comm_oph:r',true);
+		SendRawStr('comm_oph:r');
 	if naar.wat = 't' then
-		SendRawStr('comm_oph:t,'+naar.ID,true);
+		SendRawStr('comm_oph:t,'+naar.ID);
 end;
 
 function TvSendMsg.SendGetTreinStatus;
@@ -171,17 +198,25 @@ begin
 	result.status := rsOK;
 	result.msg := '';
 	if treinnr = '' then exit;
-	result := SendRawStr('tsr:'+Treinnr,false);
+	try
+		SendRawStr('tsr:'+Treinnr)
+	except
+		on E: EVCommandRefused do
+			if E.Message = unknowntrainerror then
+				raise EVTrainNotFound.Create('Er is geen trein onder nummer '+treinnr+'.')
+			else
+				raise
+	end;
 end;
 
 procedure TvSendMsg.SendBroadcast;
 begin
-	SendRawStr('bc',true);
+	SendRawStr('bc');
 end;
 
 procedure TvSendMsg.SendGetScore;
 begin
-	SendRawStr('score',true);
+	SendRawStr('score');
 end;
 
 end.

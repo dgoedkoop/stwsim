@@ -360,7 +360,7 @@ begin
 			end;
 			SendMsg.SendPlainString('smsg:--');
 		end else
-			SendError(unknowntrainerror+'.');
+			SendError(unknowntrainerror);
 	end else if cmd = 'comm_bel' then begin
 		SplitOff(tail, wat, nummer);
 		if Wat = 't' then begin
@@ -371,7 +371,7 @@ begin
 				Gesprek^.tekstXsoort := pmsTreinOpdracht;
 				SendOK
 			end else
-				SendError(unknowntrainerror+'.');
+				SendError(unknowntrainerror);
 		end else if Wat = 'r' then begin
 			Gesprek := Core.NieuwTelefoongesprek(Core.pMonteur, tgtGebeldWorden, true);
 			Gesprek^.tekstX := 'Met de storingsdienst. Waarmee kan ik u van dienst zijn?';
@@ -391,14 +391,14 @@ begin
 				end else
 					SendError('unknown conversation.')
 			end else
-				SendError(unknowntrainerror+'.');
+				SendError(unknowntrainerror);
 		end else	if Wat = 'r' then begin
 			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
 			if assigned(Gesprek) then begin
 				CommPhysics.TrdlNeemtOp(Gesprek);
-				SendMsg.SendPlainString('ok')
+				SendOK
 			end else
-				SendMsg.SendPlainString('err:unknown conversation.')
+				SendError('unknown conversation.')
 		end else
 			SendError('unknown telephone nr');
 	end else if cmd = 'comm_oph' then begin
@@ -414,7 +414,7 @@ begin
 				end else
 					SendError('unknown conversation.')
 			end else
-				SendError(unknowntrainerror+'.');
+				SendError(unknowntrainerror);
 		end else	if Wat = 'r' then begin
 			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
 			if assigned(Gesprek) then begin
@@ -422,7 +422,8 @@ begin
 				CommPhysics.TrdlHangtOp(Gesprek)
 			end else
 				SendError('unknown conversation.')
-		end;
+		end else
+			SendError('unknown actor to hang up conversation.')
 	end else if cmd = 'comm_msg' then begin
 		// Niet echt slimme code-reuse... ;-)
 		SplitOff(tail, wat, tail);
@@ -539,7 +540,7 @@ begin
 				else
 					SendError('unknown conversation.')
 			end else
-				SendError(unknowntrainerror+'.');
+				SendError(unknowntrainerror);
 		end else if Wat = 'r' then begin
 			Gesprek := Core.ZoekTelefoongesprek(Core.pMonteur);
 			if assigned(Gesprek) then
