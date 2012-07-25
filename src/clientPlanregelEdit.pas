@@ -23,7 +23,6 @@ type
 	 Label6: TLabel;
     instelMinEdit: TEdit;
     Label7: TLabel;
-    ariCheck: TCheckBox;
     nieuwNrEdit: TEdit;
     Label8: TLabel;
     Label9: TLabel;

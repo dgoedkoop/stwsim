@@ -2,8 +2,10 @@ unit clientSendMsg;
 
 interface
 
-uses sysutils, stwvSporen, stwvMeetpunt, stwvSeinen, stwvTreinInfo, stwsimComm,
-	stwvTreinComm;
+uses sysutils, stwvSporen, stwvMeetpunt, stwvSeinen, stwvTreinInfo,
+	stwsimComm, stwvTreinComm;
+
+//{$DEFINE NoAsync}
 
 const
 	unknowntrainerror = 'unknown train';
@@ -31,6 +33,7 @@ type
 	public
 		// Dit MOET ingesteld worden:
 		SimComm:	TStringComm;
+		constructor Create;
 		procedure SendString(s: string);
 		procedure SendWissel(Wissel: PvWissel; Stand: TWisselStand);
 		procedure SendSetSein(Sein: PvSein; stand: string);
@@ -43,7 +46,7 @@ type
 		procedure SendOphangen(naar: TvMessageWie);
 		procedure SendMsg(naar: TvMessageWie; msg: string);
 
-		function SendGetTreinStatus(treinnr: string): TvReturned;
+		procedure SendGetTreinStatus(treinnr: string);
 		procedure SendRichting(Erlaubnis: PvErlaubnis; richting: byte; hoe: RichtingWat);
 		procedure SendBroadcast;
 		procedure SendGetScore;
@@ -52,7 +55,15 @@ type
 
 implementation
 
-uses Forms;
+uses Forms, Windows, Messages;
+
+const
+	WM_RESULTSET = WM_USER + 1;
+
+constructor TvSendMsg.Create;
+begin
+	ReturnedList := nil;
+end;
 
 function TvSendMsg.PushReturned;
 begin
@@ -74,11 +85,11 @@ var
 begin
 	Returned := PushReturned;
 	Returned^.MSG := msg;
-	if success then begin
-		Returned^.status := rsOK;
-	end else begin
+	if success then
+		Returned^.status := rsOK
+	else
 		Returned^.Status := rsError;
-	end;
+   PostMessage(Application.Handle, WM_RESULTSET, 0, 0);
 end;
 
 procedure TvSendMsg.SendRawStr;
@@ -87,14 +98,18 @@ var
 	tmpReturned: TvReturned;
 begin
 	SimComm.SendStringToServer(s);
+	{$IFNDEF NoAsync}
 	repeat
 		Application.HandleMessage;
+		{$ENDIF}
 		Returned := PopReturned
+	{$IFNDEF NoAsync}
 	until assigned(Returned);
+	{$ENDIF}
 	tmpReturned := Returned^;
 	dispose(Returned);
 
-	if Returned^.Status = rsError then
+	if tmpReturned.Status = rsError then
 		raise EVCommandRefused.Create(tmpReturned.msg);
 end;
 
@@ -158,7 +173,7 @@ begin
 	vsSchatting: vertrtstr := 'st';
 	else exit
 	end;
-	SendRawStr('ti:'+TreinInfo.Treinnummer+',v,'+vertrtstr+','+vertrstr);
+	SendRawStr('ti:'+TreinInfo.Treinnummer+',v,'+vertrtstr+','+vertrstr+','+TreinInfo.Vertragingplaats);
 end;
 
 procedure TvSendMsg.SendBel;
@@ -193,10 +208,8 @@ begin
 		SendRawStr('comm_oph:t,'+naar.ID);
 end;
 
-function TvSendMsg.SendGetTreinStatus;
+procedure TvSendMsg.SendGetTreinStatus;
 begin
-	result.status := rsOK;
-	result.msg := '';
 	if treinnr = '' then exit;
 	try
 		SendRawStr('tsr:'+Treinnr)

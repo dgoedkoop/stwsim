@@ -81,8 +81,8 @@ procedure LoadPrlRijweg(var f: file; core: PvCore; PrlRijweg: PvPrlRijweg; modus
 procedure SaveSubroute(var f: file; Subroute: PvSubroute);
 procedure LoadSubroute(var f: file; core: PvCore; Subroute: PvSubroute);
 
-procedure SaveWisselStatus(var f: file; Core: PvCore);
-procedure LoadWisselStatus(var f: file; Core: PvCore);
+procedure SaveWisselMeetpuntStatus(var f: file; Core: PvCore);
+procedure LoadWisselMeetpuntStatus(var f: file; Core: PvCore);
 
 procedure LoadThings(Core: PvCore; var f: file; modus: integer);
 procedure SaveThings(Core: PvCore; var f: file);
@@ -1276,12 +1276,14 @@ begin
 	blockwrite(f, t, sizeof(t));
 end;
 
-procedure SaveWisselStatus;
+procedure SaveWisselMeetpuntStatus;
 var
 	WisselCount: integer;
 	Wissel: PvWissel;
 	WisselGroepCount: integer;
 	WisselGroep: PvWisselGroep;
+	MeetpuntCount: integer;
+	Meetpunt: PvMeetpunt;
 begin
 	WisselCount := 0;
 	Wissel := EersteWissel(core);
@@ -1311,15 +1313,33 @@ begin
 		boolwrite(f, WisselGroep^.bedienverh);
 		WisselGroep := WisselGroep^.Volgende;
 	end;
+
+	MeetpuntCount := 0;
+	Meetpunt := Core.vAlleMeetpunten;
+	while assigned(Meetpunt) do begin
+		inc(MeetpuntCount);
+		Meetpunt := Meetpunt^.Volgende;
+	end;
+	intwrite(f, MeetpuntCount);
+	Meetpunt := Core.vAlleMeetpunten;
+	while assigned(Meetpunt) do begin
+		stringwrite(f, Meetpunt^.meetpuntID);
+		boolwrite(f, Meetpunt^.bezet);
+		Meetpunt := Meetpunt^.Volgende;
+	end;
 end;
 
-procedure LoadWisselStatus;
+procedure LoadWisselMeetpuntStatus;
 var
 	WisselCount: integer;
 	Wissel: PvWissel;
 
 	WisselGroepCount: integer;
 	WisselGroep: PvWisselGroep;
+
+	MeetpuntCount: integer;
+	Meetpunt: PvMeetpunt;
+	MeetpuntID: string;
 
 	i: integer;
 	WisselID, WisselGroepID: string;
@@ -1338,6 +1358,12 @@ begin
 		stringread(f, WisselGroepID);
 		WisselGroep := ZoekWisselGroep(Core, WisselGroepID);
 		boolread(f, WisselGroep^.bedienverh);
+	end;
+	intread(f, MeetpuntCount);
+	for i := 1 to MeetpuntCount do begin
+		stringread(f, MeetpuntID);
+		Meetpunt := ZoekMeetpunt(Core, MeetpuntID);
+		boolread(f, Meetpunt^.bezet);
 	end;
 end;
 

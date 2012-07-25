@@ -123,7 +123,11 @@ begin
 			Erlaubnis^.check := true;
 		// Als het meetpunt vrij is moeten we de rijrichting resetten
 		if not bezet then
-			rijrichting := 0;
+			if assigned(Erlaubnis) then begin
+				if (not Erlaubnis.voorvergendeld) or (Erlaubnis.richting <> rijrichting) then
+					rijrichting := 0
+			end else 
+				rijrichting := 0;
 	end;
 end;
 

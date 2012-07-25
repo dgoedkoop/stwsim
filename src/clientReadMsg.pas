@@ -123,7 +123,7 @@ var
 	stand, vergrendeld: string;
 	// Voor treininfo
 	TreinInfo: TvTreinInfo;
-	TiWat, vertrstr: string;
+	TiWat, vertrstr, TiWaar: string;
 begin
 	p := pos(':', msg);
 	if p <> 0 then begin
@@ -265,10 +265,13 @@ begin
 		end;
 	end else if cmd = 'ti' then begin
 		SplitOff(tail, TreinInfo.Treinnummer, tail);
-		SplitOff(tail, TiWat, vertrstr);
+		SplitOff(tail, TiWat, tail);
+		SplitOff(tail, vertrstr, tail);
+		SplitOff(tail, TiWaar, tail);
 		if TiWat = 'st' then TreinInfo.Vertragingsoort := vsSchatting;
 		if TiWat = 'ex' then TreinInfo.Vertragingsoort := vsExact;
 		val(vertrstr, TreinInfo.Vertraging, code);
+		TreinInfo.Vertragingplaats := TiWaar;
 		if assigned(TreinInfoEvent) then
 			TreinInfoEvent(TreinInfo);
 	end else if cmd = 't' then begin

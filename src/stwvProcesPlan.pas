@@ -2,7 +2,7 @@ unit stwvProcesplan;
 
 interface
 
-uses stwvHokjes, stwvRijwegen, stwvRijwegLogica, stwpTijd, stwvCore,
+uses sysutils, stwvHokjes, stwvRijwegen, stwvRijwegLogica, stwpTijd, stwvCore,
 	stwvMeetpunt, stwvTreinInfo, stwvRijVeiligheid, clientSendMsg, stwvLog,
 	stwvSeinen, stwvMisc;
 
@@ -11,6 +11,8 @@ const
 	VertrekRijwegMaxWacht   = 5;
 
 type
+	EProcesplanSyntaxError = class(Exception);
+
 	TActiviteitSoort = (asDoorkomst, asVertrek, asAankomst, asKortestop, asRangeren, asNul);
 	TGetriggerd = (trNiet, trGetriggerd, trAanwezig, trAndereInDeWeg);
 
@@ -40,10 +42,12 @@ type
 		// Vertragingsinfo
 		GemetenVertraging:		integer;
 		GemetenVertragingSoort: TVertragingSoort;
+		GemetenVertragingPlaats:string;
 		VerwerkteVertraging:		integer;
-		EersteTNVStap:				PvMeetpunt;	// Bij deelrijwegen kan <> TNVNaar
-		IsVervolgRegel:			boolean;
+		VertragingTNVPos:			PvMeetpunt;	// Bij deelrijwegen kan <> TNVNaar
+		VertragingTNVPosHandm:	boolean;		// VertragingTNVPos niet autom. bijw.
 		// Dynamische informatie
+		InBehandeling:		boolean;
 		Bewerkt:				boolean;
 		AnalyseGedaan:		boolean;
 		Getriggerd:			TGetriggerd;
@@ -67,6 +71,7 @@ type
 		KlaarAantal:					integer;
 		ProcesPlanPuntenPending:	PvProcesPlanPunt;
 		Gewijzigd:						boolean;
+		Locatienaam:					string;
 		// Externe zaken
 		RijwegLogica:	TRijwegLogica;
 		Core:				PvCore;
@@ -89,12 +94,19 @@ type
 		procedure LoadBinair(var f: file);
 		procedure SaveBinair(var f: file);
 		// Gebeurtenissen
+		function PlanpuntIsTreinAanwezig(ProcesPlanPunt: PvProcesPlanPunt): boolean;
 		function ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt: PvProcesPlanPunt; CheckVolgorde: boolean): boolean;
 		procedure DoeStapje;
 		procedure TreinnummerNieuw(Meetpunt: PvMeetpunt);
 		procedure TreinnummerWeg(Meetpunt: PvMeetpunt);
 		procedure TreinInfo(TreinInfoData: TvTreinInfo);
+		procedure RegelsKlaarBijwerken(OudeTriggerTNV, NieuweTriggerTNV: PvMeetpunt);
+		function MagHandmatigUitvoeren(ProcesPlanPunt: PvProcesPlanPunt): boolean;
 	end;
+
+const
+	AsVertragingBijEersteSein = [asVertrek, asDoorkomst, asKortestop];
+	AsVertragingBijLaatsteSein = [asAankomst];
 
 function ActiviteitSoortStr(ActiviteitSoort: TActiviteitSoort): string;
 
@@ -198,6 +210,24 @@ begin
 	result := Sort_Merge(links, rechts);
 end;
 
+procedure TProcesPlan.RegelsKlaarBijwerken(OudeTriggerTNV, NieuweTriggerTNV: PvMeetpunt);
+var
+	PPP: PvProcesPlanPunt;
+begin
+	if not assigned(OudeTriggerTNV) then exit;
+	PPP := ProcesPlanPuntenKlaar;
+	while assigned(PPP) do begin
+		if (PPP^.VertragingTNVPos = OudeTriggerTNV) and PPP^.VertragingTNVPosHandm then
+			PPP^.VertragingTNVPos := NieuweTriggerTNV;
+		PPP := PPP^.Volgende;
+	end;
+end;
+
+function TProcesPlan.MagHandmatigUitvoeren;
+begin
+	result := not (ProcesPlanPunt^.ARI_toegestaan and ProcesPlanPunt^.InBehandeling)
+end;
+
 // Het oude punt wordt gewijzigd in Splitsspoor -> Naar
 // Het nieuwe punt wordt Van -> Splitsspoor.
 function TProcesPlan.SplitsPunt;
@@ -208,7 +238,6 @@ var
 	PrlRijweg2:	PvPrlRijweg;
 	RijwegL1,
 	RijwegL2:	PvRijwegLijst;
-{	EentjeTerugRijweg:PvRijweg;}
 	Doe, OK:		boolean;
 begin
 	// Gegevens nieuwe punt instellen
@@ -225,6 +254,8 @@ begin
 	NieuwPunt^.RestNummer := '';
 	NieuwPunt^.RestNummerGedaan := false;
 	NieuwPunt^.AnalyseGedaan := false;
+	NieuwPunt^.InBehandeling := false;
+	NieuwPunt^.Bewerkt := false;
 	// Bij het splitsen slaan we in NieuwePunt (dus het eerste deel van de
 	// rijweg) het sein op, en later ook in het oude planpunt (het tweede deel
 	// van de rijweg). Nadat het eerste deel van de rijweg wordt afgereden zijn
@@ -234,9 +265,10 @@ begin
 	// dat planpunt doorgegeven.
 	NieuwPunt^.GemetenVertraging := ProcesPlanPunt^.GemetenVertraging;
 	NieuwPunt^.GemetenVertragingSoort := ProcesPlanPunt^.GemetenVertragingSoort;
+	NieuwPunt^.GemetenVertragingPlaats := ProcesPlanPunt^.GemetenVertragingPlaats;
 	NieuwPunt^.VerwerkteVertraging := ProcesPlanPunt^.VerwerkteVertraging;
-	NieuwPunt^.EersteTNVStap := ProcesPlanPunt^.EersteTNVStap;
-	NieuwPunt^.IsVervolgRegel := false;
+	NieuwPunt^.VertragingTNVPos := ProcesPlanPunt^.VertragingTNVPos;
+	NieuwPunt^.VertragingTNVPosHandm := ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijLaatsteSein;
 	NieuwPunt^.TNVVan := nil;
 	NieuwPunt^.TNVNaar := nil;
 	NieuwPunt^.TriggerPunt := nil;
@@ -250,7 +282,6 @@ begin
 	PrlRijweg1 := ZoekPrlRijweg(Core, ProcesPlanPunt^.van, ProcesPlanPunt^.naar,
 		ProcesPlanPunt^.dwang);
 	dwang := 0;
-{	EentjeTerugRijweg := nil;}
 	repeat
 		OK := false;
 		// Zoek de rijweg Splitsspoor->Naar met de geitereerde dwang.
@@ -263,7 +294,6 @@ begin
 		RijwegL1 := PrlRijweg1^.Rijwegen;
 		RijwegL2 := PrlRijweg2^.Rijwegen;
 		repeat
-{			EentjeTerugRijweg := RijwegL1^.Rijweg;}
 			RijwegL1 := RijwegL1^.Volgende;
 			// Is dat punt er niet? Dan de volgende dwang nemen.
 			if not assigned(RijwegL1) then
@@ -290,18 +320,8 @@ begin
 	ProcesPlanPunt^.van := Splitsspoor;
 	ProcesPlanPunt^.dwang := Dwang;
 	ProcesPlanPunt^.AnalyseGedaan := false;
-	ProcesPlanPunt^.IsVervolgRegel := true;
+	ProcesPlanPunt^.VertragingTNVPosHandm := ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijEersteSein;
 	UpdatePlanpunt(ProcesPlanPunt);
-	// Als triggerpunt stellen we het van-punt van de laatste reeds uitgevoerde
-	// rijweg in zodat dit laatste stuk indien mogelijk vroeg genoeg wordt
-	// ingesteld dat de trein niet met gele signalen te maken krijgt.
-	// Noot: dit hoeft niet meer, want nu zorgen we voor *alle* rijwegen ervoor
-	// dat ze op tijd worden ingesteld om niet met geel te maken te krijgen.
-	// (Daarom is verder hierboven ook 'EentjeTerugRijweg' overal
-	// uitgecommenteerd.
-{	if assigned(EentjeTerugRijweg) then
-		if assigned(EentjeTerugRijweg^.Sein) then
-			ProcesPlanPunt^.TriggerPunt := EentjeTerugRijweg^.Sein^.VanTNVMeetpunt;}
 
 	Log.Log('Procesplan: Regel aangepast: trein '+ProcesPlanPunt^.Treinnr+
 	' moet verder van spoor '+ProcesPlanPunt^.van+' naar spoor '+ProcesPlanPunt^.naar);
@@ -317,6 +337,7 @@ begin
 	ProcesPlanPuntenKlaar := nil;
 	Gewijzigd := false;
 	KlaarAantal := 0;
+	Locatienaam := '';
 end;
 
 destructor TProcesPlan.Destroy;
@@ -339,6 +360,7 @@ end;
 procedure TProcesPlan.UpdatePlanpunt;
 var
 	RijwegL: PvRijwegLijst;
+	OudeTNVNaar: PvMeetpunt;
 begin
 	if ProcesPlanPunt^.AnalyseGedaan then
 		exit;
@@ -360,6 +382,7 @@ begin
 		ProcesPlanPunt^.TNVVan := nil;
 
 	// Zoek het tnv-naar-punt
+	OudeTNVNaar := ProcesPlanPunt^.TNVNaar;
 	if assigned(ProcesPlanPunt^.PrlRijweg) then begin
 		RijwegL := ProcesPlanPunt^.PrlRijweg^.Rijwegen;
 		if assigned(RijwegL) then begin
@@ -370,6 +393,8 @@ begin
 			ProcesPlanPunt^.TNVNaar := nil;
 	end else
 		ProcesPlanPunt^.TNVNaar := nil;
+	if OudeTNVNaar <> ProcesPlanPunt^.TNVNaar then
+		RegelsKlaarBijwerken(OudeTNVNaar, ProcesPlanPunt^.TNVNaar);
 
 	// Zoek het tnv-trigger-punt
 	if assigned(ProcesPlanPunt^.PrlRijweg) then
@@ -391,10 +416,7 @@ begin
 	tmpPlanPunt := ProcesPlanPuntenPending;
 	while assigned(tmpPlanPunt) do begin
 		if (tmpPlanPunt^.Insteltijd < ProcesPlanPunt^.Insteltijd) and
-			((tmpPlanPunt^.van = ProcesPlanPunt^.van) or
-			 (tmpPlanPunt^.naar = ProcesPlanPunt^.naar) or
-			 (tmpPlanPunt^.naar = ProcesPlanPunt^.van) or
-			 (tmpPlanPunt^.van = ProcesPlanPunt^.naar)) then begin
+			(tmpPlanPunt^.naar = ProcesPlanPunt^.naar) then begin
 			ProcesPlanPunt^.VolgordeOK := false;
 			exit;
 		end;
@@ -454,16 +476,10 @@ begin
 	end;
 end;
 
-function TProcesPlan.ProbeerPlanpuntUitTeVoeren;
+function TProcesPlan.PlanpuntIsTreinAanwezig;
 var
-	PrlRijweg: PvPrlRijweg;
 	ActieveRijweg: PvActieveRijwegLijst;
-	PPP: PvProcesPlanPunt;
 begin
-	result := false;
-
-	if CheckVolgorde and not ProcesPlanPunt^.VolgordeOK then exit;
-
 	UpdatePlanpunt(ProcesPlanPunt);
 
 	(* NOOT:
@@ -483,7 +499,6 @@ begin
 	dus voor nu moet dit maar goed genoeg zijn.
 	*)
 
-	// Eerst eens kijken of de juiste trein op de juiste plaats staat.
 	if assigned(ProcesPlanPunt^.TNVVan) then begin
 		if (ProcesPlanPunt^.TNVVan^.treinnummer <> '') then
 			if (ProcesPlanPunt^.TNVVan^.treinnummer = ProcesPlanPunt^.Treinnr) then
@@ -515,7 +530,32 @@ begin
 					end;
 
 	// We doen niks als de trein niet aanwezig is.
-	if not (ProcesPlanPunt^.Getriggerd in [trGetriggerd, trAanwezig]) then exit;
+	result := ProcesPlanPunt^.Getriggerd in [trGetriggerd, trAanwezig];
+end;
+
+function TProcesPlan.ProbeerPlanpuntUitTeVoeren;
+var
+	PrlRijweg: PvPrlRijweg;
+	PPP: PvProcesPlanPunt;
+begin
+	result := false;
+
+	if CheckVolgorde and (not ProcesPlanPunt^.VolgordeOK) and
+		ProcesPlanPunt^.InBehandeling then exit;
+
+	UpdatePlanpunt(ProcesPlanPunt);
+
+	if not PlanpuntIsTreinAanwezig(ProcesPlanPunt) then exit;
+
+	// De trein is er. Dan kunnen we 'm als in behandeling markeren.
+	if CheckVolgorde and not ProcesPlanPunt^.InBehandeling then begin
+		ProcesPlanPunt^.InBehandeling := true;
+		Gewijzigd := true;
+	end;
+
+	// Evt. als in behandeling markeren
+	if CheckVolgorde and not ProcesPlanPunt^.VolgordeOK then
+		exit;
 
 	// Okee, alle checks zijn positief verlopen. We proberen de rijweg in te stellen.
 	// Er zijn twee strategieen. Ofwel we mogen een deelrijweg instellen, ofwel
@@ -526,14 +566,22 @@ begin
 	if Lock then exit;
 	Lock := true;
 	if RijwegLogica.StelPrlRijwegIn(PrlRijweg, ProcesPlanPunt^.ROZ, ProcesPlanPunt^.Dwang) then begin
-		if not ProcesPlanPunt^.IsVervolgRegel then
-			ProcesPlanPunt^.EersteTNVStap := RijwegLogica.Prl_EersteTNVStap;
+		if not ProcesPlanPunt^.VertragingTNVPosHandm then begin
+			if ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijEersteSein then
+				ProcesPlanPunt^.VertragingTNVPos := RijwegLogica.Prl_EersteTNVStap;
+			if ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijLaatsteSein then
+				ProcesPlanPunt^.VertragingTNVPos := ProcesPlanPunt^.TNVNaar;
+		end;
 		result := true
 	end else
 		if RijwegLogica.Prl_IngesteldTot <> '' then begin
 			// Procesplanpunt opdelen en bijwerken
-			if not ProcesPlanPunt^.IsVervolgRegel then
-				ProcesPlanPunt^.EersteTNVStap := RijwegLogica.Prl_EersteTNVStap;
+			if not ProcesPlanPunt^.VertragingTNVPosHandm then begin
+				if ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijEersteSein then
+					ProcesPlanPunt^.VertragingTNVPos := RijwegLogica.Prl_EersteTNVStap;
+				if ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijLaatsteSein then
+					ProcesPlanPunt^.VertragingTNVPos := ProcesPlanPunt^.TNVNaar;
+			end;
 			PPP := SplitsPunt(ProcesPlanPunt, RijwegLogica.Prl_IngesteldTot);
 			MarkeerKlaar(PPP);
 		end;
@@ -561,7 +609,6 @@ begin
 	ProcesPlanPunt^.Volgende := ProcesPlanPuntenKlaar;
 	ProcesPlanPuntenKlaar := ProcesPlanPunt;
 	inc(KlaarAantal);
-
 
 	// En volgordes aanpassen.
 	UpdateVolgordeAfhVanPunt(ProcesPlanPunt);
@@ -618,15 +665,20 @@ begin
 	// Registreer vertraging
 	ProcesPlanPunt := ProcesPlanPuntenKlaar;
 	while assigned(ProcesPlanPunt) do begin
-		if (ProcesPlanPunt^.EersteTNVStap = Meetpunt) and
+		if (ProcesPlanPunt^.VertragingTNVPos = Meetpunt) and
 			(ProcesPlanPunt^.Treinnr = Meetpunt^.treinnummer) then begin
 			// Bereken vertraging
 			TreinInfo.Treinnummer := ProcesPlanPunt^.Treinnr;
 			TreinInfo.Vertragingsoort := vsExact;
 			TreinInfo.Vertraging := GetTijd - ProcesPlanPunt^.Plantijd;
+			TreinInfo.Vertragingplaats := Locatienaam;
 			// Werk onszelf bij
-			if round(ProcesPlanPunt^.GemetenVertraging/60) <> round(TreinInfo.Vertraging/60) then
+			Gewijzigd := false;
+			if (round(ProcesPlanPunt^.GemetenVertraging/MkTijd(0,1,0)) <> round(TreinInfo.Vertraging/MkTijd(0,1,0))) or
+				(ProcesPlanPunt^.GemetenVertragingPlaats = '') then begin
+				ProcesPlanPunt^.GemetenVertragingPlaats := Locatienaam;
 				Gewijzigd := true;
+			end;
 			ProcesPlanPunt^.GemetenVertraging := TreinInfo.Vertraging;
 			if ProcesPlanPunt^.GemetenVertragingSoort <> TreinInfo.Vertragingsoort then begin
 				ProcesPlanPunt^.GemetenVertragingSoort := TreinInfo.Vertragingsoort;
@@ -635,7 +687,7 @@ begin
 			// Verstuur vertraging
 			SendMsg.SendVertraging(TreinInfo);
 			// Deregistreren
-			ProcesPlanPunt^.EersteTNVStap := nil;
+			ProcesPlanPunt^.VertragingTNVPos := nil;
 		end;
 		ProcesPlanPunt := ProcesPlanPunt^.Volgende;
 	end;
@@ -728,11 +780,13 @@ begin
 							PPP^.RestNummerGedaan := false;
 							PPP^.GemetenVertraging := 0;
 							PPP^.GemetenVertragingSoort := vsSchatting;
+							PPP^.GemetenVertragingPlaats := '';
 							PPP^.VerwerkteVertraging := 0;
-							PPP^.IsVervolgRegel := false;
-							PPP^.EersteTNVStap := nil;
+							PPP^.VertragingTNVPos := nil;
+							PPP^.VertragingTNVPosHandm := false;
 							PPP^.Bewerkt := false;
 							PPP^.VolgordeOK := true;
+							PPP^.InBehandeling := false;
 							PPP^.AnalyseGedaan := false;
 							PPP^.Getriggerd := trNiet;
 							PPP^.TNVVan := nil;
@@ -757,16 +811,20 @@ begin
 						p := pos(':', waarde);
 						us := copy(waarde,1,p-1);
 						ms := copy(waarde, p+1, length(waarde)-p);
-						val(us, u, code); if code <> 0 then halt;
-						val(ms, m, code); if code <> 0 then halt;
+						val(us, u, code); if code <> 0 then
+							raise EProcesplanSyntaxError.Create('Onjuiste tijd in procesplan: '+waarde);
+						val(ms, m, code); if code <> 0 then
+							raise EProcesplanSyntaxError.Create('Onjuiste tijd in procesplan: '+waarde);
 						PPP^.Plantijd := MkTijd(u, m, 0);
 					end;
 					3: begin
 						p := pos(':', waarde);
 						us := copy(waarde,1,p-1);
 						ms := copy(waarde, p+1, length(waarde)-p);
-						val(us, u, code); if code <> 0 then halt;
-						val(ms, m, code); if code <> 0 then halt;
+						val(us, u, code); if code <> 0 then
+							raise EProcesplanSyntaxError.Create('Onjuiste tijd in procesplan: '+waarde);
+						val(ms, m, code); if code <> 0 then
+							raise EProcesplanSyntaxError.Create('Onjuiste tijd in procesplan: '+waarde);
 						PPP^.Insteltijd := MkTijd(u, m, 0);
 					end;
 					4:	PPP^.van := waarde;
@@ -780,7 +838,7 @@ begin
 								PPP^.dwang := ord(waarde[i])-ord('0');
 						end;
 					else
-						halt;
+						raise EProcesplanSyntaxError.Create('Procesplanregel heeft te veel parameters');
 				end;
 				inc(index);
 			end; // while s <> ''
@@ -845,18 +903,21 @@ begin
 	if LoadVertraging then begin
 		intread(f, ProcesPlanPunt^.GemetenVertraging);
 		byteread(f, x); ProcesPlanPunt^.GemetenVertragingSoort := ByteNaarVertragingSoort(x);
+		stringread(f, ProcesPlanPunt^.GemetenVertragingPlaats);
 	end else begin
 		ProcesPlanPunt^.GemetenVertraging := 0;
 		ProcesPlanPunt^.GemetenVertragingSoort := vsSchatting;
+		ProcesPlanPunt^.GemetenVertragingPlaats := '';
 	end;
 	intread(f, ProcesPlanPunt^.VerwerkteVertraging);
 	stringread(f, s);
 	if s <> '' then
-		ProcesPlanPunt^.EersteTNVStap := ZoekMeetpunt(Core, s)
+		ProcesPlanPunt^.VertragingTNVPos := ZoekMeetpunt(Core, s)
 	else
-		ProcesPlanPunt^.EersteTNVStap := nil;
-	boolread(f, ProcesPlanPunt^.IsVervolgRegel);
+		ProcesPlanPunt^.VertragingTNVPos := nil;
+	boolread(f, ProcesPlanPunt^.VertragingTNVPosHandm);
 	boolread(f, ProcesPlanPunt^.Bewerkt);
+	ProcesPlanPunt^.InBehandeling := false;
 	ProcesPlanPunt^.AnalyseGedaan := false;
 	ProcesPlanPunt^.PrlRijweg := nil;
 	ProcesPlanPunt^.TNVVan := nil;
@@ -950,13 +1011,14 @@ begin
 	if SaveVertraging then begin
 		intwrite(f, ProcesPlanPunt^.GemetenVertraging);
 		bytewrite(f, VertragingSoortNaarByte(ProcesPlanPunt^.GemetenVertragingSoort));
+		stringwrite(f, ProcesPlanPunt^.GemetenVertragingPlaats);
 	end;
 	intwrite(f, ProcesPlanPunt^.VerwerkteVertraging);
-	if assigned(ProcesPlanPunt^.EersteTNVStap) then
-		stringwrite(f, ProcesPlanPunt^.EersteTNVStap^.meetpuntID)
+	if assigned(ProcesPlanPunt^.VertragingTNVPos) then
+		stringwrite(f, ProcesPlanPunt^.VertragingTNVPos^.meetpuntID)
 	else
 		stringwrite(f, '');
-	boolwrite(f, ProcesPlanPunt^.IsVervolgRegel);
+	boolwrite(f, ProcesPlanPunt^.VertragingTNVPosHandm);
 	boolwrite(f, ProcesPlanPunt^.Bewerkt);
 end;
 
@@ -1009,11 +1071,15 @@ begin
 		if PPP^.Treinnr = TreinInfoData.Treinnummer then begin
 			if PPP^.GemetenVertraging <> TreinInfoData.Vertraging then begin
 				PPP^.GemetenVertraging := TreinInfoData.Vertraging;
-				Gewijzigd := true;
+				Gewijzigd := true
 			end;
 			if PPP^.GemetenVertragingSoort <> TreinInfoData.Vertragingsoort then begin
 				PPP^.GemetenVertragingSoort := TreinInfoData.Vertragingsoort;
-				Gewijzigd := true;
+				Gewijzigd := true
+			end;
+			if PPP^.GemetenVertragingPlaats <> TreinInfoData.Vertragingplaats then begin
+				PPP^.GemetenVertragingPlaats := TreinInfoData.Vertragingplaats;
+				Gewijzigd := true
 			end;
 		end;
 		PPP := PPP^.Volgende;

@@ -2,6 +2,8 @@ unit stwpTreinInfo;
 
 interface
 
+uses stwpTijd;
+
 type
 	TpVertragingType = (vtExact, vtSchatting);
 	PpTreinInfo = ^TpTreinInfo;
@@ -9,12 +11,13 @@ type
 		Treinnummer: 		string;
 		Vertraging: 		integer;
 		Vertragingtype: 	TpVertragingtype;
+		Vertragingplaats:	string;
 		gewijzigd:			boolean;
 		Volgende: 			PpTreinInfo;
 	end;
 
 procedure ScoreVertraging(TreinInfo: PpTreinInfo; vertraging: integer;
-	vertragingtype: TpVertragingType);
+	vertragingtype: TpVertragingType; Locatienaam: string);
 
 implementation
 
@@ -26,6 +29,14 @@ begin
 		TreinInfo.Vertragingtype := vertragingtype;
 		TreinInfo.gewijzigd := true
 	end;
+	// De locatie werken we alleen bij als het tijdsverschil een minutensprong
+	// veroorzaakt
+	if (round(TreinInfo.Vertraging / MkTijd(0,1,0)) <> round(vertraging / MkTijd(0,1,0))) or
+		((TreinInfo.Vertragingplaats = '') and (Locatienaam <> '')) then begin
+		TreinInfo.Vertragingplaats := Locatienaam;
+		TreinInfo.gewijzigd := true;
+	end;
+	// Maar de vertraging zelf werken we altijd bij!
 	if TreinInfo.Vertraging <> vertraging then begin
 		TreinInfo.Vertraging := vertraging;
 		TreinInfo.gewijzigd := true

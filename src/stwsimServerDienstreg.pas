@@ -237,12 +237,16 @@ begin
 			Matfile := Matfile^.Volgende;
 		end;
 		if iseral then begin
-			Application.Messagebox('Bestand is al geladen.', 'Fout', MB_ICONERROR);
+			Application.Messagebox('Bestand is al geladen.', 'Fout', MB_ICONINFORMATION);
 			exit;
 		end;
-		if not Core.WagonsLaden(matfn) then begin
-			Application.Messagebox('Bestand kon niet geladen worden.', 'Fout', MB_ICONERROR);
-			exit;
+		try
+			Core.WagonsLaden(matfn)
+		except
+			on EInOutError do begin
+				Application.Messagebox('Bestand kon niet geladen worden.', 'Fout', MB_ICONWARNING);
+				exit;
+			end;
 		end;
 		UpdateDingen;
 	end;

@@ -913,6 +913,7 @@ end;
 procedure TRijwegLogica.MarkeerBezet;
 var
 	ActieveRijweg: PvActieveRijwegLijst;
+	tmpActieveRijweg: TvActieveRijwegLijst;
 	Tab: PTablist;
 	Treinnr: string;
 	VanMeetpunt, NaarMeetpunt: PvMeetpunt;
@@ -938,24 +939,43 @@ begin
 		end else
 			Meetpunt^.OnterechtBezet := false;
 
+	// Als het een approach-locking-rijweg is, moeten we die status
+	// ongedaan maken.
+	if ActieveRijweg^.Herroep.herroep then begin
+		ActieveRijweg^.Herroep.herroep := false;
+		Log.Log('Herroepen van rijweg gedeactiveerd.');
+		// Sein weer normaal tonen
+		ActieveRijweg^.Rijweg^.Sein^.herroepen := false;
+		Tab := Tabs;
+		while assigned(Tab) do begin
+			Tab^.Gleisplan.PaintSein(ActieveRijweg^.Rijweg^.Sein);
+			Tab := Tab^.Volgende;
+		end;
+	end;
+
 	// Sein op rood zetten en pending-status bijwerken.
 	if (ActieveRijweg^.Pending = 2) then begin
-		// Stel de pending-status in zodat we het onderstaande niet door
-		// asynchroon gebeuren dubbel doen.
+		// Stel de pending-status in. Dat moeten we meteen doen om te voorkomen
+		// dat we het onderstaande door asynchroon werken dubbel doen.
 		ActieveRijweg^.Pending := 3;
-		// Deregistreer het sein
+		// Deregistreer het sein. Vanwege asynchroon werken moeten we dat nu vast
+		// doen, zodat als we straks het sein op rood zetten het ook altijd netjes
+		// gerepaint wordt als zijnde niet meer behorend bij een rijweg.
 		ActieveRijweg^.Rijweg^.Sein^.RijwegOnderdeel := nil;
 		if assigned(ActieveRijweg^.Rijweg^.NaarSein) then
 			ActieveRijweg^.Rijweg^.NaarSein^.DoelVanRijweg := nil;
-		// En zet het op rood. De volgorde van deze twee stappen is zo, omdat
-		// SendSetSein een HandleMessage oproept die ervoor kan zorgen dat het
-		// op rood zetten onmiddellijk een event genereert dat al tot het
+		// Vanwege asynchroon werken kan het geheugen van ActieveRijweg straks
+		// evt. al vrijgegeven zijn. Dus moeten we er even een kopie van maken.
+		tmpActieveRijweg := ActieveRijweg^;
+		// En zet het op rood. De volgorde van deze stappen is zo, omdat
+		// SendSetSein een HandleMessage oproept die ervoor kan zorgen dat
+		// het op rood zetten onmiddellijk een event genereert dat al tot het
 		// repainten van het sein leidt. Voor een correcte weergave moet het
 		// deregistreren dan al gedaan zijn.
-		SendMsg.SendSetSein(ActieveRijweg^.Rijweg^.Sein, 'r');
+		SendMsg.SendSetSein(tmpActieveRijweg.Rijweg^.Sein, 'r');
 		// Verplaats het treinnummer
-		VanMeetpunt := ActieveRijweg^.Rijweg^.Sein^.VanTNVMeetpunt;
-		NaarMeetpunt := ActieveRijweg^.Rijweg^.NaarTNVMeetpunt;
+		VanMeetpunt := tmpActieveRijweg.Rijweg^.Sein^.VanTNVMeetpunt;
+		NaarMeetpunt := tmpActieveRijweg.Rijweg^.NaarTNVMeetpunt;
 		if assigned(VanMeetpunt) then begin
 			TreinNr := VanMeetpunt^.treinnummer;
 			if TreinNr <> '' then
@@ -974,26 +994,13 @@ begin
 						SendMsg.SendSetTreinnr(NaarMeetpunt, Sternummer);
 		end;
 		// Bij auto-rijweg opnieuw instellen.
-		if ActieveRijweg^.Autorijweg then begin
+		if tmpActieveRijweg.Autorijweg then begin
 			// Dit werkt gegarandeerd, want de rijweg is immers al ingesteld.
 			// Alle wissels staan al goed en zojuist is enkel een trein
 			// het eerste meetpunt binnengereden.
 			if not RijveiligheidLock then exit;
-			StelRijwegInNu(ActieveRijweg^.Rijweg, ActieveRijweg^.ROZ, true);
+			StelRijwegInNu(tmpActieveRijweg.Rijweg, tmpActieveRijweg.ROZ, true);
 			RijveiligheidUnlock;
-		end;
-	end;
-	// Als het een approach-locking-rijweg is, moeten we die status
-	// ongedaan maken.
-	if ActieveRijweg^.Herroep.herroep then begin
-		ActieveRijweg^.Herroep.herroep := false;
-		Log.Log('Herroepen van rijweg gedeactiveerd.');
-		// Sein weer normaal tonen
-		ActieveRijweg^.Rijweg^.Sein^.herroepen := false;
-		Tab := Tabs;
-		while assigned(Tab) do begin
-			Tab^.Gleisplan.PaintSein(ActieveRijweg^.Rijweg^.Sein);
-			Tab := Tab^.Volgende;
 		end;
 	end;
 
@@ -1758,12 +1765,8 @@ var
 	gesplitst: PString;
 	tmpstr: PString;
 	count,p: integer;
-	code: integer;
 	// Voor wisseldingen omdat daar geen eigen functie voor bestaat
 	wissel: PvWissel;
-	// Voor treininfo
-	x: integer;
-	TreinInfo: TvTreinInfo;
 begin
 	new(tmpstr);
 	gesplitst := tmpstr;
@@ -1833,19 +1836,6 @@ begin
 					Wissel^.rijwegverh := not Wissel^.rijwegverh
 				else
 					Log.Log('Wissel niet gevonden.');
-			end else
-				Log.Log('Verkeerd aantal argumenten opgegeven.');
-		end else
-		if gesplitst^.s = 'tv' then begin
-			if count = 3 then begin
-				TreinInfo.Treinnummer := gesplitst^.v^.s;
-				val(gesplitst^.v^.v^.s, x, code);
-				TreinInfo.Vertraging := MkTijd(0,x,0);
-				TreinInfo.Vertragingsoort := vsExact;
-				if code = 0 then
-					SendMsg.SendVertraging(TreinInfo)
-				else
-					Log.Log('Opgegeven vertraging is geen geldig aantal minuten.');
 			end else
 				Log.Log('Verkeerd aantal argumenten opgegeven.');
 		end else

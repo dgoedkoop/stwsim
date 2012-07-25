@@ -26,8 +26,10 @@ type
     VVAct: TAction;
     Voernuuit1: TMenuItem;
 	 Verwerkvertraging1: TMenuItem;
-    Bewerk1: TMenuItem;
+	 Bewerk1: TMenuItem;
     Verwijder1: TMenuItem;
+    GeenARIAct: TAction;
+    UitschakelenvoorARI1: TMenuItem;
     procedure RegelListDblClick(Sender: TObject);
     procedure VoernuuitActExecute(Sender: TObject);
     procedure BewerkActExecute(Sender: TObject);
@@ -39,6 +41,8 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure HistListDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
+    procedure GeenARIActExecute(Sender: TObject);
+    procedure RegelListClick(Sender: TObject);
 	private
 		{ Private declarations }
 		selPunt:	PvProcesPlanPunt;
@@ -49,6 +53,7 @@ type
 		// Intern
 		function GetARI: boolean;
 		procedure SetARI(auto: boolean);
+		procedure UpdateControls;
 	public
 		FName:			string;
 		ProcesPlan:		TProcesPlan;
@@ -68,6 +73,16 @@ constructor TstwscProcesPlanFrame.Create;
 begin
 	inherited Create(AOwner);
 	PendingLijst := TStringList.Create;
+end;
+
+procedure TstwscProcesPlanFrame.UpdateControls;
+begin
+	selPunt := FindSelected;
+	VoernuuitAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt) and Procesplan.PlanpuntIsTreinAanwezig(selPunt);
+	BewerkAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
+	DelAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
+	VVAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
+	GeenAriAct.Enabled := assigned(selPunt) and selPunt^.ARI_toegestaan;
 end;
 
 function TstwscProcesPlanFrame.GetARI;
@@ -107,34 +122,37 @@ var
 	s: string;
 	tstr: string;
 	vstr: string;
+	vint: integer;
 begin
-	if round(PPP^.GemetenVertraging/60) > round(PPP^.VerwerkteVertraging/60) then
+	if round(PPP^.GemetenVertraging/MkTijd(0,1,0)) > round(PPP^.VerwerkteVertraging/MkTijd(0,1,0)) then
 		tstr := '!'
 	else if PPP^.Bewerkt then
 		tstr := '+'
 	else
 		tstr := '';
-	if (PPP^.GemetenVertraging >= 30) or
-	   (PPP^.GemetenVertraging <= -31) then begin
-		str(round(PPP^.GemetenVertraging/60), vstr);
-		if PPP^.GemetenVertraging > 0 then
+	vint := round(PPP^.GemetenVertraging/MkTijd(0,1,0));
+	if (vint <> 0) or (PPP^.GemetenVertragingPlaats <> '') then begin
+		str(vint, vstr);
+		if vint >= 0 then
 			vstr := '+'+vstr;
 		if PPP^.GemetenVertragingSoort = vsSchatting then
 			vstr := 'V'+vstr;
-	end;
+	end else
+		vstr := '';
 
 	s := s + Pad(tstr, 1, #32, vaVoor);
 	s := s + Pad(PPP^.Treinnr, 7, #32, vaVoor) + '  ';
 	s := s + Pad(ActiviteitSoortStr(PPP^.ActiviteitSoort), 3, #32, vaAchter);
 	s := s + Pad(TijdStr(PPP^.Plantijd, false), 8, #32, vaAchter);
 	s := s + Pad(vstr, 5, #32, vaAchter);
+	s := s + Pad(PPP^.GemetenVertragingPlaats, 6, #32, vaAchter);
 	s := s + Pad(TijdStr(PPP^.Insteltijd, false), 8, #32, vaAchter);
-	s := s + Pad(PPP^.van, 7, #32, vaAchter);
-	s := s + Pad(PPP^.naar, 7, #32, vaAchter);
+	s := s + Pad(PPP^.van, 5, #32, vaAchter);
+	s := s + Pad(PPP^.naar, 6, #32, vaAchter);
 	if PPP^.Dwang > 0 then
-		s := s + Pad(inttostr(PPP^.Dwang), 5, #32, vaAchter)
+		s := s + Pad(inttostr(PPP^.Dwang), 4, #32, vaAchter)
 	else
-		s := s + Pad('', 5, #32, vaAchter);
+		s := s + Pad('', 4, #32, vaAchter);
 	if (PPP^.NieuwNummer <> '') or (PPP^.RestNummer <> '') then
 		s := s + 'm';
 	result := s;
@@ -185,6 +203,8 @@ begin
 		inc(i);
 		PPP := PPP^.Volgende;
 	end;
+
+	UpdateControls;
 end;
 
 procedure TstwscProcesPlanFrame.RegelListDblClick(Sender: TObject);
@@ -196,8 +216,9 @@ procedure TstwscProcesPlanFrame.VoernuuitActExecute(Sender: TObject);
 begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then
-		if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt, false) then
-			ProcesPlan.MarkeerKlaar(selPunt);
+		if ProcesPlan.MagHandmatigUitvoeren(selPunt) then
+			if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt, false) then
+				ProcesPlan.MarkeerKlaar(selPunt);
 	UpdateLijst;
 end;
 
@@ -225,7 +246,6 @@ begin
 		stwscPlanregelEditForm.vanEdit.Text := selPunt^.van;
 		stwscPlanregelEditForm.naarEdit.Text := selPunt^.naar;
 		stwscPlanregelEditForm.rozCheck.Checked := selPunt^.ROZ;
-		stwscPlanregelEditForm.ariCheck.Checked := selPunt^.ARI_toegestaan;
 		FmtTijd(selPunt^.Insteltijd, u, m, s);
 		us := inttostr(u); if length(us)=1 then us := '0'+us;
 		ms := inttostr(m); if length(ms)=1 then ms := '0'+ms;
@@ -278,14 +298,12 @@ begin
 			selPunt^.naar := Naar;
 			selPunt^.Dwang := Dwang;
 			selPunt^.ROZ := stwscPlanregelEditForm.rozCheck.Checked;
-			selPunt^.ARI_toegestaan := stwscPlanregelEditForm.ariCheck.Checked;
 			selPunt^.NieuwNummer := stwscPlanregelEditForm.nieuwNrEdit.Text;
 			selPunt^.RestNummer := stwscPlanregelEditForm.RestNrEdit.Text;
 			selPunt^.AnalyseGedaan := false;
 			selPunt^.Bewerkt := true;
-		end else
-			// Bij CANCEL moeten we de oude ARI-instelling terugzetten.
-			selPunt^.ARI_toegestaan := ari_oud;
+		end;
+		selPunt^.ARI_toegestaan := ari_oud;
 		ProcesPlan.Sorteer;
 		UpdateLijst;
 		Markeer(selPunt);
@@ -327,6 +345,7 @@ begin
 		if Index > -1 then
 			RegelList.ItemIndex := Index;
 	end;
+	UpdateControls;
 end;
 
 procedure TstwscProcesPlanFrame.RegelListDrawItem(Control: TWinControl;
@@ -349,13 +368,16 @@ begin
 			Canvas.Brush.Color := clBlack
 {		else
 			Canvas.Brush.Color := clHighlight};
-		if GetTijd >= PPP^.Insteltijd - MkTijd(0,1,0) then
-			if GetTijd >= PPP^.Insteltijd + MkTijd(0,1,0) then
-				Canvas.Font.Color := clRed
-			else
-				Canvas.Font.Color := clYellow
+		if not ProcesPlan.MagHandmatigUitvoeren(PPP) then
+			Canvas.Font.Color := clTeal
 		else
-			Canvas.Font.Color := clWhite;
+			if GetTijd >= PPP^.Insteltijd - MkTijd(0,1,0) then
+				if GetTijd >= PPP^.Insteltijd + MkTijd(0,1,0) then
+					Canvas.Font.Color := clRed
+				else
+					Canvas.Font.Color := clYellow
+			else
+				Canvas.Font.Color := clWhite;
 		TopDif := (ItemHeight div 2) - (Canvas.TextHeight(#32) div 2);
 		if PendingLijst.Strings[Index] <> MkLijstString(PPP) then
 			PendingLijst.Strings[Index] := MkLijstString(PPP);
@@ -380,6 +402,17 @@ begin
 		TopDif := (ItemHeight div 2) - (Canvas.TextHeight(#32) div 2);
 		Canvas.TextRect(Rect, Rect.Left+2, Rect.Top + TopDif, Items[Index]);
 	end;
+end;
+
+procedure TstwscProcesPlanFrame.GeenARIActExecute(Sender: TObject);
+begin
+	selPunt^.ARI_toegestaan := false;
+	UpdateLijst;
+end;
+
+procedure TstwscProcesPlanFrame.RegelListClick(Sender: TObject);
+begin
+   UpdateControls;
 end;
 
 end.

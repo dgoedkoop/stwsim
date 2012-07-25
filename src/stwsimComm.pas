@@ -2,18 +2,20 @@ unit stwsimComm;
 
 interface
 
-{//$DEFINE LogFile}
+uses stwpTijd;
 
 type
 	TReceiveEvent = procedure(s: string) of object;
 
 	TStringComm = class
-		{$IFDEF LogFile}
+	private
+		dolog: boolean;
 		logfile: textfile;
-		{$ENDIF}
+	public
 		ReceiveEventServer, ReceiveEventClient: TReceiveEvent;
 		procedure SendStringToServer(s: string);
 		procedure SendStringToClient(s: string);
+		procedure SetLog(value: boolean);
 		constructor Create;
 	end;
 
@@ -23,24 +25,33 @@ constructor TStringComm.Create;
 begin
 	ReceiveEventServer := nil;
 	ReceiveEventClient := nil;
-	{$IFDEF LogFile}
-	assignfile(logfile, 'log.txt');
-	rewrite(logfile);
-	{$ENDIF}
+	dolog := false;
 end;
 
 procedure TStringComm.SendStringToServer;
 begin
-	{$IFDEF LogFile}writeln(logfile, '>' + s);{$ENDIF}
+	if dolog then writeln(logfile, TijdStr(GetTijd,true)+': >' + s);
 	if assigned(ReceiveEventServer) then
 		ReceiveEventServer(s);
 end;
 
 procedure TStringComm.SendStringToClient;
 begin
-	{$IFDEF LogFile}writeln(logfile,'<' + s);{$ENDIF}
+	if dolog then writeln(logfile,TijdStr(GetTijd,true)+': <' + s);
 	if assigned(ReceiveEventClient) then
 		ReceiveEventClient(s);
+end;
+
+procedure TStringComm.SetLog;
+begin
+	if (not dolog) and value then begin
+		assignfile(logfile, 'log.txt');
+		rewrite(logfile);
+		dolog := true
+	end else if dolog and not value then begin
+		closefile(logfile);
+		dolog := false;
+	end;
 end;
 
 end.

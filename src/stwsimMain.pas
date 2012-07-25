@@ -198,10 +198,10 @@ type
 		rinkelsound: THandle;
 		rinkelstapjes: integer;
 		// Sim-bediening
-		pauze: 	boolean;
-		app_exit: boolean;
-		gestart:	boolean;
-		closewarn:boolean;
+		pauze: 		boolean;
+		app_exit:	boolean;
+		gestart:		boolean;
+		closewarn:	boolean;
 		// Intern
 		FormShown: boolean;
 		TimeSet: boolean;
@@ -264,6 +264,13 @@ const
 	MagicCode = 'STWSIM.1';
 
 procedure TstwsimMainForm.DoeStapje;
+	procedure ZetOpPauze;
+	begin
+		TijdTimer.Enabled := false;
+		if not pauze then
+			PauzeAction.Execute;
+		PauzeAction.Enabled := false;
+	end;
 begin
 	try
 		pCore.DoeStapje;
@@ -272,15 +279,19 @@ begin
 		MonteurPhysics.CheckWacht(pCore.pMonteur);
 	except
 		on EAccessViolation do begin
-			// Zet de simulatie op pauze
-			TijdTimer.Enabled := false;
-			if not pauze then
-				PauzeAction.Execute;
-			PauzeAction.Enabled := false;
-			// Foutmelding weergeven.
+			ZetOpPauze;
 			Application.MessageBox('Er is een interne fout opgetreden. De simulatie kan niet verder gaan.'+#13#10+#13#10+
 				'U kunt nog wel proberen de simulatie op te slaan.','Fout',MB_ICONERROR);
 		end;
+		on E: EFysiekeError do begin
+			ZetOpPauze;
+			Application.MessageBox(pchar('Er is een interne fout opgetreden. De simulatie kan niet verder gaan.'+#13#10+#13#10+
+				'U kunt nog wel proberen de simulatie op te slaan.'+#13#10+#13#10+
+				'De foutmelding is: '+E.Message),'Fout',MB_ICONERROR);
+		end;
+		on E: EFysiekeWarning do
+			Application.MessageBox(pchar('Er is een interne fout opgetreden. De simulatie kan echter wel verder gaan.'+#13#10+#13#10+
+				'De foutmelding is: '+E.Message),'Fout',MB_ICONERROR);
 		on E: EVCommandRefused do begin
 			Application.MessageBox(pchar('Fout opgetreden: '+E.Message), 'Fout', 0);
 		end;
@@ -553,11 +564,20 @@ var
 	sel: 			string;
 begin
 	sel := SchermenTab.Tabs[SchermenTab.TabIndex];
+	// Om flikkeren te voorkomen, eerst de nieuwe weergeven en dan de oude
+	// weghalen.
 	Tab := RijwegLogica.Tabs;
 	while assigned(Tab) do begin
-		Tab^.Scrollbox.Visible := (Tab^.Titel = sel);
-		if Tab^.Scrollbox.Visible then
+		if Tab^.Titel = sel then begin
+			Tab^.Scrollbox.Visible := true;
 			visibleTab := Tab;
+		end;
+		Tab := Tab^.Volgende;
+	end;
+	Tab := RijwegLogica.Tabs;
+	while assigned(Tab) do begin
+		if Tab^.Titel <> sel then
+			Tab^.Scrollbox.Visible := false;
 		Tab := Tab^.Volgende;
 	end;
 end;
@@ -642,7 +662,7 @@ begin
 	closewarn := false;
 	gestart := false;
 	pauze := true;
-   app_exit := false;
+	app_exit := false;
 end;
 
 procedure TstwsimMainForm.ChangeMeetpunt;
@@ -813,12 +833,13 @@ begin
 	Stapjes := (timeGetTime - TijdUitgevoerdTot) * versnelling div msPerStapje;
 	TijdUitgevoerdTot := TijdUitgevoerdTot + stapjes * msPerStapje div versnelling;
 
-	for i := 1 to Stapjes do
+	for i := 1 to Stapjes do begin
+		if app_exit then break;
 		DoeStapje;
+	end;
 
 	if GetTijd <> VorigeTijd then begin
 		tijdLabel.Caption := TijdStr(GetTijd, false);
-
 
 		RijwegLogica.DoeActieveRijwegen;
 		RijwegLogica.DoeOverwegen;
@@ -831,8 +852,12 @@ begin
 		stwscProcesplanForm.UpdateLijst;
 
 		if (GetTijd mod 2 = 0) and stwscTreinStatusForm.Visible then
-			if vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr).status <> rsOK then
-				stwscTreinStatusForm.ModalResult := mrOK;
+			try
+				vSendMsg.SendGetTreinStatus(stwscTreinStatusForm.treinnr)
+			except
+				on EVTrainNotFound do
+					stwscTreinStatusForm.ModalResult := mrOK
+			end
 	end;
 end;
 
@@ -989,6 +1014,9 @@ begin
 end;
 
 procedure TstwsimMainForm.FormShow(Sender: TObject);
+var
+	i: integer;
+	loaded: boolean;
 begin
 	if FormShown then exit;
 	FormShown := true;
@@ -1008,8 +1036,16 @@ begin
 	SimOpenPanel.Visible := true;
 	ActiveControl := SimOpenBut;
 
-	if paramCount = 1 then
-		LoadFile(ParamStr(1))
+	loaded := false;
+	for i := 1 to paramCount do
+		if copy(paramStr(i),1,1)<>'/' then begin
+			if not loaded then begin
+				LoadFile(ParamStr(i));
+				loaded := true
+			end;
+		end else
+			if uppercase(ParamStr(i))='/L' then
+				SimComm.SetLog(true);
 end;
 
 procedure TstwsimMainForm.RijwegHoExecute(Sender: TObject);
@@ -1159,6 +1195,7 @@ begin
 	pCore.Destroy;
 	pReadMsg.Destroy;
 	pSendMsg.Destroy;
+	SimComm.SetLog(false);
 	SimComm.Destroy;
 	RijwegLogica.Destroy;
 	Log.Destroy;
@@ -1223,7 +1260,14 @@ begin
 			exit;
 		end;
 		// Dan de dienstregeling laden
-		pCore.LaadMatDienstVerschijn(f, swBasis);
+		try
+			pCore.LaadMatDienstVerschijn(f, swBasis);
+		except
+			on E: EFysiekeError do begin
+				Application.MessageBox(pchar(E.Message), 'Fout', MB_ICONERROR+MB_OK);
+				halt
+			end;
+		end;
 		closefile(f);
 		DienstOpen.Enabled := false;
 		result := true;
@@ -1269,7 +1313,14 @@ begin
 			exit;
 		end;
 		// Dan de dienstregeling laden
-		pCore.LaadMatDienstVerschijn(f, swStatus);
+		try
+			pCore.LaadMatDienstVerschijn(f, swStatus);
+		except
+			on E: EFysiekeError do begin
+				Application.MessageBox(pchar(E.Message), 'Fout', MB_ICONERROR+MB_OK);
+				halt
+			end;
+		end;
 		// Huidige tijd lezen
 		intread(f, Tijd);
 		SetTijd(Tijd);
@@ -1280,7 +1331,7 @@ begin
 		pCore.LoadInfraStatus(f);
 		// Actieve rijwegen laden
 		RijwegLogica.LoadActieveRijwegen(f);
-		LoadWisselStatus(f, vCore);
+		LoadWisselMeetpuntStatus(f, vCore);
 		// Scenario laden
 		Scenario.Clear;
 		intread(f, n);
@@ -1333,10 +1384,11 @@ var
 	i: integer;
 	oudepauze: boolean;
 begin
+	result := false;
 	oudepauze := pauze;
 	if not pauze then
 		PauzeActionExecute(Self);
-	result := false;
+
 	if GameSaveDialog.Execute then begin
 		assignfile(f, GameSaveDialog.Filename);
 		filemode := 2;
@@ -1360,7 +1412,7 @@ begin
 		pCore.SaveInfraStatus(f);
 		// Actieve rijwegen opslaan
 		RijwegLogica.SaveActieveRijwegen(f);
-		SaveWisselStatus(f, vCore);
+		SaveWisselMeetpuntStatus(f, vCore);
 		// Scenario opslaan
 		intwrite(f, Scenario.Count);
 		for i := 1 to Scenario.Count do

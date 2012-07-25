@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.11';
+	SaveIOMagic			= 'STWSIMSAVE.12';
 
 	tps					= 10;
 
@@ -18,18 +18,20 @@ const
 	frontaal				= 3*3;		// Frontaal oppvervlak
 	dichtheid			= 1.293;		// Luchtdichtheid
 
-	stationkijkafstand    = 20;
-	maxkoppelkijkafstand	 = 10;	// Hoeveel meter afstand is nodig om een koppeling
+	stationkijkafstand    	= 20;
+	maxkoppelkijkafstand	 	= 10;	// Hoeveel meter afstand is nodig om een koppeling
 											// toe te staan?
-	koppelafstanddoel		 = 3;		// Hoe dicht rijden we naar een andere trein toe?
-	kopstaartbotsingafstand=5;		// Hoe dicht moeten de treinen op elkaar komen
+	koppelafstanddoel		 	= 3;	// Hoe dicht rijden we naar een andere trein toe?
+	kopstaartbotsingafstand	= 5;  // Hoe dicht moeten de treinen op elkaar komen
 											// (en niet meer kunnen remmen) voor we een
 											// kopstaartbotsing registreren?
-	SnelheidTargetAfwijking=0.05;	// Met hoe veel snelheidsverschil zijn we tevreden?										
-	Treinvooruitblik		=	250;
-	WensMaxRemvertraging =  1.0;
-	berichtsturenwachten	=	1;		// Bericht sturen na zoveel minuten voor rood.
-	doorroodrozsnelheid  = 40;
+	SnelheidTargetAfwijking	=0.05;// Met hoe veel snelheidsverschil zijn we tevreden?
+	Treinvooruitblik			= 250;
+	JuistePerronVooruitblik	= 750;
+	WensMaxRemvertraging 	= 1.0;
+	berichtsturenwachten		= 1;		// Bericht sturen na zoveel minuten voor rood.
+	doorroodrozsnelheid  	= 40;
+	rozsnelheid 				= 40; 	// Snelheid voor geel-knipper
 
 	wisseldefectkans 					= 1/400;
 	wisselechtdefectkans				= 1/5;	// in de overige gevallen helpt omzetten
@@ -63,6 +65,10 @@ const
 	zvsVoorsein = 2;
 
 type
+	EFysiekeError = class(Exception);
+	EFysiekeWarning = class(Exception);
+	EMatfileError = class(Exception);
+
 	TScoreInfo = record
 		AankomstOpTijd			: integer;
 		AankomstBinnenDrie	: integer;
@@ -180,7 +186,7 @@ type
 		function ErlaubnisVrij(Erlaubnis: PpErlaubnis): boolean;
 		function LoadRailString(s: string): boolean;
 		function LoadScenarioString(s: string): boolean;
-		function WagonsLaden(filenaam: string): boolean;
+		procedure WagonsLaden(filenaam: string);
 		procedure WagonsWissen;
 		function ZetWissel(Wissel: PpWissel; stand: TWisselstand): boolean;
 		procedure DoeSeinen;
@@ -479,6 +485,7 @@ begin
 		tmpTreinInfo^.Treinnummer := treinnr;
 		tmpTreinInfo^.Vertraging := 0;
 		tmpTreinInfo^.Vertragingtype := vtSchatting;
+		tmpTreinInfo^.Vertragingplaats := '';
 		tmpTreinInfo^.gewijzigd := false;
 		tmpTreinInfo^.Volgende := nil;
 		result := tmpTreinInfo;
@@ -669,7 +676,7 @@ begin
 		tmpLijst2^.volgende := result;
 		result := tmpLijst2;
 	until not assigned(tmpRail);
-	halt;
+	raise EFysiekeError.Create('ZoekSporenTotVolgendHoofdseinR: Voorbij einde van rails.');
 end;
 
 procedure TpCore.ZoekVolgendSein;
@@ -1021,13 +1028,25 @@ begin
 
 	// Is het een autovoorsein, dan zoeken we het bijbehorende hoofdsein op
 	// en geven het seinbeeld door.
-	if Sein^.Autovoorsein then begin
-		ZoekVolgendVoorOfHoofdSein(Sein^.Plaats, Sein2, false, zvsHoofdsein);
-		if assigned(Sein2) then
-			Sein^.V_AdviesAuthority := Sein2^.H_MovementAuthority
-		else
-			Sein^.V_AdviesAuthority.HasAuthority := false
-	end;
+	if Sein^.Autovoorsein then
+		if IsHoofdsein(Sein) then begin
+			ZoekVolgendVoorOfHoofdSein(Sein^.Plaats, Sein2, false, zvsHoofdsein+zvsVoorsein);
+			if assigned(Sein2) then
+				if IsHoofdsein(Sein2) then
+					Sein^.V_AdviesAuthority := Sein2^.H_MovementAuthority
+				else begin
+					Sein^.V_AdviesAuthority.HasAuthority := true;
+					Sein^.V_AdviesAuthority.Baanvaksnelheid := true
+				end
+			else
+				Sein^.V_AdviesAuthority.HasAuthority := false
+		end else begin
+			ZoekVolgendVoorOfHoofdSein(Sein^.Plaats, Sein2, false, zvsHoofdsein);
+			if assigned(Sein2) then
+				Sein^.V_AdviesAuthority := Sein2^.H_MovementAuthority
+			else
+				Sein^.V_AdviesAuthority.HasAuthority := false
+		end;
 
 	// Sowieso eerst maar eens e.e.a. opzoeken.
 	ZoekVolgendVoorOfHoofdsein(Sein^.Plaats, VolgendSein, false, zvsHoofdsein);
@@ -1181,9 +1200,9 @@ begin
 				MovementAuthority.HasAuthority := true;
 				if MovementAuthority.Baanvaksnelheid then begin
 					MovementAuthority.Baanvaksnelheid := false;
-					MovementAuthority.Snelheidsbeperking := 20
-				end else if MovementAuthority.Snelheidsbeperking > 20 then
-					MovementAuthority.Snelheidsbeperking := 20;
+					MovementAuthority.Snelheidsbeperking := rozsnelheid
+				end else if MovementAuthority.Snelheidsbeperking > rozsnelheid then
+					MovementAuthority.Snelheidsbeperking := rozsnelheid;
 				Sein^.H_MovementAuthority := MovementAuthority;
 			end;
 		end;
@@ -1228,13 +1247,13 @@ begin
 			if Seinbeeld = sbGroen then begin
 				Sein^.groendefect := true;
 				Sein^.groendefecttot := GetTijd + MkTijd(0,seindefectmintijd,0)+
-					round(random * (seindefectmaxtijd-seindefectmintijd)*60);
+					round(random * (seindefectmaxtijd-seindefectmintijd)*MkTijd(0,1,0));
 				SendMsg.SendDefectSeinMsg(Sein, sbGroen);
 			end;
 			if Seinbeeld = sbGeel then begin
 				Sein^.geeldefect := true;
 				Sein^.geeldefecttot := GetTijd + MkTijd(0,seindefectmintijd,0)+
-					round(random * (seindefectmaxtijd-seindefectmintijd)*60);
+					round(random * (seindefectmaxtijd-seindefectmintijd)*MkTijd(0,1,0));
 				SendMsg.SendDefectSeinMsg(Sein, sbGeel);
 			end;
 		end;
@@ -1373,7 +1392,8 @@ begin
 	VerschijnItem := VerschijnLijst;
 	while assigned(VerschijnItem) do begin
 		Plaats := VerschijnItem^.Plaats;
-		if not (assigned(Plaats) and assigned(VerschijnItem^.wagons)) then begin
+		if VerschijnItem^.gedaan or
+			not (assigned(Plaats) and assigned(VerschijnItem^.wagons)) then begin
 			VerschijnItem := VerschijnItem^.Volgende;
 			continue;
 		end;
@@ -1386,17 +1406,16 @@ begin
 			break;
 
 		tmpRail := Plaats^.Rail;
-		if not assigned(tmpRail) then
-			halt;
+		if not assigned(tmpRail) then begin
+			VerschijnItem^.gedaan := true;
+			raise EFysiekeWarning.Create('Rail van verschijnpunt '+Plaats^.Naam+' bestaat niet. Trein '+VerschijnItem^.Treinnummer+' is daarom niet verschenen.');
+		end;
 
 		magversch := true;
 		rt := VerschijnItem^.Treinweg_Tijd;
-		if VerschijnItem^.gedaan then
-			magversch := false
-		else
-			if (VerschijnItem^.treinweg_naam <> '-') and
-				VerschijnItem^.treinweg_voldaan then
-				magversch := GetTijd >= (rt + VerschijnItem^.treinweg_wachten);
+		if (VerschijnItem^.treinweg_naam <> '-') and
+			VerschijnItem^.treinweg_voldaan then
+			magversch := GetTijd >= (rt + VerschijnItem^.treinweg_wachten);
 
 		// Punctualiteit is zo ongeveer 87,5% volgens de 3-minuten-norm.
 		k := Power(0.5, 1/(tps*60));
@@ -1439,7 +1458,7 @@ begin
 				pAlleTreinen^.Vorige := tmpTrein;
 			pAlleTreinen := tmpTrein;
 
-			tmpTrein^.vertraging := (GetTijd - vt) div 60;
+			tmpTrein^.vertraging := (GetTijd - vt) div MkTijd(0,1,0);
 			tmpTrein^.vorigeaankomstvertraging := tmpTrein^.vertraging;
 
 			// Rijplan instellen
@@ -1507,7 +1526,7 @@ begin
 			// Vertraging bijwerken van onszelf en van evt. andere treinen die
 			// eerder hadden moeten verschijnen.
 			TreinInfo := ZoekOfMaakTreininfo(VerschijnItem^.Treinnummer);
-			ScoreVertraging(TreinInfo, GetTijd-VerschijnItem^.Tijd, vtSchatting);
+			ScoreVertraging(TreinInfo, GetTijd-VerschijnItem^.Tijd, vtSchatting, '');
 			tmpVerschijnItem := VerschijnLijst;
 			while assigned(tmpVerschijnItem) and
 				(tmpVerschijnItem <> VerschijnItem) do begin
@@ -1515,7 +1534,7 @@ begin
 				// items gehad.
 				if not tmpVerschijnItem.gedaan then begin
 					TreinInfo := ZoekOfMaakTreininfo(tmpVerschijnItem^.Treinnummer);
-					ScoreVertraging(TreinInfo, GetTijd+MkTijd(0,1,0)-tmpVerschijnItem^.Tijd, vtSchatting);
+					ScoreVertraging(TreinInfo, GetTijd+MkTijd(0,1,0)-tmpVerschijnItem^.Tijd, vtSchatting, '');
 				end;
 				tmpVerschijnItem := tmpVerschijnItem^.Volgende;
 			end;
@@ -2264,7 +2283,7 @@ begin
 	result := true;
 end;
 
-function TpCore.WagonsLaden;
+procedure TpCore.WagonsLaden;
 const
 	ws = [#9, ' '];
 var
@@ -2277,15 +2296,11 @@ var
 	code: integer;
 	Matfile:	PpMaterieelFile;
 begin
-	result := false;
 	// Probeer het bestand te openen
 	if (copy(FileDir, length(FileDir), 1) <> '\') and
 		(FileDir <> '') then FileDir := FileDir + '\';
 	Assign(f, FileDir+filenaam+'.ssm');
-	{$I-}Reset(f);{$I+}
-	if ioresult <> 0 then exit;	// Als het bestand niet bestaat niks doen.
-	// Het bestand is geopend. Laad het in.
-	result := true;
+	Reset(f);
 	new(Matfile);
 	Matfile^.Filename := filenaam;
 	Matfile^.Wagons := nil;
@@ -2317,55 +2332,55 @@ begin
 				case index of
 				0: begin
 						if pos(',', waarde) > 0 then
-							halt;
+							raise EMatfileError.Create('Materieeltype mag geen komma bevatten: '+waarde);
 						if copy(waarde,1,1) = '-' then
-							halt;
+							raise EMatfileError.Create('Materieeltype mag niet ''-'' zijn');
 						tmpWagon.naam := waarde;
 					end;
 				1: begin
 						val(waarde, tmpWagon.lengte, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('Materieellengte is geen getal: '+waarde);
 					end;
 				2: begin
 						val(waarde, tmpWagon.gewicht, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('Gewicht van materieel is geen getal: '+waarde);
 						tmpWagon.gewicht := tmpWagon.gewicht * 1000;
 					end;
 				3: begin
 						val(waarde, tmpWagon.vermogen, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('Vermogen van materieel is geen getal: '+waarde);
 						tmpWagon.vermogen := tmpWagon.vermogen * 1000;
 					end;
 				4: begin
 						val(waarde, tmpWagon.trekkracht, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('Trekkracht van materieel is geen getal: '+waarde);
 						tmpWagon.trekkracht := tmpWagon.trekkracht * 1000;
 					end;
 				5: begin
 						val(waarde, tmpWagon.remkracht, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('Remkracht van materieel is geen getal: '+waarde);
 						tmpWagon.remkracht := tmpWagon.remkracht * 1000;
 					end;
 				6: begin
 						val(waarde, tmpWagon.maxsnelheid, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('Maximumsnelheid van materieel is geen getal: '+waarde);
 					end;
 				7: begin
 						val(waarde, tmpWagon.cw, code);
 						if code <> 0 then
-							halt;
+							raise EMatfileError.Create('cw-Waarde van materieel is geen getal: '+waarde);
 					end;
 				8: tmpWagon.elektrisch := (waarde = 'j') or (waarde = 'J');
 				9: tmpWagon.bedienbaar := (waarde = 'j') or (waarde = 'J');
 				10: tmpWagon.twbedienbaar := (waarde = 'j') or (waarde = 'J');
 				else
-					halt;
+					raise EMatfileError.Create('Te veel parameters voor materieel opgegeven');
 				end;
 				inc(index);
 			end;
@@ -2514,6 +2529,7 @@ begin
 		stringwrite(f, TreinInfo^.Treinnummer);
 		intwrite(f, TreinInfo^.Vertraging);
 		bytewrite(f, VertragingTypeNaarByte(TreinInfo^.Vertragingtype));
+		stringwrite(f, TreinInfo^.Vertragingplaats);
 		TreinInfo := TreinInfo^.Volgende;
 	end;
 
@@ -2618,6 +2634,7 @@ begin
 		stringread(f, Treinnummer);   TreinInfo := ZoekOfMaakTreininfo(Treinnummer);
 		intread(f, TreinInfo^.Vertraging);
 		byteread(f, x); TreinInfo^.Vertragingtype := ByteNaarVertragingType(x);
+		stringread(f, TreinInfo^.Vertragingplaats);
 		TreinInfo^.gewijzigd := true;
 	end;
 
@@ -2649,8 +2666,13 @@ begin
 	intread(f, matfilecount);
 	for i := 1 to matfilecount do begin
 		stringread(f, s);
-		if not WagonsLaden(s) then begin
-			halt;
+		try
+			WagonsLaden(s)
+		except
+			on EInOutError do
+				raise EFysiekeError.Create('Materieelbestand voor dienstregeling ontbreekt: '+s);
+			on E: EMatfileError do
+				raise EFysiekeError.Create(E.Message);
 		end;
 	end;
 	// En de rest.

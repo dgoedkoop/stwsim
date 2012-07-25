@@ -21,6 +21,7 @@ type
 		procedure ActieKoppelen(Trein: PpTrein);
 		procedure ActieLoskoppelen(Trein: PpTrein; AfkoppelenVanOmgekeerdeTrein: boolean);
 		procedure ActiesAfhandelen(Trein: PpTrein);
+		function MoetTreinStoppenBijPerronpunt(Trein: PpTrein; Punt: PpSein): boolean;
 		procedure ControleerVertrektijd(Trein: PpTrein);
 		procedure ControleerStoppen(Trein: PpTrein);
 		function  ControleerKoppelTrein(Trein: PpTrein; Planpunt: PpRijplanpunt): boolean;
@@ -138,7 +139,7 @@ begin
 			if not Trein^.Planpunten^.stoppen then begin
 				// Vertragingsinfo bijwerken
 				Trein^.Vertraging := (GetTijd -
-					Trein^.Planpunten^.Aankomst) div 60;
+					Trein^.Planpunten^.Aankomst) div MkTijd(0,1,0);
 				// Naar volgende planpunt springen
 				dispose(Trein^.GetVolgendRijplanpunt);
 			end;
@@ -311,10 +312,8 @@ begin
 				MovementAuthority.Baanvaksnelheid := true;
 			end;
 			// Is het een station? Dan kijken we naar de naam, of het geldig is.
-			if GevSein^.Perronpunt and assigned(Trein^.Planpunten) then
-				if (Trein^.Planpunten^.Station = GevSein^.Stationsnaam) then
-					if Trein^.Planpunten^.stoppen then
-						MovementAuthority.HasAuthority := false;
+			if MoetTreinStoppenBijPerronpunt(Trein, GevSein) then
+				MovementAuthority.HasAuthority := false;
 			// Is het een snelheidsopleggend sein?
 			if (not MovementAuthority.HasAuthority) or
 				((not MovementAuthority.Baanvaksnelheid) and
@@ -697,7 +696,7 @@ begin
 		tmpPos := Trein^.pos_dist;
 		GevSeinAfstand := 0;
 		repeat
-			Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, Treinvooruitblik, GevSein, tmpAfstand);
+			Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, Treinvooruitblik-GevSeinAfstand, GevSein, tmpAfstand);
 			GevSeinAfstand := GevSeinAfstand + tmpAfstand;
 		until (not assigned(GevSein)) or IsHoofdsein(GevSein);
 		Core.ZoekVolgendeTrein(Trein, Treinvooruitblik, GevTrein, GevTreinAfstand, tmpAchteruit);
@@ -729,7 +728,7 @@ begin
 			if (not wasdefect) and Core.GaatDefect(treindefectkans) then begin
 				Trein^.defect := true;
 				Trein^.defecttot := GetTijd + MkTijd(0,treindefectmintijd,0) +
-					round(random * (treindefectmaxtijd-treindefectmintijd)*60);
+					round(random * (treindefectmaxtijd-treindefectmintijd)*MkTijd(0,1,0));
 
 				gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
 				gesprek^.tekstXsoort := pmsVraagOK;
@@ -746,7 +745,7 @@ begin
 			end else begin
 				// We kunnen echt echt vertrekken
 				Trein^.modus := tmRijden;
-				Trein^.Vertraging := (GetTijd - vt) div 60;
+				Trein^.Vertraging := (GetTijd - vt) div MkTijd(0,1,0);
 				Trein^.kannietwegvoor := -1;
 				dispose(Trein^.StationModusPlanpunt);
 				Trein^.StationModusPlanpunt := nil;
@@ -795,11 +794,61 @@ var
 begin
 	Trein^.Modus := tmStilstaan;	// We staan stil bij het station.
 	// Vertragingsinformatie bijwerken
-	nieuwevertraging := (GetTijd - Trein^.Planpunten^.Aankomst) div 60;
+	nieuwevertraging := (GetTijd - Trein^.Planpunten^.Aankomst) div MkTijd(0,1,0);
 	Core.ScoreAankomstVertraging(Trein, nieuwevertraging);
 	Trein^.Vertraging := nieuwevertraging;
 	// En het rijplanpunt inladen.
 	Trein^.StationModusPlanpunt := Trein^.GetVolgendRijplanpunt;
+end;
+
+function TpTreinPhysics.MoetTreinStoppenBijPerronpunt;
+var
+	tmpRail:			PpRail;
+	tmpAchteruit:	boolean;
+	tmpPos:			double;
+	tmpAfstand:		double;
+	GevAfstand:		double;
+	GevSein:			PpSein;
+begin
+	result := false;
+
+	// Eerst de eenvoudige cases afhandelen
+	if (not assigned(Trein^.Planpunten)) or
+		(not Trein^.Planpunten^.stoppen) or
+		(not Punt^.Perronpunt) then
+		exit;
+	if Trein^.Planpunten^.Station <> Punt^.Stationsnaam then
+		exit;
+	if (Trein^.Planpunten^.Perron = '-') or
+		(Trein^.Planpunten^.Perron = '0') or
+		(Trein^.Planpunten^.Perron = Punt^.Perronnummer) then begin
+		result := true;
+		exit;
+	end;
+
+	// Het is het juiste station maar het verkeerde perron. Dan wordt het wat
+	// ingewikkelder. Tijd voor plan B.
+	tmpRail := Trein^.pos_rail;
+	tmpAchteruit := Trein^.achteruit;
+	tmpPos := Trein^.pos_dist;
+	GevAfstand := 0;
+	repeat
+		Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, JuistePerronVooruitblik-GevAfstand, GevSein, tmpAfstand);
+		GevAfstand := GevAfstand + tmpAfstand;
+		if assigned(GevSein) then begin
+			if GevSein^.Perronpunt and
+				(GevSein^.Stationsnaam = Trein^.Planpunten^.Station) and
+				(GevSein^.Perronnummer = Trein^.Planpunten^.Perron) then
+				exit;
+			if IsHoofdsein(GevSein) then
+				if not GevSein^.H_MovementAuthority.HasAuthority then begin
+					result := true;
+					exit;
+				end;
+		end;
+	until (not assigned(tmpRail)) or (not assigned(GevSein));
+	// Niks gevonden binnen de kijkafstand.
+	result := true;
 end;
 
 procedure TpTreinPhysics.ControleerStoppen;
@@ -825,8 +874,7 @@ begin
 			Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
 				GevSein, GevSeinAfstand);
 			if (Trein^.Modus <> tmStilstaan) and assigned(GevSein) then
-				if GevSein^.Perronpunt and
-					(Trein^.Planpunten^.Station = GevSein^.Stationsnaam) then begin
+				if MoetTreinStoppenBijPerronpunt(Trein, GevSein) then begin
 					// Correct perrongebruik registreren
 					if (Trein^.Planpunten^.Perron = '') or
 						(Trein^.Planpunten^.Perron = GevSein^.Perronnummer) then
@@ -840,7 +888,7 @@ begin
 						// Er is in feite geen perron
 						// Vertragingsinfo bijwerken
 						Trein^.Vertraging := (GetTijd -
-							Trein^.Planpunten^.Aankomst) div 60;
+							Trein^.Planpunten^.Aankomst) div MkTijd(0,1,0);
 						// Naar volgende planpunt springen
 						dispose(Trein^.GetVolgendRijplanpunt);
 					end;

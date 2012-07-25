@@ -2,13 +2,15 @@ unit stwpTreinen;
 
 interface
 
-uses stwpRails, stwpRijplan, stwpTijd, stwpSeinen, stwvMisc, stwpDatatypes,
-	stwpTelefoongesprek;
+uses sysutils, stwpRails, stwpRijplan, stwpTijd, stwpSeinen, stwvMisc,
+	stwpDatatypes, stwpTelefoongesprek;
 
 const
 	RemwegSnelheid	 		 = 40;
 
 type
+	ETreinError = class(Exception);
+
 	TWaaromStilstaan = (stWeetniet, stSein, stTrein, stStroom, stDoorrood,
 							  stWissel, stStuurstand, stUndef);
 
@@ -229,7 +231,7 @@ begin
 		stringread(f, WagonTypeStr);
 		Wagon := ZoekWagonType(pMaterieel, WagonTypeStr);
 		if not assigned(Wagon) then
-			Halt;
+			raise ETreinError.Create('Kon wagontype niet vinden: '+WagonTypeStr);
 		WagonConn^.wagon := Wagon;
 		boolread(f, WagonConn^.Omgekeerd);
 	end;

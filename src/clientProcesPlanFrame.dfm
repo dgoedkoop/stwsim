@@ -29,6 +29,7 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
     PopupMenu = PopupMenu
     Style = lbOwnerDrawFixed
     TabOrder = 0
+    OnClick = RegelListClick
     OnDblClick = RegelListDblClick
     OnDrawItem = RegelListDrawItem
     OnMouseDown = RegelListMouseDown
@@ -123,6 +124,9 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
     object Voernuuit1: TMenuItem
       Action = VoernuuitAct
     end
+    object UitschakelenvoorARI1: TMenuItem
+      Action = GeenARIAct
+    end
     object Verwerkvertraging1: TMenuItem
       Action = VVAct
       Caption = 'Vertraging verwerken'
@@ -154,6 +158,10 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
     object VVAct: TAction
       Caption = 'Verwerk vertraging'
       OnExecute = VVActExecute
+    end
+    object GeenARIAct: TAction
+      Caption = 'Uitschakelen voor ARI'
+      OnExecute = GeenARIActExecute
     end
   end
 end

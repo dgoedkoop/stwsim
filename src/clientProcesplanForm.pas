@@ -35,6 +35,7 @@ type
 		FramesLinks,
 		FramesRechts:		integer;
 		VorigeTijd:		integer;
+		procedure AddFrame(PPFrame: PFrameList; waar: tLinksRechts);
 	public
 		RijwegLogica:	TRijwegLogica;
 		Core:				PvCore;
@@ -48,7 +49,7 @@ type
 		procedure TreinnummerNieuw(Meetpunt: PvMeetpunt);
 		procedure TreinnummerWeg(Meetpunt: PvMeetpunt);
 		procedure TreinInfo(TreinInfoData: TvTreinInfo);
-		function CreateFrame(Filename: string; waar: tLinksRechts): PFrameList;
+		function CreateFrame(Filename: string): PFrameList;
 		procedure RecalcSizes;
 		procedure SaveStatus(var f: file);
 		procedure LoadStatus(var f: file);
@@ -162,23 +163,31 @@ end;
 function TstwscProcesplanForm.CreateFrame;
 var
 	PPFrame: PFrameList;
-	tmpFrame: PFrameList;
+	s: string;
 begin
 	new(PPFrame);
 	PPFrame^.PPFrame := TstwscProcesPlanFrame.Create(Self);
 	PPFrame^.PPFrame.Name := 'PPFrame'+IntToStr(FramesLinks+FramesRechts);
 	PPFrame^.PPFrame.Visible := true;
 	PPFrame^.PPFrame.Core  := Core;
+	s := copy(Filename, 1, length(Filename)-length(ExtractFileExt(Filename)));
+	PPFrame^.PPFrame.FName := Uppercase(copy(s,1,1))+LowerCase(copy(s,2,length(s)-1));
+	PPFrame^.PPFrame.titelLabel.Caption := PPFrame^.PPFrame.FName;
 	PPFrame^.PPFrame.ProcesPlan := TProcesPlan.Create;
 	PPFrame^.PPFrame.ProcesPlan.Core := Core;
 	PPFrame^.PPFrame.ProcesPlan.SendMsg := SendMsg;
 	PPFrame^.PPFrame.ProcesPlan.Log := Log;
 	PPFrame^.PPFrame.ProcesPlan.RijwegLogica := RijwegLogica;
-	PPFrame^.PPFrame.FName := Filename;
-	PPFrame^.PPFrame.titelLabel.Caption :=
-		UpperCase(copy(Filename, 1, length(Filename)-length(ExtractFileExt(Filename))));
+	PPFrame^.PPFrame.ProcesPlan.Locatienaam := PPFrame^.PPFrame.FName;
 	PPFrame^.Volgende := nil;
 	PPFrame^.PPFrame.UpdateLijst;
+	result := PPFrame;
+end;
+
+procedure TstwscProcesplanForm.AddFrame;
+var
+	tmpFrame: PFrameList;
+begin
 	if waar = lrLinks then begin
 		PPFrame^.PPFrame.Parent := LiPanel;
 		if assigned(PPFramesLinks) then begin
@@ -205,7 +214,6 @@ begin
 		PPFrame^.PPFrame.Align := alClient;
 		inc(FramesRechts);
 	end;
-	result := PPFrame;
 	RecalcSizes;
 end;
 
@@ -253,14 +261,16 @@ begin
 	intread(f, count);
 	for i := 1 to count do begin
 		stringread(f, Filename);
-		PPFrame := CreateFrame(Filename, lrLinks);
+		PPFrame := CreateFrame(Filename);
 		PPFrame^.PPFrame.ProcesPlan.LoadBinair(f);
+		AddFrame(PPFrame, lrLinks);
 	end;
 	intread(f, count);
 	for i := 1 to count do begin
 		stringread(f, Filename);
-		PPFrame := CreateFrame(Filename, lrRechts);
+		PPFrame := CreateFrame(Filename);
 		PPFrame^.PPFrame.ProcesPlan.LoadBinair(f);
+		AddFrame(PPFrame, lrRechts);
 	end;
 end;
 
@@ -288,11 +298,21 @@ var
 begin
 	if OpenDialog.Execute then begin
 		Filename := ExtractFileName(OpenDialog.Filename);
-		if FramesLinks = FramesRechts then
-			PPFrame := CreateFrame(Filename, lrLinks)
-		else
-			PPFrame := CreateFrame(Filename, lrRechts);
-		PPFrame^.PPFrame.ProcesPlan.LaadProcesplan(OpenDialog.Filename);
+		PPFrame := CreateFrame(Filename);
+		try
+			PPFrame^.PPFrame.ProcesPlan.LaadProcesplan(OpenDialog.Filename);
+			if FramesLinks = FramesRechts then
+				AddFrame(PPFrame, lrLinks)
+			else
+				AddFrame(PPFrame, lrRechts);
+		except
+			on E: EProcesplanSyntaxError do begin
+				Application.MessageBox(pchar(E.Message), 'Fout bij laden procesplan', MB_OK+MB_ICONWARNING);
+				PPFrame^.PPFrame.ProcesPlan.Destroy;
+				PPFrame^.PPFrame.Destroy;
+				dispose(PPFrame);
+			end;
+		end;
 	end;
 end;
 

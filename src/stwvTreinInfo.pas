@@ -8,6 +8,7 @@ type
 		Treinnummer:		string;
 		Vertraging:			integer;
 		Vertragingsoort:	TVertragingSoort;
+		Vertragingplaats:	string;
 	end;
 
 implementation

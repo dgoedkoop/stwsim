@@ -91,8 +91,6 @@ begin
 		intread(f, VI^.Tijd);
 		stringread(f, PlaatsStr);
 		VI^.Plaats := ZoekVerschijnpunt(pAlleVerschijnpunten, PlaatsStr);
-//		if not assigned(VI^.Plaats) then
-//			halt;
 		stringread(f, VI^.vanafstation);
 
 		VI^.Wagons := LoadWagons(f, pMaterieel);

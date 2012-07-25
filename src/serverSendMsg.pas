@@ -142,7 +142,7 @@ begin
 	vtSchatting: vertrtstr := 'st';
 	else exit
 	end;
-	SendPlainString('ti:'+TreinInfo^.Treinnummer+','+vertrtstr+','+vertrstr);
+	SendPlainString('ti:'+TreinInfo^.Treinnummer+','+vertrtstr+','+vertrstr+','+TreinInfo^.Vertragingplaats);
 end;
 
 procedure TpSendMsg.SendBel(van: PpTrein);
