@@ -216,6 +216,7 @@ type
 		function vLoadScenarioString(s: string): boolean;
 		procedure ScenarioToepassen(vToepassen: boolean);
 		// Tekenen
+		procedure SetTabSizes;
 		procedure UpdateControls;
 		procedure SetSeltabVisible;
 		procedure LogMsg(s: string);
@@ -262,6 +263,7 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 
 const
 	MagicCode = 'STWSIM.1';
+	WachtCursor = crHourGlass;
 
 procedure TstwsimMainForm.DoeStapje;
 	procedure ZetOpPauze;
@@ -327,6 +329,7 @@ begin
 	SimOpenPanel.Top := GetTop(SimOpenPanel.Height);
 	SimStartPanel.Left := GetLeft(SimStartPanel.Width);
 	SimStartPanel.Top := GetTop(SimStartPanel.Height);
+   SetTabSizes;
 end;
 
 procedure TstwsimMainForm.LoadInfra;
@@ -355,6 +358,7 @@ end;
 
 procedure TstwsimMainForm.LoadFile;
 var
+	tmpCursor: TCursor;
 	f: file;
 	magic, schermnaam: string;
 	naam: string;
@@ -375,6 +379,9 @@ begin
 		Application.MessageBox('Dit is geen geldig bestand.', 'Fout', MB_ICONERROR);
 		exit;
 	end;
+
+	tmpCursor := Cursor;
+	SetCursor(Screen.Cursors[WachtCursor]);
 
 	LoadInfra(f);
 
@@ -399,6 +406,8 @@ begin
 	BerekenAankondigingen(vCore);
 	BerekenRijwegenNaarSeinen(vCore);
 
+	SetCursor(Screen.Cursors[tmpCursor]);
+
 	UpdateChg.Schermaantal := true;
 	UpdateChg.Schermen := true;
 	UpdateChg.Rijweg := true;
@@ -419,6 +428,24 @@ procedure TstwsimMainForm.SimOpenenExecute(Sender: TObject);
 begin
 	if OpenDialog.Execute then
 		LoadFile(OpenDialog.Filename);
+end;
+
+procedure TstwsimMainForm.SetTabSizes;
+var
+	Tab: PTabList;
+begin
+	Tab := RijwegLogica.Tabs;
+	while assigned(Tab) do begin
+		if Tab^.Gleisplan.Width >= Tab^.Scrollbox.Width then
+			Tab^.Gleisplan.Left := 0
+		else
+			Tab^.Gleisplan.Left := (Tab^.Scrollbox.Width - Tab^.Gleisplan.Width) div 2;
+		if Tab^.Gleisplan.Height >= Tab^.Scrollbox.Height then
+			Tab^.Gleisplan.Top := 0
+		else
+			Tab^.Gleisplan.Top := (Tab^.Scrollbox.Height - Tab^.Gleisplan.Height) div 2;
+		Tab := Tab^.Volgende;
+	end;
 end;
 
 procedure TstwsimMainForm.AddScherm;
@@ -443,8 +470,6 @@ begin
 //	Tab^.Gleisplan.OnMouseMove := GleisplanMouseMove;
 	Tab^.Gleisplan.OnClick := GleisplanClick;
 	Tab^.Gleisplan.OnDblClick := GleisplanClick;
-	Tab^.Gleisplan.Top := 0;
-	Tab^.Gleisplan.Left := 0;
 	Tab^.Gleisplan.MaxX := 125;
 	Tab^.Gleisplan.MaxY := 36;
 	Tab^.Gleisplan.Core := vCore;
@@ -463,6 +488,7 @@ begin
 			l := l^.volgende;
 		l^.volgende := Tab;
 	end;
+	SetTabSizes;
 end;
 
 function TstwsimMainForm.GetScherm;
@@ -1189,6 +1215,7 @@ begin
 		Tab := Tab^.Volgende;
 		dispose(tmpTab);
 	end;
+	RijwegLogica.Tabs := nil;
 	dispose(vCore);
 	vReadMsg.Destroy;
 	vSendMsg.Destroy;
@@ -1226,12 +1253,14 @@ begin
 		BorderStyle := bsSizeable;
 		WindowState := wsMaximized;
 	end;
+   SetTabSizes;
 end;
 
 function TstwsimMainForm.OpenDienstregeling;
 var
 	f: file;
 	s: string;
+	tmpCursor: TCursor;
 begin
 	result := false;
 	if DienstOpenDialog.Execute then begin
@@ -1248,6 +1277,8 @@ begin
 			Application.Messagebox('Ongeldig bestandstype.', 'Fout', MB_ICONERROR);
 			exit;
 		end;
+		tmpCursor := Cursor;
+		SetCursor(Screen.Cursors[WachtCursor]);
 		// Lees simnaam en simversie
 		stringread(f, s);
 		if s <> pCore.simnaam then begin
@@ -1269,6 +1300,7 @@ begin
 			end;
 		end;
 		closefile(f);
+		SetCursor(Screen.Cursors[tmpCursor]);
 		DienstOpen.Enabled := false;
 		result := true;
 	end;
@@ -1276,6 +1308,7 @@ end;
 
 function TstwsimMainForm.OpenGame;
 var
+	tmpCursor: TCursor;
 	f: file;
 	s: string;
 	i,n: integer;
@@ -1291,6 +1324,8 @@ begin
 			Application.Messagebox('Fout bij openen bestand.', 'Fout', MB_ICONERROR);
 			exit;
 		end;
+		tmpCursor := Cursor;
+		SetCursor(Screen.Cursors[WachtCursor]);
 		// Lees de MAGIC
 		stringread(f, s);
 		modus := -1;
@@ -1345,6 +1380,7 @@ begin
 			stwscProcesplanForm.LoadStatus(f);
 
 		closefile(f);
+		SetCursor(Screen.Cursors[tmpCursor]);
 		SGOpenen.Enabled := false;
 		result := true;
 	end;
@@ -1380,6 +1416,7 @@ end;
 
 function TstwsimMainForm.SaveGame;
 var
+	tmpCursor: TCursor;
 	f: file;
 	i: integer;
 	oudepauze: boolean;
@@ -1397,6 +1434,8 @@ begin
 			Application.Messagebox('Fout bij openen bestand.', 'Fout', MB_ICONERROR);
 			exit;
 		end;
+		tmpCursor := Cursor;
+		SetCursor(Screen.Cursors[WachtCursor]);
 		// Schrijf de MAGIC
 		stringwrite(f, SaveIOMagic);
 		// Schrijf simnaam en simversie
@@ -1420,6 +1459,7 @@ begin
 		// Procesplan opslaan
 		stwscProcesplanForm.SaveStatus(f);
 
+		SetCursor(Screen.Cursors[tmpCursor]);
 		closefile(f);
 		result := true;
 	end;

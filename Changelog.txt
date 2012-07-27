@@ -659,8 +659,29 @@
 - Fix: Bij opsplitsen van planregel werd de variabele voor al of niet bewerkt
   zijn niet geinitialiseerd.
 
-25 juli 2012:
+(0.2.0.36) 25 juli 2012:
 - Voer-uit-knop alleen activeren als regel ook echt mogelijkerwijs uitgevoerd
   kan worden, dus als de trein op het beginspoor is aangekondigd.
 - Fix: Trein wilde niet meer stoppen als hij bij het verkeerde perron kwam en
   het uitrijsein veilig stond.
+
+- Fix: De aanrijtijd van de monteur was ingebouwd, maar de werktijd niet, dus
+  de klus was onmiddellijk geklaard. Dat is natuurlijk niet de bedoeling.
+- De monteur gebruikt nu een kortsluitlans terwijl hij bezig is.
+
+26 juli 2012:
+- Een afgekoppeld treindeel moet de speciale acties die bij het eerste
+  dienstregelingpunt van z'n nieuwe treinnummer wel degelijk uitvoeren, want
+  anders is het niet mogelijk om een trein in drie delen te splitsen.
+- Fix: In de dienstregelingeditor BeginUpdate en EndUpdate gebruiken zodat
+  het hertekenen na het bewerken van een item niet zo verschrikkelijk langzaam
+  gaat als er veel treinen zijn.
+
+27 juli 2012:
+- Fix: In de dienstregeling-editor niks hertekenen na het wijzigen van de
+  dienstregeling van een trein omdat er toch niks zichtbaars (nl. het
+  treinnummer) gewijzigd kan zijn in het bewerk-venster.
+- Fix: Als er nul minuten vertraging wordt gemeten en er nog geen vertraging
+  was geregistreerd, geen nieuwe vertraging registreren.
+- Als het venster groter is dan de inhoud van een tab, die inhoud gecentreerd
+  weergeven

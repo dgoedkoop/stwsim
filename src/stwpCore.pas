@@ -2215,6 +2215,7 @@ begin
 						begin Leesfout_melding := 'Meetpunt '+waarde+' niet gevonden'; exit end;
 					// Stel de kortsluitlans in
 					tmpMeetpunt^.kortsluitlans := true;
+					tmpMeetpunt^.kortsluitlansiswegensscenario := true;
 					// Breek dit meetpunt los van het spoorplan
 					tmpRail := pAlleRails;
 					while assigned(tmpRail) do begin

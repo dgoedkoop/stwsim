@@ -3,7 +3,7 @@ unit stwpMonteurPhysics;
 interface
 
 uses stwpCore, stwpTijd, stwpRails, stwpTelefoongesprek, stwpMonteur,
-	stwpDatatypes;
+	stwpMeetpunt, stwpDatatypes;
 
 type
 	PpMonteurPhysics = ^TpMonteurPhysics;
@@ -53,6 +53,10 @@ begin
 		if not assigned(Wissel) then begin
 			// XXX Dit mag niet voorkomen.
 		end else begin
+			if not PpMeetpunt(Wissel^.Meetpunt)^.kortsluitlansiswegensscenario then begin
+				PpMeetpunt(Wissel^.Meetpunt)^.kortsluitlans := false;
+				PpMeetpunt(Wissel^.Meetpunt)^.veranderd := true;
+			end;
 			if not (Wissel^.defect = wdDefect) then begin
 				Gesprek := Core.NieuwTelefoongesprek(Monteur, tgtBellen, true);
 				Gesprek^.tekstX := 'In wissel '+Monteur.Opdracht.ID+' kan ik geen defect ontdekken!';
@@ -75,16 +79,22 @@ var
 	Gesprek: PpTelefoongesprek;
 begin
 	case Monteur.Opdracht.Wat of
-	mrwWissel: begin
-		Wissel := Core.ZoekWissel(Monteur.Opdracht.ID);
-		if not assigned(Wissel) then begin
-			Gesprek := Core.NieuwTelefoongesprek(Monteur, tgtBellen, true);
-			Gesprek^.tekstX := 'Het gevraagde wissel '+Monteur.Opdracht.ID+' kan ik niet vinden!';
-			Gesprek^.tekstXsoort := pmsVraagOK;
-			Monteur.Status := msWachten;
-		end else
-			Wissel^.Monteur := Monteur;
-	end;
+		mrwWissel: begin
+			Wissel := Core.ZoekWissel(Monteur.Opdracht.ID);
+			if not assigned(Wissel) then begin
+				Gesprek := Core.NieuwTelefoongesprek(Monteur, tgtBellen, true);
+				Gesprek^.tekstX := 'Het gevraagde wissel '+Monteur.Opdracht.ID+' kan ik niet vinden!';
+				Gesprek^.tekstXsoort := pmsVraagOK;
+				Monteur.Status := msWachten;
+			end else begin
+				if not PpMeetpunt(Wissel^.Meetpunt)^.kortsluitlansiswegensscenario then begin
+					PpMeetpunt(Wissel^.Meetpunt)^.kortsluitlans := true;
+					PpMeetpunt(Wissel^.Meetpunt)^.veranderd := true;
+				end;
+				Wissel^.Monteur := Monteur;
+				Monteur.VolgendeStatusTijd := RandomWachtTijd(mintijd_repareren, maxtijd_repareren);
+			end;
+		end;
 	end;
 end;
 

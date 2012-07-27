@@ -675,7 +675,8 @@ begin
 			// Werk onszelf bij
 			Gewijzigd := false;
 			if (round(ProcesPlanPunt^.GemetenVertraging/MkTijd(0,1,0)) <> round(TreinInfo.Vertraging/MkTijd(0,1,0))) or
-				(ProcesPlanPunt^.GemetenVertragingPlaats = '') then begin
+				((ProcesPlanPunt^.GemetenVertragingPlaats = '') and
+				 (round(TreinInfo.Vertraging/MkTijd(0,1,0)) <> 0)) then begin
 				ProcesPlanPunt^.GemetenVertragingPlaats := Locatienaam;
 				Gewijzigd := true;
 			end;

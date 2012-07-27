@@ -23,8 +23,9 @@ type
 		// Defecten
 		magdefect:  boolean;			// Verschijnpunt mag niet defect.
 		defect:		boolean;
-		// Scenario
+		// Scenario / monteur
 		kortsluitlans: boolean;
+		kortsluitlansiswegensscenario: boolean;
 
 		// OVERIG
 		veranderd:	boolean;
@@ -77,7 +78,8 @@ constructor TpMeetpunt.Create;
 begin
 	ZichtbaarLijst := nil;
 	bezet := false;
-   kortsluitlans := false;
+	kortsluitlans := false;
+   kortsluitlansiswegensscenario := false;
 end;
 
 destructor TpMeetpunt.Destroy;

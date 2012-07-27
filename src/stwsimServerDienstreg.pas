@@ -170,6 +170,7 @@ begin
 	// Treinen
 	Dienst := Core.pAlleDiensten;
 	i := 0;
+	treinList.Items.BeginUpdate;
 	while assigned(Dienst) do begin
 		inc(i);
 		if treinList.Items.Count >= i then
@@ -180,9 +181,11 @@ begin
 	end;
 	while treinList.Items.Count > i do
 		treinList.Items.Delete(treinList.Items.Count-1);
+	treinList.Items.EndUpdate;
 	// Verschijnen
 	VerschijnItem := Core.VerschijnLijst;
 	i := 0;
+	verschijnList.Items.BeginUpdate;
 	while assigned(VerschijnItem) do begin
 		inc(i);
 		if verschijnList.Items.Count >= i then
@@ -193,6 +196,7 @@ begin
 	end;
 	while verschijnList.Items.Count > i do
 		verschijnList.Items.Delete(verschijnList.Items.Count-1);
+	verschijnList.Items.EndUpdate;
 end;
 
 procedure TstwssDienstregForm.FormShow(Sender: TObject);
@@ -708,7 +712,7 @@ begin
 		Dienst := Dienst^.Volgende;
 	stwssTreinDienstForm.Dienst := Dienst;
 	stwssTreinDienstForm.ShowModal;
-	UpdateDingen;
+//	UpdateDingen; // Deze procedure wijzigt toch niks dat op deze form zichtbaar is
 end;
 
 procedure TstwssDienstregForm.delTreinButClick(Sender: TObject);

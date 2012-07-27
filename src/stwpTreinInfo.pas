@@ -32,7 +32,8 @@ begin
 	// De locatie werken we alleen bij als het tijdsverschil een minutensprong
 	// veroorzaakt
 	if (round(TreinInfo.Vertraging / MkTijd(0,1,0)) <> round(vertraging / MkTijd(0,1,0))) or
-		((TreinInfo.Vertragingplaats = '') and (Locatienaam <> '')) then begin
+		((TreinInfo.Vertragingplaats = '') and (Locatienaam <> '') and
+		 (round(vertraging / MkTijd(0,1,0)) <> 0)) then begin
 		TreinInfo.Vertragingplaats := Locatienaam;
 		TreinInfo.gewijzigd := true;
 	end;

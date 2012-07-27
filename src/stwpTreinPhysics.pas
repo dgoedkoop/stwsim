@@ -593,7 +593,7 @@ begin
 		// route vleugelen.
 		tmpTrein^.Planpunten := Core.CopyDienstFrom(tmpTrein^.Treinnummer, Trein^.StationModusPlanpunt^.Station);
 		tmpTrein^.StationModusPlanpunt := tmpTrein^.GetVolgendRijplanpunt;
-		tmpTrein^.StationModusPlanpunt^.spc_gedaan := true;
+		tmpTrein^.StationModusPlanpunt^.spc_gedaan := false;
 		// Af te wachten tijd instellen
 		tmpTrein^.kannietwegvoor := Trein^.kannietwegvoor;
 		// Dynamische gegevens overkopiëren

@@ -4,7 +4,6 @@ uses
   Forms,
   stwsimMain in 'stwsimMain.pas' {stwsimMainForm},
   stwsimClientInfo in 'stwsimClientInfo.pas' {stwscInfoForm},
-  stwsimClientConnect in 'stwsimClientConnect.pas' {stwscConnectForm},
   stwsimClientStringInput in 'stwsimClientStringInput.pas' {stwscStringInputForm},
   stwsimclientTelefoongesprek in 'stwsimclientTelefoongesprek.pas' {stwscTelefoonGesprekForm},
   stwsimclientTelefoon in 'stwsimclientTelefoon.pas' {stwscTelefoonForm},
@@ -67,7 +66,6 @@ begin
   Application.Title := 'StwSim';
   Application.CreateForm(TstwsimMainForm, stwsimMainForm);
   Application.CreateForm(TstwscInfoForm, stwscInfoForm);
-  Application.CreateForm(TstwscConnectForm, stwscConnectForm);
   Application.CreateForm(TstwscStringInputForm, stwscStringInputForm);
   Application.CreateForm(TstwscTelefoonForm, stwscTelefoonForm);
   Application.CreateForm(TstwscTelefoonGesprekForm, stwscTelefoonGesprekForm);
