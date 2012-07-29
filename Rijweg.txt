@@ -56,3 +56,29 @@ Wat leren we hieruit?
 	 - Welke hokjes worden niet ingekleurd wanneer de rijweg is ingesteld?
 - Bij ieder meetpunt kunnen we markeren dat het geclaimd is door een rijweg, en
   zo ja door welke.
+
+Procesplan:
+
+Een regel wordt in behandeling genomen als:
+(a) de trein aanwezig is en
+(b) ARI is ingesteld en
+(c) het tijdvenster klopt
+(*) vertrektijd bereikt is (bij vertrek- en rangeerregels)
+
+ARI wordt uitgeschakeld als:
+(C) het tijdvenster niet klopt.
+
+Een regel wordt automatisch ingesteld als:
+(a) de trein aanwezig is en  \
+(b) ARI is ingesteld en       | -> In behandeling nemen 
+(c) het tijdvenster klopt en /
+(d) de insteltijd is bereikt en
+(e) de rijweg kan worden ingesteld
+
+Een regel kan handmatig worden ingesteld als:
+(a) de trein aanwezig is en
+(e) de rijweg kan worden ingesteld.
+
+Dus:
+(a) is een losstaande functie (IsTreinAanwezig)
+(e) wordt gecontroleerd bij het instellen (ProbeerPlanpuntUitTeVoeren)

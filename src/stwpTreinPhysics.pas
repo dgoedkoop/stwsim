@@ -29,6 +29,7 @@ type
 		procedure WisPlanregelsDieTijdensRijdenNutteloosZijn(Trein: PpTrein);
 		function ZoekTelefoongesprek(Trein: PpTrein; Soort: TpTreinTelefoonSoort): PpTelefoonGesprek;
 		procedure RijTrein(Trein: PpTrein);
+		procedure DestroyUserdata(userdata: pointer);
 	public
 		constructor Create(Core: PpCore; CommPhysics: PpCommPhysics);
 		procedure DoeTreinen;
@@ -47,6 +48,10 @@ begin
 	result := 'Hallo, met de machinist van trein ' +Trein^.Treinnummer+'. ';
 end;
 
+procedure TpTreinPhysics.DestroyUserdata;
+begin
+	Dispose(PpTreinTelefoonSoort(userdata));
+end;
 
 procedure TpTreinPhysics.DoeTreinen;
 var
@@ -323,7 +328,18 @@ begin
 					HSeinSnelheid := 0
 				else
 					HSeinSnelheid := MovementAuthority.Snelheidsbeperking;
-				intAfstand := ((mssnelheid / WensMaxRemvertraging) *
+				intAfstand := (((mssnelheid - (HSeinSnelheid / 3.6)) / WensMaxRemvertraging) *
+				(mssnelheid + (HSeinSnelheid / 3.6)) / 2);
+				if basisAfstand + GevSeinAfstand < IntAfstand + 10 then
+					if kracht > -remkrachtwens then begin
+						kracht := -remkrachtwens;	// Remmen met gewenste snelheid.
+					end;
+			end;
+			// Is het een bordje waarvoor we moeten afremmen?
+			if GevSein^.H_Baanmaxsnelheid > -1 then begin
+				// Berekenen of we voor dit sein alvast moeten gaan afremmen
+				HSeinSnelheid := GevSein^.H_Baanmaxsnelheid;
+				intAfstand := (((mssnelheid - (HSeinSnelheid / 3.6)) / WensMaxRemvertraging) *
 				(mssnelheid + (HSeinSnelheid / 3.6)) / 2);
 				if basisAfstand + GevSeinAfstand < IntAfstand + 10 then
 					if kracht > -remkrachtwens then begin
@@ -734,6 +750,7 @@ begin
 				gesprek^.tekstXsoort := pmsVraagOK;
 				new(PpTreinTelefoonSoort(gesprek^.userdata));
 				PpTreinTelefoonSoort(gesprek^.userdata)^ := ttsKannietweg;
+				Gesprek^.OnDestroyUserdata := DestroyUserdata;
 				if assigned(Trein^.StationModusPlanpunt) and
 					(Trein^.StationModusPlanpunt^.Perron <> '') and
 					(Trein^.StationModusPlanpunt^.Perron <> '0') then
@@ -761,6 +778,7 @@ begin
 				Gesprek^.OphangenErg := true;
 				new(PpTreinTelefoonSoort(Gesprek^.userdata));
 				PpTreinTelefoonSoort(Gesprek^.userdata)^ := ttsStilstaanStation;
+				Gesprek^.OnDestroyUserdata := DestroyUserdata;
 				case Waaromstilstaan of
 					stSein: begin
 						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar sein '+GevSein^.naam+' toont nog steeds stop.';
@@ -953,8 +971,9 @@ begin
 			Core.ZoekVolgendSein(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
 				GevSein, GevSeinAfstand);
 			if assigned(GevSein) then begin
-				if (not GevSein^.H_MovementAuthority.HasAuthority) and
-					(GevSein^.Autosein or GevSein^.Bediend) then
+				if ((not GevSein^.H_MovementAuthority.HasAuthority) and
+					 (GevSein^.Autosein or GevSein^.Bediend)) or
+					(GevSein^.H_Baanmaxsnelheid = 0) then
 					break;
 				KijkAfstand := KijkAfstand - GevSeinAfstand;
 				basisAfstand := basisAfstand + GevSeinAfstand;
@@ -1035,6 +1054,7 @@ begin
 				end;
 				new(PpTreinTelefoonSoort(Gesprek^.userdata));
 				PpTreinTelefoonSoort(Gesprek^.userdata)^ := ttsStilstaan;
+				Gesprek^.OnDestroyUserdata := DestroyUserdata;
 				Trein^.vorigewaaromstilstaan := waaromstilstaan;
 			end;
 	end else

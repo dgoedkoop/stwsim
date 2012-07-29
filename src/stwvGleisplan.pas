@@ -44,6 +44,7 @@ type
 	public
 		Core: PvCore;
 		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
 		procedure Empty(x,y: integer);
 		procedure PutText(x,y: integer; text: string; kleur: byte; spoornummer: string; seinwisselnr: boolean);
 		procedure PutSpoor(x,y: integer; grx,gry: integer; meetpunt: PvMeetpunt);
@@ -97,6 +98,32 @@ implementation
 function MeetpuntenVerschillen(eerste, tweede: PvMeetpunt): boolean;
 begin
 	result := (eerste <> tweede) and assigned(eerste) and assigned(tweede);
+end;
+
+destructor TvGleisplan.Destroy;
+var
+	x,y: integer;
+	Hokje: TvHokje;
+begin
+	for x := 0 to imaxx do
+		for y := 0 to imaxy do begin
+			Hokje := Hokjes^[y*(imaxx+1)+x];
+			Dispose(Hokje.DynData);
+			case Hokje.Soort of
+				1: Dispose(PvHokjeSpoor(Hokje.grdata));
+				2: Dispose(PvHokjeLetter(Hokje.grdata));
+				3: Dispose(PvHokjeSein(Hokje.grdata));
+				4: Dispose(PvHokjeLS(Hokje.grdata));
+				5: Dispose(PvHokjeWissel(Hokje.grdata));
+				6: Dispose(PvHokjeErlaubnis(Hokje.grdata));
+			end;
+		end;
+
+	FreeMem(hokjes, sizeof(TvHokje)*(imaxx+1)*(imaxy+1));
+
+	grimg.Destroy;
+
+	inherited;
 end;
 
 function TvGleisplan.GetMaxX;

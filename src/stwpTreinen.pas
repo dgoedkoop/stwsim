@@ -24,7 +24,7 @@ type
 		maxsnelheid:integer;	// km/u
 		cw:			double;	// Luchtweerstandscoefficient
 		elektrisch:	boolean;	// Elektrolok?
-      bedienbaar:	boolean;	// Lok of stuurstandrijtuig
+		bedienbaar:	boolean;	// Lok of stuurstandrijtuig
       twbedienbaar:	boolean;	// Cabine voor en achter, bij false alleen voor.
 		naam:			string;	// Type-herkenning
       volgende:	PpWagon;
@@ -137,6 +137,8 @@ type
 		Procedure Moetwachten(tijdsduur: integer);
 
 		procedure WisPlanpunten;
+		procedure WisBezetteRails;
+		procedure WisWagons;
 
 		constructor Create;
 		destructor Destroy; override;
@@ -393,6 +395,12 @@ end;
 destructor TpTrein.Destroy;
 begin
 	WisPlanpunten;
+	if assigned(StationModusPlanpunt) then begin
+		dispose(StationModusPlanpunt);
+		StationModusPlanpunt := nil;
+	end;
+	WisBezetteRails;
+	WisWagons;
 	inherited Destroy;
 end;
 
@@ -404,6 +412,28 @@ begin
 		tmpPunt := Planpunten;
 		Planpunten := Planpunten^.Volgende;
 		dispose(tmpPunt);
+	end;
+end;
+
+procedure TpTrein.WisBezetteRails;
+var
+	tmpRail: PpRailLijst;
+begin
+	while assigned(BezetteRails) do begin
+		tmpRail := BezetteRails;
+		BezetteRails := BezetteRails^.Volgende;
+		dispose(tmpRail);
+	end;
+end;
+
+procedure TpTrein.WisWagons;
+var
+	tmpWagon: PpWagonConn;
+begin
+	while assigned(EersteWagon) do begin
+		tmpWagon := EersteWagon;
+		EersteWagon := EersteWagon^.Volgende;
+		dispose(tmpWagon);
 	end;
 end;
 

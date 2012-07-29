@@ -43,6 +43,7 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure GeenARIActExecute(Sender: TObject);
     procedure RegelListClick(Sender: TObject);
+    procedure ARICheckClick(Sender: TObject);
 	private
 		{ Private declarations }
 		selPunt:	PvProcesPlanPunt;
@@ -59,6 +60,7 @@ type
 		ProcesPlan:		TProcesPlan;
 		Core:				PvCore;
 		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
 		procedure UpdateLijst;
 		property ARI: boolean read GetARI write SetARI default true;
 	end;
@@ -75,10 +77,16 @@ begin
 	PendingLijst := TStringList.Create;
 end;
 
+destructor TstwscProcesPlanFrame.Destroy;
+begin
+	PendingLijst.Free;
+	inherited;
+end;
+
 procedure TstwscProcesPlanFrame.UpdateControls;
 begin
 	selPunt := FindSelected;
-	VoernuuitAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt) and Procesplan.PlanpuntIsTreinAanwezig(selPunt);
+	VoernuuitAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt) and Procesplan.IsTreinAanwezig(selPunt, true);
 	BewerkAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
 	DelAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
 	VVAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
@@ -87,11 +95,12 @@ end;
 
 function TstwscProcesPlanFrame.GetARI;
 begin
-	result := ARICheck.Checked;
+	result := ProcesPlan.ARI;
 end;
 
 procedure TstwscProcesPlanFrame.SetARI;
 begin
+	ProcesPlan.ARI := Auto;
 	ARICheck.Checked := Auto;
 end;
 
@@ -155,6 +164,10 @@ begin
 		s := s + Pad('', 4, #32, vaAchter);
 	if (PPP^.NieuwNummer <> '') or (PPP^.RestNummer <> '') then
 		s := s + 'm';
+	if PPP^.H then
+		s := s + 'H';
+	if PPP^.ROZ then
+		s := s + 'Z';
 	result := s;
 end;
 
@@ -217,7 +230,7 @@ begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then
 		if ProcesPlan.MagHandmatigUitvoeren(selPunt) then
-			if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt, false) then
+			if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt, false) = irHelemaal then
 				ProcesPlan.MarkeerKlaar(selPunt);
 	UpdateLijst;
 end;
@@ -246,6 +259,7 @@ begin
 		stwscPlanregelEditForm.vanEdit.Text := selPunt^.van;
 		stwscPlanregelEditForm.naarEdit.Text := selPunt^.naar;
 		stwscPlanregelEditForm.rozCheck.Checked := selPunt^.ROZ;
+		stwscPlanregelEditForm.HCheck.Checked := selPunt^.H;
 		FmtTijd(selPunt^.Insteltijd, u, m, s);
 		us := inttostr(u); if length(us)=1 then us := '0'+us;
 		ms := inttostr(m); if length(ms)=1 then ms := '0'+ms;
@@ -298,6 +312,7 @@ begin
 			selPunt^.naar := Naar;
 			selPunt^.Dwang := Dwang;
 			selPunt^.ROZ := stwscPlanregelEditForm.rozCheck.Checked;
+			selPunt^.H := stwscPlanregelEditForm.HCheck.Checked;
 			selPunt^.NieuwNummer := stwscPlanregelEditForm.nieuwNrEdit.Text;
 			selPunt^.RestNummer := stwscPlanregelEditForm.RestNrEdit.Text;
 			selPunt^.AnalyseGedaan := false;
@@ -413,6 +428,11 @@ end;
 procedure TstwscProcesPlanFrame.RegelListClick(Sender: TObject);
 begin
    UpdateControls;
+end;
+
+procedure TstwscProcesPlanFrame.ARICheckClick(Sender: TObject);
+begin
+	ProcesPlan.ARI := not GetARI;
 end;
 
 end.

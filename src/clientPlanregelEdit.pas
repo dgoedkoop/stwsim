@@ -29,6 +29,7 @@ type
     RestNrEdit: TEdit;
     Button1: TButton;
     CancelBut: TButton;
+    HCheck: TCheckBox;
     procedure vanEditChange(Sender: TObject);
     procedure naarEditChange(Sender: TObject);
     procedure FormShow(Sender: TObject);

@@ -91,6 +91,8 @@ procedure BerekenAankondigingen(Core: PvCore);
 procedure BerekenOnbekendAanwezig(Groep: PvWisselGroep);
 procedure BerekenRijwegenNaarSeinen(Core: PvCore);
 
+procedure DestroyVCore(var Core: PvCore);
+
 implementation
 
 procedure RijwegVoegInactiefHokjeToe;
@@ -1474,6 +1476,117 @@ begin
 			Groep^.OnbekendAanwezig := true;
 		Wissel := Wissel^.Volgende;
 	end;
+end;
+
+procedure DestroyVCore;
+var
+	tmp, tmp2: pointer;
+begin
+	if not assigned(Core) then exit;
+	with Core^ do begin
+		while assigned(vAlleWisselGroepen) do begin
+			tmp := vAlleWisselGroepen^.Volgende;
+			while assigned(vAlleWisselGroepen^.EersteWissel) do begin
+				tmp2 := vAlleWisselGroepen^.EersteWissel^.Volgende;
+				Dispose(vAlleWisselGroepen^.EersteWissel);
+				vAlleWisselGroepen^.EersteWissel := tmp2;
+			end;
+			Dispose(vAlleWisselGroepen);
+			vAlleWisselGroepen := tmp;
+		end;
+		while assigned(vAlleMeetpunten) do begin
+			tmp := vAlleMeetpunten^.Volgende;
+			Dispose(vAlleMeetpunten);
+			vAlleMeetpunten := tmp;
+		end;
+		while assigned(vAlleSeinen) do begin
+			tmp := vAlleSeinen^.Volgende;
+			while assigned(vAlleSeinen^.HerroepMeetpunten) do begin
+				tmp2 := vAlleSeinen^.HerroepMeetpunten^.Volgende;
+				Dispose(vAlleSeinen^.HerroepMeetpunten);
+				vAlleSeinen^.HerroepMeetpunten := tmp2;
+			end;
+			Dispose(vAlleSeinen);
+			vAlleSeinen := tmp;
+		end;
+		while assigned(vAlleRijwegen) do begin
+			tmp := vAlleRijwegen^.Volgende;
+			while assigned(vAlleRijwegen^.Meetpunten) do begin
+				tmp2 := vAlleRijwegen^.Meetpunten^.Volgende;
+				Dispose(vAlleRijwegen^.Meetpunten);
+				vAlleRijwegen^.Meetpunten := tmp2;
+			end;
+			while assigned(vAlleRijwegen^.Wisselstanden) do begin
+				tmp2 := vAlleRijwegen^.Wisselstanden^.Volgende;
+				Dispose(vAlleRijwegen^.Wisselstanden);
+				vAlleRijwegen^.Wisselstanden := tmp2;
+			end;
+			while assigned(vAlleRijwegen^.KruisingHokjes) do begin
+				tmp2 := vAlleRijwegen^.KruisingHokjes^.Volgende;
+				Dispose(vAlleRijwegen^.KruisingHokjes);
+				vAlleRijwegen^.KruisingHokjes := tmp2;
+			end;
+			Dispose(vAlleRijwegen);
+			vAlleRijwegen := tmp;
+		end;
+		while assigned(vAlleOverwegen) do begin
+			tmp := vAlleOverwegen^.Volgende;
+			Dispose(vAlleOverwegen);
+			vAlleOverwegen := tmp;
+		end;
+		while assigned(vAlleErlaubnisse) do begin
+			tmp := vAlleErlaubnisse^.Volgende;
+			Dispose(vAlleErlaubnisse);
+			vAlleErlaubnisse := tmp;
+		end;
+		while assigned(vActieveRijwegen) do begin
+			tmp := vActieveRijwegen^.Volgende;
+			Dispose(vActieveRijwegen);
+			vActieveRijwegen := tmp;
+		end;
+		while assigned(vAllePrlRijwegen) do begin
+			tmp := vAllePrlRijwegen^.Volgende;
+			while assigned(vAllePrlRijwegen^.Rijwegen) do begin
+				tmp2 := vAllePrlRijwegen^.Rijwegen^.Volgende;
+				Dispose(vAllePrlRijwegen^.Rijwegen);
+				vAllePrlRijwegen^.Rijwegen := tmp2;
+			end;
+			Dispose(vAllePrlRijwegen);
+			vAllePrlRijwegen := tmp;
+		end;
+		while assigned(vAlleBinnenkomendeGesprekken) do begin
+			tmp := vAlleBinnenkomendeGesprekken^.Volgende;
+			Dispose(vAlleBinnenkomendeGesprekken);
+			vAlleBinnenkomendeGesprekken := tmp;
+		end;
+		while assigned(vAlleSubroutes) do begin
+			tmp := vAlleSubroutes^.Volgende;
+			while assigned(vAlleSubroutes^.EersteHokje) do begin
+				tmp2 := vAlleSubroutes^.EersteHokje^.Volgende;
+				Dispose(vAlleSubroutes^.EersteHokje);
+				vAlleSubroutes^.EersteHokje := tmp2;
+			end;
+			while assigned(vAlleSubroutes^.Wisselstanden) do begin
+				tmp2 := vAlleSubroutes^.Wisselstanden^.Volgende;
+				Dispose(vAlleSubroutes^.Wisselstanden);
+				vAlleSubroutes^.Wisselstanden := tmp2;
+			end;
+			while assigned(vAlleSubroutes^.KruisingHokjes) do begin
+				tmp2 := vAlleSubroutes^.KruisingHokjes^.Volgende;
+				Dispose(vAlleSubroutes^.KruisingHokjes);
+				vAlleSubroutes^.KruisingHokjes := tmp2;
+			end;
+			Dispose(vAlleSubroutes);
+			vAlleSubroutes := tmp;
+		end;
+		while assigned(vFlankbeveiliging) do begin
+			tmp := vFlankbeveiliging^.Volgende;
+			Dispose(vFlankbeveiliging);
+			vFlankbeveiliging := tmp;
+		end;
+	end;
+	Dispose(Core);
+	Core := nil;
 end;
 
 end.

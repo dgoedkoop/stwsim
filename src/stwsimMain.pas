@@ -200,6 +200,7 @@ type
 		// Sim-bediening
 		pauze: 		boolean;
 		app_exit:	boolean;
+		bezig:		boolean;
 		gestart:		boolean;
 		closewarn:	boolean;
 		// Intern
@@ -216,7 +217,7 @@ type
 		function vLoadScenarioString(s: string): boolean;
 		procedure ScenarioToepassen(vToepassen: boolean);
 		// Tekenen
-		procedure SetTabSizes;
+		procedure SetTabSize;
 		procedure UpdateControls;
 		procedure SetSeltabVisible;
 		procedure LogMsg(s: string);
@@ -329,7 +330,7 @@ begin
 	SimOpenPanel.Top := GetTop(SimOpenPanel.Height);
 	SimStartPanel.Left := GetLeft(SimStartPanel.Width);
 	SimStartPanel.Top := GetTop(SimStartPanel.Height);
-   SetTabSizes;
+	SetTabSize;
 end;
 
 procedure TstwsimMainForm.LoadInfra;
@@ -430,22 +431,21 @@ begin
 		LoadFile(OpenDialog.Filename);
 end;
 
-procedure TstwsimMainForm.SetTabSizes;
+procedure TstwsimMainForm.SetTabSize;
 var
 	Tab: PTabList;
 begin
-	Tab := RijwegLogica.Tabs;
-	while assigned(Tab) do begin
-		if Tab^.Gleisplan.Width >= Tab^.Scrollbox.Width then
-			Tab^.Gleisplan.Left := 0
-		else
-			Tab^.Gleisplan.Left := (Tab^.Scrollbox.Width - Tab^.Gleisplan.Width) div 2;
-		if Tab^.Gleisplan.Height >= Tab^.Scrollbox.Height then
-			Tab^.Gleisplan.Top := 0
-		else
-			Tab^.Gleisplan.Top := (Tab^.Scrollbox.Height - Tab^.Gleisplan.Height) div 2;
-		Tab := Tab^.Volgende;
-	end;
+	Tab := VisibleTab;
+	if not assigned(Tab) then exit;
+
+	Tab^.ScrollBox.DisableAutoRange;
+	Tab^.Gleisplan.Left := 0;
+	Tab^.Gleisplan.Top := 0;
+	if not Tab^.ScrollBox.HorzScrollBar.IsScrollBarVisible then
+		Tab^.Gleisplan.Left := (Tab^.Scrollbox.Width - Tab^.Gleisplan.Width) div 2;
+	if not Tab^.ScrollBox.VertScrollBar.IsScrollBarVisible then
+		Tab^.Gleisplan.Top := (Tab^.Scrollbox.Height - Tab^.Gleisplan.Height) div 2;
+	Tab^.ScrollBox.EnableAutoRange;
 end;
 
 procedure TstwsimMainForm.AddScherm;
@@ -488,7 +488,6 @@ begin
 			l := l^.volgende;
 		l^.volgende := Tab;
 	end;
-	SetTabSizes;
 end;
 
 function TstwsimMainForm.GetScherm;
@@ -590,6 +589,8 @@ var
 	sel: 			string;
 begin
 	sel := SchermenTab.Tabs[SchermenTab.TabIndex];
+	if assigned(VisibleTab) then
+		if VisibleTab^.Titel = sel then exit;
 	// Om flikkeren te voorkomen, eerst de nieuwe weergeven en dan de oude
 	// weghalen.
 	Tab := RijwegLogica.Tabs;
@@ -600,6 +601,7 @@ begin
 		end;
 		Tab := Tab^.Volgende;
 	end;
+	SetTabSize;
 	Tab := RijwegLogica.Tabs;
 	while assigned(Tab) do begin
 		if Tab^.Titel <> sel then
@@ -688,13 +690,16 @@ begin
 	closewarn := false;
 	gestart := false;
 	pauze := true;
+	bezig := false;
 	app_exit := false;
 end;
 
 procedure TstwsimMainForm.ChangeMeetpunt;
 begin
-	if (not Meetpunt^.Bezet) and Oudebezet then
+	if (not Meetpunt^.Bezet) and Oudebezet then begin
 		RijwegLogica.MarkeerVrij(Meetpunt);
+		stwscProcesplanForm.MarkeerVrij(Meetpunt);
+	end;
 
 	if Meetpunt^.Bezet and not Oudebezet then
 		RijwegLogica.MarkeerBezet(Meetpunt);
@@ -702,8 +707,9 @@ begin
 	// Voor het procesplan
 	if Meetpunt^.treinnummer <> Oudetreinnr then
 		if Meetpunt^.treinnummer <> '' then begin
-			RijwegLogica.Aankondigen(Meetpunt);
-			stwscProcesplanForm.TreinnummerNieuw(Meetpunt)
+			stwscProcesplanForm.TreinnummerNieuw(Meetpunt);
+			if not stwscProcesplanForm.TreinIsAfgehandeld then
+				RijwegLogica.Aankondigen(Meetpunt)
 		end else
 			stwscProcesplanForm.TreinnummerWeg(Meetpunt);
 
@@ -847,7 +853,9 @@ var
 	Stapjes: 		word;
 	Versnelling:	word;
 begin
-	if (not gestart) or pauze then exit;
+	if (not gestart) or pauze or bezig then exit;
+
+	bezig := true;
 
 	VorigeTijd := GetTijd;
 
@@ -858,6 +866,10 @@ begin
 	Versnelling := SpeedTrack.Position;
 	Stapjes := (timeGetTime - TijdUitgevoerdTot) * versnelling div msPerStapje;
 	TijdUitgevoerdTot := TijdUitgevoerdTot + stapjes * msPerStapje div versnelling;
+
+	// Niet meer dan een seconde inhalen.
+	if Stapjes > SpeedTrack.Max * tps then
+		Stapjes := SpeedTrack.Max * tps;
 
 	for i := 1 to Stapjes do begin
 		if app_exit then break;
@@ -873,7 +885,12 @@ begin
 		// Deze functie kan relatief veel tijd kosten. Dat gebeurt als een rijweg
 		// wordt ingesteld, maar dat kan natuurlijk ook veel tijd kosten aangezien
 		// dat asynchroon gebeurt.
-		stwscProcesplanForm.DoeStapje;
+		// Aangezien rijwegen voor aan- en doorkomst in principe worden ingesteld
+		// zodra een trein wordt aangekondigd, hoeven we hier alleen maar eens
+		// per minuut te checken om te kijken of er nog regels zijn waarvoor de
+		// insteltijd is aangebroken.
+		if (GetTijd div MkTijd(0,1,0)) <> (VorigeTijd div MkTijd(0,1,0)) then
+			stwscProcesplanForm.DoeStapje;
 
 		stwscProcesplanForm.UpdateLijst;
 
@@ -885,6 +902,8 @@ begin
 					stwscTreinStatusForm.ModalResult := mrOK
 			end
 	end;
+
+	bezig := false;
 end;
 
 procedure TstwsimMainForm.Info1Click(Sender: TObject);
@@ -1152,7 +1171,7 @@ end;
 
 procedure TstwsimMainForm.SchermenTabChange(Sender: TObject);
 begin
-   SetSeltabVisible;
+	SetSeltabVisible;
 end;
 
 procedure TstwsimMainForm.FormMouseWheel(Sender: TObject;
@@ -1209,23 +1228,29 @@ var
 begin
 	Tab := RijwegLogica.Tabs;
 	while assigned(Tab) do begin
-		Tab^.Gleisplan.Destroy;
-		Tab^.Scrollbox.Destroy;
+		Tab^.Gleisplan.Free;
+		Tab^.Scrollbox.Free;
 		tmpTab := Tab;
 		Tab := Tab^.Volgende;
 		dispose(tmpTab);
 	end;
 	RijwegLogica.Tabs := nil;
-	dispose(vCore);
-	vReadMsg.Destroy;
-	vSendMsg.Destroy;
-	pCore.Destroy;
-	pReadMsg.Destroy;
-	pSendMsg.Destroy;
+	TreinPhysics.Free;
+	MonteurPhysics.Free;
+	CommPhysics.Free;
+	VisibleTab := nil;
+	DestroyVCore(vCore);
+	vReadMsg.Free;
+	vSendMsg.Free;
+	pCore.Free;
+	dispose(pCore);
+	pReadMsg.Free;
+	pSendMsg.Free;
 	SimComm.SetLog(false);
-	SimComm.Destroy;
-	RijwegLogica.Destroy;
-	Log.Destroy;
+	SimComm.Free;
+	RijwegLogica.Free;
+	Log.Free;
+	Scenario.Free;
 end;
 
 procedure TstwsimMainForm.GetScoreExecute(Sender: TObject);
@@ -1253,7 +1278,7 @@ begin
 		BorderStyle := bsSizeable;
 		WindowState := wsMaximized;
 	end;
-   SetTabSizes;
+	SetTabSize;
 end;
 
 function TstwsimMainForm.OpenDienstregeling;

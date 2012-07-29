@@ -75,6 +75,7 @@ object stwscProcesPlanFrame: TstwscProcesPlanFrame
       Checked = True
       State = cbChecked
       TabOrder = 3
+      OnClick = ARICheckClick
     end
   end
   object TitelPanel: TPanel

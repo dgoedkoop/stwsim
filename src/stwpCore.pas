@@ -123,6 +123,7 @@ type
 
 	public
 		constructor Create;
+		destructor Destroy; override;
 		// Wat nuttige algemene interne functies
 		function NieuwTelefoongesprek(Sender: TSender; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek; overload;
 		function NieuwTelefoongesprek(Trein: PpTrein; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek; overload;
@@ -1378,6 +1379,7 @@ var
 	vt, rt: integer;
 	Plaats: PpVerschijnPunt;
 	// Veiligheid
+	SporenTotVolgendSein: PpRailLijst;
 	tmpRailL: PpRailLijst;
 	tmpSein: PpSein;
 
@@ -1423,7 +1425,8 @@ begin
 
 		if magversch then begin
 			// Weg tot volgend sein checken
-			tmpRailL := ZoekSporenTotVolgendHoofdseinR(tmpRail, Plaats^.achteruit);
+			SporenTotVolgendSein := ZoekSporenTotVolgendHoofdseinR(tmpRail, Plaats^.achteruit);
+			tmpRailL := SporenTotVolgendSein;
 			while assigned(tmpRailL) do begin
 				if assigned(tmpRailL^.Rail^.meetpunt) then
 					magversch := magversch and not PpMeetpunt(tmpRailL^.Rail^.meetpunt)^.Bezet
@@ -1434,6 +1437,7 @@ begin
 					magversch := false;
 				tmpRailL := tmpRailL^.volgende;
 			end;
+         RaillijstWissen(SporenTotVolgendSein);
 
 			if assigned(Plaats^.erlaubnis) then
 				if (Plaats^.erlaubnis^.richting <> Plaats^.Erlaubnisstand) and
@@ -1946,7 +1950,7 @@ begin
 							begin Leesfout_melding := 'Als een sein aan een rijrichtingsveld gekoppeld wordt, moet ook een richting worden opgegeven.'; exit end;
 				9: if waarde <> '-' then begin
 						val(waarde, tmpSein^.H_Baanmaxsnelheid, code);
-						if code <> 0then
+						if code <> 0 then
 							begin Leesfout_melding := 'Maximumsnelheid sein: Is geen getal, of het sein is bediend of een autosein.'; exit end;
 					end;
 				10: tmpSein^.Autovoorsein := (waarde = 'j') or (waarde = 'J');
@@ -2938,6 +2942,117 @@ begin
 			VerschijnItem^.gedaan := true;
 		VerschijnItem := VerschijnItem^.Volgende;
 	end;
+end;
+
+destructor TpCore.Destroy;
+var
+	tmp, tmp2: pointer;
+begin
+	while assigned(pAlleRails) do begin
+		tmp := pAlleRails^.Volgende;
+		dispose(pAlleRails.Rail.Vorige);
+		dispose(pAlleRails.Rail.Volgende);
+		dispose(pAlleRails.Rail);
+		dispose(pAlleRails);
+		pAlleRails := tmp;
+	end;
+	while assigned(pAlleMeetpunten) do begin
+		tmp := pAlleMeetpunten^.Volgende;
+		pAlleMeetpunten^.Destroy;
+		dispose(pAlleMeetpunten);
+		pAlleMeetpunten := tmp;
+	end;
+	while assigned(pAlleErlaubnisse) do begin
+		tmp := pAlleErlaubnisse^.Volgende;
+		while assigned(pAlleErlaubnisse^.Meetpunten) do begin
+			tmp2 := pAlleErlaubnisse^.Meetpunten^.Volgende;
+			dispose(pAlleErlaubnisse^.Meetpunten);
+			pAlleErlaubnisse^.Meetpunten := tmp2;
+		end;
+		dispose(pAlleErlaubnisse);
+		pAlleErlaubnisse := tmp;
+	end;
+	while assigned(pAlleSeinen) do begin
+		tmp := pAlleSeinen^.Volgende;
+		dispose(pAlleSeinen);
+		pAlleSeinen := tmp;
+	end;
+	while assigned(pAlleSeinBeperkingen) do begin
+		tmp := pAlleSeinBeperkingen^.Volgende;
+		dispose(pAlleSeinBeperkingen);
+		pAlleSeinBeperkingen := tmp;
+	end;
+	while assigned(pAlleWissels) do begin
+		tmp := pAlleWissels^.Volgende;
+		dispose(pAlleWissels);
+		pAlleWissels := tmp;
+	end;
+	while assigned(pAlleVerschijnpunten) do begin
+		tmp := pAlleVerschijnpunten^.Volgende;
+		dispose(pAlleVerschijnpunten);
+		pAlleVerschijnpunten := tmp;
+	end;
+	while assigned(pAlleVerdwijnpunten) do begin
+		tmp := pAlleVerdwijnpunten^.Volgende;
+		dispose(pAlleVerdwijnpunten);
+		pAlleVerdwijnpunten := tmp;
+	end;
+	while assigned(pAlleOverwegen) do begin
+		tmp := pAlleOverwegen^.Volgende;
+		dispose(pAlleOverwegen);
+		pAlleOverwegen := tmp;
+	end;
+	while assigned(pAlleGesprekken) do begin
+		tmp := pAlleGesprekken^.Volgende;
+		pAlleGesprekken^.Destroy;
+		dispose(pAlleGesprekken);
+		pAlleGesprekken := tmp;
+	end;
+	while assigned(pMaterieel) do begin
+		tmp := pMaterieel^.Volgende;
+		while assigned(pMaterieel^.Wagons) do begin
+			tmp2 := pMaterieel^.Wagons^.Volgende;
+			dispose(pMaterieel^.Wagons);
+			pMaterieel^.Wagons := tmp2;
+		end;
+		dispose(pMaterieel);
+		pMaterieel := tmp;
+	end;
+	while assigned(pAlleDiensten) do begin
+		tmp := pAlleDiensten^.Volgende;
+		while assigned(pAlleDiensten^.Planpunten) do begin
+			tmp2 := pAlleDiensten^.Planpunten^.Volgende;
+			dispose(pAlleDiensten^.Planpunten);
+			pAlleDiensten^.Planpunten := tmp2;
+		end;
+		dispose(pAlleDiensten);
+		pAlleDiensten := tmp;
+	end;
+	while assigned(VerschijnLijst) do begin
+		tmp := VerschijnLijst^.Volgende;
+		while assigned(VerschijnLijst^.wagons) do begin
+			tmp2 := VerschijnLijst^.wagons^.Volgende;
+			dispose(VerschijnLijst^.wagons);
+			VerschijnLijst^.wagons := tmp2;
+		end;
+		dispose(VerschijnLijst);
+		VerschijnLijst := tmp;
+	end;
+	while assigned(pAlleTreinen) do begin
+		tmp := pAlleTreinen^.Volgende;
+		pAlleTreinen^.Free;
+		dispose(pAlleTreinen);
+		pAlleTreinen := tmp;
+	end;
+	while assigned(pAlleTreinInfo) do begin
+		tmp := pAlleTreinInfo^.Volgende;
+		dispose(pAlleTreinInfo); 
+		pAlleTreinInfo := tmp;
+	end;
+	pMonteur^.Destroy;
+	dispose(pMonteur);
+	pMonteur := nil;
+	inherited;
 end;
 
 end.

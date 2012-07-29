@@ -1,6 +1,7 @@
 program stwsim;
 
 uses
+{	FastMM4,}
   Forms,
   stwsimMain in 'stwsimMain.pas' {stwsimMainForm},
   stwsimClientInfo in 'stwsimClientInfo.pas' {stwscInfoForm},

@@ -46,8 +46,10 @@ type
 		// Dit moeten we doorgeven aan ieder procesplan(frame)
 		procedure UpdateLijst;
 		procedure DoeStapje;
+		function TreinIsAfgehandeld: boolean;
 		procedure TreinnummerNieuw(Meetpunt: PvMeetpunt);
 		procedure TreinnummerWeg(Meetpunt: PvMeetpunt);
+		procedure MarkeerVrij(Meetpunt: PvMeetpunt);
 		procedure TreinInfo(TreinInfoData: TvTreinInfo);
 		function CreateFrame(Filename: string): PFrameList;
 		procedure RecalcSizes;
@@ -110,6 +112,29 @@ begin
 			Frame^.PPFrame.RegelList.Invalidate;
 		Frame := Frame^.Volgende;
 	end;
+end;
+
+function TstwscProcesplanForm.TreinIsAfgehandeld;
+var
+	Frame: PFrameList;
+begin
+	result := false;
+	Frame := PPFramesLinks;
+	while assigned(Frame) do begin
+		result := result or Frame^.PPFrame.ProcesPlan.TreinIsAfgehandeld;
+		Frame := Frame^.Volgende;
+	end;
+	Frame := PPFramesRechts;
+	while assigned(Frame) do begin
+		result := result or Frame^.PPFrame.ProcesPlan.TreinIsAfgehandeld;
+		Frame := Frame^.Volgende;
+	end;
+end;
+
+procedure TstwscProcesplanForm.MarkeerVrij;
+begin
+	// Misschien kunnen we nu een in behandeling zijnde rijweg instellen.
+	DoeStapje;
 end;
 
 procedure TstwscProcesplanForm.TreinnummerNieuw;
@@ -333,18 +358,23 @@ end;
 procedure TstwscProcesplanForm.FormDestroy(Sender: TObject);
 var
 	Frame: PFrameList;
+	tmp: pointer;
 begin
 	Frame := PPFramesLinks;
 	while assigned(Frame) do begin
-		Frame^.PPFrame.ProcesPlan.Destroy;
-		Frame^.PPFrame.Destroy;
-		Frame := Frame^.Volgende;
+		Frame^.PPFrame.ProcesPlan.Free;
+		Frame^.PPFrame.Free;
+		tmp := Frame^.Volgende;
+		Dispose(Frame);
+		Frame := tmp;
 	end;
 	Frame := PPFramesRechts;
 	while assigned(Frame) do begin
-		Frame^.PPFrame.ProcesPlan.Destroy;
-		Frame^.PPFrame.Destroy;
-		Frame := Frame^.Volgende;
+		Frame^.PPFrame.ProcesPlan.Free;
+		Frame^.PPFrame.Free;
+		tmp := Frame^.Volgende;
+		Dispose(Frame);
+		Frame := tmp;
 	end;
 end;
 

@@ -11,6 +11,8 @@ type
 
 	TSender = ^TObject;
 
+	TDestroyUserdata = procedure(userdata: pointer) of object;
+
 	PpTelefoongesprek = ^TpTelefoongesprek;
 	TpTelefoongesprek = class
 		VolgendeStatusTijd:	integer;	// Voor een wacht-status
@@ -24,10 +26,12 @@ type
 		WachtOpdracht: boolean;
 		// Voor meer info
 		userdata:		pointer;
+		OnDestroyUserdata: TDestroyUserdata;
 
 		volgende:		PpTelefoongesprek;
 		// Initialisatie
 		constructor Create(Owner: TSender; Soort: TpTelefoongesprekType; Meteen: boolean);
+		destructor Destroy; override;
 	end;
 
 implementation
@@ -44,6 +48,7 @@ begin
 	tekstOK := tekst_ok;
 	OphangenErg := false;
 	Userdata := nil;
+   OnDestroyUserdata := nil;
 	Self.Owner := Owner;
 	WachtOpdracht := false;
 	WachtMetBellen := RandomWachtTijd(mintijd_wachtmetbellen, maxtijd_wachtmetbellen);
@@ -60,6 +65,13 @@ begin
 		VolgendeStatusTijd := RandomWachtTijd(mintijd_opnemen, maxtijd_opnemen);
 	end;
 	end;
+end;
+
+destructor TpTelefoongesprek.Destroy;
+begin
+	if assigned(OnDestroyUserdata) and assigned(userdata) then
+		OnDestroyUserdata(userdata);
+	inherited;
 end;
 
 end.

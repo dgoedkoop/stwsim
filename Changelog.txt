@@ -685,3 +685,24 @@
   was geregistreerd, geen nieuwe vertraging registreren.
 - Als het venster groter is dan de inhoud van een tab, die inhoud gecentreerd
   weergeven
+
+28 juli 2012:
+- Geen busy-waiting meer toepassen bij instellen van rijwegen door procesplan,
+  maar dit doen als een trein zich aankondigt of bij elke minutensprong.
+- Geen aankondigingen meer als de trein wordt afgehandeld door ARI.
+- Bij veel te vroege aankondiging wordt ARI nu ook uitgezet.
+- Als een regel wordt uitgeschakeld voor ARI, wordt nu ook vermeld bij welk
+  procesplangebied dit gebeurt.
+
+29 juli 2012:
+- Fix: Trein moet (weer) voor een bordje afremmen om ter hoogte van het bordje
+  al aan de opgelegde baanvaksnelheid te voldoen.
+- Fix: Een heleboel geheugenlekken opgelost
+- Fix: Als de computer te langzaam is voor de ingestelde snelheid niet
+  vastlopen maar accepteren dat we qua tijd achterop raken.
+- Fix: Nu we geen busy-waiting in het procesplan meer doen, moeten we in plaats
+  daarvan natuurlijk wel bij het vrijkomen van een spoorsectie kijken of er
+  misschien nog een rijweg ingesteld moet worden.
+- Fix: Door compileroptimalisatie werd het tijdvenster alleen gecheckt als de
+  betreffende trein aanwezig was, waardoor ARI nooit werd uitgeschakeld bij
+  te veel vertraging.
