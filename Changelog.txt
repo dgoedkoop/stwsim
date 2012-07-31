@@ -694,7 +694,7 @@
 - Als een regel wordt uitgeschakeld voor ARI, wordt nu ook vermeld bij welk
   procesplangebied dit gebeurt.
 
-29 juli 2012:
+(0.2.0.37) 29 juli 2012:
 - Fix: Trein moet (weer) voor een bordje afremmen om ter hoogte van het bordje
   al aan de opgelegde baanvaksnelheid te voldoen.
 - Fix: Een heleboel geheugenlekken opgelost
