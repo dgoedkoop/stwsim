@@ -834,16 +834,15 @@ begin
 				Punt := nDienst^.Planpunten;
 				while assigned(Punt) do begin
 					if Punt^.Aankomst <> -1 then
-						Punt^.Aankomst := Punt^.Aankomst + MkTijd(0,min,0);
+						Punt^.Aankomst := Punt^.Aankomst + MkTijd(0,min,0)*i;
 					if Punt^.Vertrek <> -1 then
-						Punt^.Vertrek := Punt^.Vertrek + MkTijd(0,min,0);
+						Punt^.Vertrek := Punt^.Vertrek + MkTijd(0,min,0)*i;
 					if Punt^.nieuwetrein and (Punt^.nieuwetrein_w <> '') then
 						IncTreinnr(Punt^.nieuwetrein_w, nrup);
 					if (Punt^.loskoppelen>0) and (Punt^.loskoppelen_w <> '') then
 						IncTreinnr(Punt^.loskoppelen_w, nrup);
 					Punt := Punt^.Volgende;
 				end;
-				Dienst := nDienst;
 			end else
 				Application.Messagebox(pchar('Trein '+treinnr+' bestaat al - genegeerd.'),'Info', MB_ICONASTERISK);
 		end;

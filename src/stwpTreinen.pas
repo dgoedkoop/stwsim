@@ -9,7 +9,7 @@ const
 	RemwegSnelheid	 		 = 40;
 
 type
-	ETreinError = class(Exception);
+	ETreinWarning = class(Exception);
 
 	TWaaromStilstaan = (stWeetniet, stSein, stTrein, stStroom, stDoorrood,
 							  stWissel, stStuurstand, stUndef);
@@ -214,29 +214,43 @@ var
 	wagoncount, j: integer;
 	WagonConn: PpWagonConn;
 	WagonTypeStr: string;
+	Omgekeerd: boolean;
 	Wagon:			PpWagon;
+	nietgevonden: boolean;
+	nietgevondens: string;
 begin
+	nietgevonden := false;
+	nietgevondens := '';
 	intread(f, wagoncount);
 	WagonConn := nil;
 	result := nil;
 	for j := 1 to wagoncount do begin
-		if not assigned(WagonConn) then begin
-			new(WagonConn);
-			WagonConn^.Vorige := nil;
-			result := WagonConn;
-		end else begin
-			new(WagonConn^.Volgende);
-			WagonConn^.Volgende^.Vorige := WagonConn;
-			WagonConn := WagonConn^.Volgende;
-		end;
-		WagonConn^.Volgende := nil;
 		stringread(f, WagonTypeStr);
+		boolread(f, Omgekeerd);
 		Wagon := ZoekWagonType(pMaterieel, WagonTypeStr);
-		if not assigned(Wagon) then
-			raise ETreinError.Create('Kon wagontype niet vinden: '+WagonTypeStr);
-		WagonConn^.wagon := Wagon;
-		boolread(f, WagonConn^.Omgekeerd);
+		if assigned(Wagon) then begin
+			if not assigned(WagonConn) then begin
+				new(WagonConn);
+				WagonConn^.Vorige := nil;
+				result := WagonConn;
+			end else begin
+				new(WagonConn^.Volgende);
+				WagonConn^.Volgende^.Vorige := WagonConn;
+				WagonConn := WagonConn^.Volgende;
+			end;
+			WagonConn^.Volgende := nil;
+			WagonConn^.wagon := Wagon;
+			WagonConn^.Omgekeerd := Omgekeerd;
+		end else begin
+			nietgevonden := true;
+			if nietgevondens <> '' then
+				nietgevondens := nietgevondens + ', ' + WagonTypeStr
+			else
+				nietgevondens := WagonTypeStr;
+		end;
 	end;
+	if nietgevonden then
+		raise ETreinWarning.Create('Kon wagontype niet vinden: '+nietgevondens);
 end;
 
 procedure SaveTrein;

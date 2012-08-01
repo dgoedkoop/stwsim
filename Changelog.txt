@@ -706,3 +706,11 @@
 - Fix: Door compileroptimalisatie werd het tijdvenster alleen gecheckt als de
   betreffende trein aanwezig was, waardoor ARI nooit werd uitgeschakeld bij
   te veel vertraging.
+
+31 juli 2012:
+- Fix: De nieuwe ARI stuurde vaak treinen de verkeerde kant op als op hetzelfde
+  spoor twee treinen kort na elkaar kwamen.
+- Fix: De functie om dienstregelingen te kopieren vergat de tijden op te hogen
+  als een trein werd negeerd als deze al bestond.
+- Inladen van de dienstregeling niet afbreken als bepaald materieel niet wordt
+  gevonden, maar slechts een waarschuwing weergeven.

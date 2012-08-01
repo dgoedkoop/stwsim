@@ -540,7 +540,7 @@ begin
 	// Als de gezochte trein aanwezig is, wel even kijken of niet een andere
 	// trein in de weg staat.
 	if assigned(ProcesPlanPunt^.TNVVan) and
-	(ProcesPlanPunt^.Getriggerd = trAanwezig) then
+	(ProcesPlanPunt^.Getriggerd in [trAanwezig, trGetriggerd]) then
 	if (ProcesPlanPunt^.TNVVan^.treinnummer <> '') and
 		(ProcesPlanPunt^.TNVVan^.treinnummer <> ProcesPlanPunt^.Treinnr) then
 		ProcesPlanPunt^.Getriggerd := trAndereInDeWeg;

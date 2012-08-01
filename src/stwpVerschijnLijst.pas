@@ -2,7 +2,7 @@ unit stwpVerschijnlijst;
 
 interface
 
-uses stwpRails, stwpMeetpunt, stwpTreinen, stwvMisc;
+uses stwpRails, stwpMeetpunt, stwpTreinen, stwvMisc, stwpTijd;
 
 type
 	PpVerschijnPunt = ^TpVerschijnPunt;
@@ -51,6 +51,8 @@ procedure SaveVerschijnitems(var f: file; wat: TSaveWhat; VerschijnItems: PpVers
 
 implementation
 
+uses Forms, Windows;
+
 function ZoekVerschijnpunt(pAlleVerschijnpunten:PpVerschijnPunt; naam: string): PpVerschijnPunt;
 var
 	tmpVP : PpVerschijnPunt;
@@ -71,10 +73,17 @@ var
 	i, puntcount: 	integer;
 	VI:				PpVerschijnItem;
 	PlaatsStr:		string;
+	// Fouten
+	fout: 			boolean;
+	foutstr: 		string;
+	u, m, s:			integer;
+	us, ms:			string;
 begin
 	result := nil;
 	VI := nil;
 	intread(f, puntcount);
+	fout := false;
+	foutstr := 'Bij het inladen van de verschijnitems:'+#13#10;
 	for i := 1 to puntcount do begin
 		if not assigned(VI) then begin
 			new(VI);
@@ -93,8 +102,18 @@ begin
 		VI^.Plaats := ZoekVerschijnpunt(pAlleVerschijnpunten, PlaatsStr);
 		stringread(f, VI^.vanafstation);
 
-		VI^.Wagons := LoadWagons(f, pMaterieel);
-
+		try
+			VI^.Wagons := LoadWagons(f, pMaterieel);
+		except
+			on E: ETreinWarning do begin
+				fout := true;
+				FmtTijd(VI^.Tijd, u, m, s);
+				str(u, us);
+				str(m, ms);
+				foutstr := foutstr + 'Trein '+VI^.Treinnummer+' om '+us+':'+ms+': '+E.Message+#13#10;
+			end;
+		end;
+		
 		stringread(f, VI^.treinweg_naam);
 		intread(f, VI^.treinweg_wachten);
 		if wat = swStatus then begin
@@ -103,6 +122,10 @@ begin
 			intread(f, VI^.treinweg_tijd);
 		end;
 	end;
+	// Dit kan niet met een exception, want dan retourneert deze functie NIL, ook
+	// al hebben we hierboven wel <result := iets anders> gedaan.
+	if fout then
+		Application.MessageBox(pchar(Foutstr), 'Let op', MB_ICONWARNING+MB_OK);
 end;
 
 procedure SaveVerschijnitems;
