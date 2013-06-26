@@ -10,7 +10,7 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.3';
+	SaveIOMagic			= 'STWSIMSAVE.4';
 
 	tps					= 10;
 
@@ -101,6 +101,8 @@ type
 
 		Tijd_t:					integer;	// Huidig stapje binnen de seconde.
 
+		Leesfout_melding:		string;
+
 	private
 
 	public
@@ -127,9 +129,17 @@ type
 		function ZoekVolgendeConn(Rail: PpRail; achteruit: boolean): PpRailConn;
 		function ZoekSporenTotVolgendHoofdsein(Conn: PpRailConn): PpRailLijst;
 		function ZoekSporenTotVolgendHoofdseinR(Rail: PpRail; achteruit: boolean): PpRailLijst;
+
+		// ZoekVolgendSein en ZoekVolgendeWissel zetten via de var-parameters de
+		// positie precies achter de gevonden plek. Als de gevonden plek dus
+		// (tegelijk) een wissel is dat niet in een eenduidige stand staat, dan
+		// is de geretourneerde rail dus =nil.
+
 		procedure ZoekVolgendSein(var Rail: PpRail; var achteruit: boolean; var positie: double;
 			maxafstand: double; var GevSein: PpSein; var GevAfstand: double);
 		procedure ZoekVolgendHoofdsein(Conn: PpRailConn; var GevSein: PpSein; niksmagook: boolean);
+		procedure ZoekVolgendeWissel(var Rail: PpRail; var achteruit: boolean; var positie: double;
+			maxafstand: double; var GevWissel: PpWissel; var GevAfstand: double);
 		procedure ZoekVolgendeTrein(Trein: PpTrein; maxafstand: double;
 			var GevTrein: PpTrein; var GevAfstand: double; var GevOmgekeerd: boolean);
 		procedure WisTrein(Trein: PpTrein);
@@ -139,6 +149,7 @@ type
 
 		function GaatDefect(kans: double): boolean;
 		procedure DoeMeetpuntDefect(Meetpunt: PpMeetpunt);
+		procedure DoeWisselDefect(Wissel: PpWissel; magechtdefect: boolean);
 
 		function CalcSeinbeeld(Sein: PpSein): TSeinbeeld;
 
@@ -153,7 +164,7 @@ type
 
 		// Publieke functies
 		function ErlaubnisVrij(Erlaubnis: PpErlaubnis): boolean;
-		procedure LoadRailString(s: string);
+		function LoadRailString(s: string): boolean;
 		function WagonsLaden(filenaam: string): boolean;
 		procedure WagonsWissen;
 		function ZetWissel(Wissel: PpWissel; stand: TWisselstand): boolean;
@@ -200,6 +211,8 @@ begin
 	ScoreInfo.PerronFout := 0;
 
 	Tijd_t := 0;
+
+	Leesfout_melding := '';
 end;
 
 function TpCore.NieuwTelefoongesprek(Sender: TSender; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek;
@@ -569,7 +582,7 @@ begin
 			VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
 			Rail := tmpRail;
 			Achteruit := tmpAchteruit;
-			if achteruit then
+			if achteruit and assigned(tmpRail) then
 				Positie := tmpRail^.Lengte
 			else
 				Positie := 0;
@@ -621,6 +634,50 @@ begin
 		vRail := tmpRail;
 		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
 		if tmpRail = vRail then exit;
+	until not assigned(tmpRail);
+end;
+
+procedure TpCore.ZoekVolgendeWissel;
+var
+	tmpRail, vRail: PpRail;
+	tmpAchteruit: boolean;
+	tmpConn: PpRailConn;
+begin
+	GevWissel := nil;
+	tmpRail := Rail;
+	tmpAchteruit := Achteruit;
+	if tmpAchteruit then
+		GevAfstand := positie
+	else
+		GevAfstand := tmpRail^.Lengte-positie;
+	repeat
+		if GevAfstand > maxafstand then exit;
+		if not tmpAchteruit then
+			tmpConn := tmpRail.Volgende
+		else
+			tmpConn := tmpRail.Vorige;
+		if tmpConn^.wissel then begin
+			GevWissel := tmpConn^.WisselData;
+			VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
+			Rail := tmpRail;
+			Achteruit := tmpAchteruit;
+			if achteruit and assigned(tmpRail) then
+				Positie := tmpRail^.Lengte
+			else
+				Positie := 0;
+			exit;
+		end;
+
+		// Pak de volgende rail.
+		if tmpAchteruit then
+			tmpConn := tmpRail.Vorige
+		else
+			tmpConn := tmpRail.Volgende;
+		vRail := tmpRail;
+		VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
+		if (tmpRail = vRail) or (tmpRail = Rail) then exit;
+		if assigned(tmpRail) then
+			GevAfstand := GevAfstand + tmpRail.Lengte;
 	until not assigned(tmpRail);
 end;
 
@@ -699,7 +756,23 @@ end;
 procedure TpCore.WisTrein;
 var
 	tmpTrein: PpTrein;
+	gesprek: PpTelefoongesprek;
+	gesprekgevonden: boolean;
 begin
+	// Telefoongesprekken van deze trein beëindigen
+	gesprekgevonden := false;
+	gesprek := pAlleGesprekken;
+	while assigned(gesprek) do begin
+		if PpTrein(gesprek^.Owner) = Trein then begin
+			gesprek^.Status := tgsAbort;
+			gesprekgevonden := true;
+		end;
+		gesprek := gesprek^.Volgende;
+	end;
+
+	// Zolang gesprek nog niet beëindigd, moeten we wachten.
+	if gesprekgevonden then exit;
+
 	tmpTrein := pAlleTreinen;
 	while assigned(tmpTrein) do begin
 		if tmpTrein = Trein then begin
@@ -1021,12 +1094,13 @@ begin
 	vrij := ErlaubnisVrij(Erlaubnis);
 	if Erlaubnis^.vergrendeld then begin
 		if vrij and (not Erlaubnis^.voorvergendeld) then begin
-			// Erlaubnis weer vrijgeven
+			// Vrije Erlaubnis die niet is voorvergrendeld vrijgeven
 			Erlaubnis^.richting := Erlaubnis^.standaardrichting;
 			Erlaubnis^.vergrendeld := false;
 			Erlaubnis^.r_veranderd := true;
 		end;
 	end;
+	// Niet vrije Erlaubnis vergrendelen
 	if (not vrij) and (not Erlaubnis^.Vergrendeld) then begin
 		Erlaubnis^.Vergrendeld := true;
 		Erlaubnis^.r_veranderd := true;
@@ -1043,7 +1117,8 @@ begin
 					richting := 4;
 			Meetpunt := Meetpunt^.Volgende;
 		end;
-		if Erlaubnis^.richting <> richting then begin
+		if (Erlaubnis^.richting <> richting) and not
+			((richting = 0) and Erlaubnis^.voorvergendeld)  then begin
 			Erlaubnis^.richting := richting;
 			Erlaubnis^.r_veranderd := true; 
 		end;
@@ -1081,7 +1156,7 @@ procedure TpCore.DoeVerschijnen;
 const
 	ws = [#9, ' '];
 var
-	tmpTrein, tmpTrein2: PpTrein;
+	tmpTrein: PpTrein;
 	tmpRail: PpRail;
 	tmpPos: double;
 	tmpAchteruit: boolean;
@@ -1243,23 +1318,19 @@ begin
 				end;
 
 				// Nu de trein wissen
-				if assigned(tmpTrein^.vorige) then
-					tmpTrein^.Vorige^.Volgende := tmpTrein^.Volgende;
-				if assigned(tmpTrein^.volgende) then
-					tmpTrein^.Volgende^.Vorige := tmpTrein^.Vorige;
-				if tmpTrein = pAlleTreinen then
-					pAlleTreinen := tmpTrein^.Volgende;
-				tmpTrein2 := tmpTrein;
-				tmpTrein := tmpTrein^.Volgende;
-				dispose(tmpTrein2);
-			end else
-				tmpTrein := tmpTrein^.Volgende;
+				// We moeten dit netjes op deze manier afhandelen omdat er nog
+				// telefoongesprekken actief kunnen zijn. En om een gesprek goed te
+				// kunnen ophangen moet bekend zijn bij welke trein dat gesprek hoort.
+				tmpTrein^.Wissen := true;
+				tmpTrein^.modus := tmGecrasht;
+			end;
+			tmpTrein := tmpTrein^.Volgende;
 		end;
 		VerdwijnPunt := VerdwijnPunt^.Volgende;
 	end;
 end;
 
-procedure TpCore.LoadRailString;
+function TpCore.LoadRailString;
 const
 	ws = [#9, ' '];
 var
@@ -1295,6 +1366,7 @@ var
 	// Overweg
 	tmpOverweg:	PpOverweg;
 begin
+	result := false;
 	// Even dat de compiler niet zeurt.
 	tmpRail := nil;
 	tmpConn1 := nil;
@@ -1364,23 +1436,23 @@ begin
 				2: begin
 						val(waarde, tmpRail^.Rail^.Lengte, code);
 						if code <> 0 then
-							halt;
+							begin Leesfout_melding := 'Lengte is geen getal'; exit end;
 					end;
 				3: begin
 						val(waarde, tmpRail^.Rail^.MaxSnelheid, code);
 						if code <> 0 then
-							halt;
+							begin Leesfout_melding := 'Maximumsnelheid is geen getal'; exit end;
 					end;
 				4: tmpRail^.Rail^.elektrif := (waarde = 'j') or (waarde = 'J');
 				else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else if soort = 'c' then begin	// CONNECTIE!
 				case index of
 				1: begin
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				2: if (waarde='e') or (waarde='E') then begin
 						tmpConn1 := rail1^.Volgende;
@@ -1392,7 +1464,7 @@ begin
 				3: begin
 						rail2 := ZoekRail(waarde);
 						if not assigned(rail2) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				4: if (waarde='e') or (waarde='E') then begin
 						tmpConn2 := rail2^.Volgende;
@@ -1444,12 +1516,12 @@ begin
 						if tmpaft then begin
 							tmpMeetpunt := ZoekMeetpunt(waarde);
 							if not assigned(tmpMeetpunt) then
-								halt;
+								begin Leesfout_melding := 'Meetpunt '+waarde+' niet gevonden.'; exit end;
 							tmpConn1^.WisselData^.Meetpunt := tmpMeetpunt;
 						end else
-							halt;
+							begin Leesfout_melding := 'Meetpunt opgegeven terwijl hier geen wissel is.'; exit end;
 				else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else if soort = 'x' then begin	// KRUISING!
 				(*   *  ***  *   *  ***  ***** ***  *   * **** *   *  ***
@@ -1463,7 +1535,7 @@ begin
 				1: begin
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				2: if (waarde='e') or (waarde='E') then begin
 						tmpConn1 := rail1^.Volgende;
@@ -1475,7 +1547,7 @@ begin
 				3: begin
 						rail2 := ZoekRail(waarde);
 						if not assigned(rail2) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				4: if (waarde='e') or (waarde='E') then begin
 						tmpConn2 := rail2^.Volgende;
@@ -1487,7 +1559,7 @@ begin
 				5: begin
 						rail3 := ZoekRail(waarde);
 						if not assigned(rail3) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				6: if (waarde='e') or (waarde='E') then begin
 						tmpConn3 := rail3^.Volgende;
@@ -1499,7 +1571,7 @@ begin
 				7: begin
 						rail4 := ZoekRail(waarde);
 						if not assigned(rail4) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				8: begin
 						if (waarde='e') or (waarde='E') then begin
@@ -1545,7 +1617,7 @@ begin
 						tmpConn4.kruising := true;
 					end;
 				else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters.'; exit end;
 				end;
 			end else if soort = 's' then begin	// SEIN!
 				case index of
@@ -1569,7 +1641,7 @@ begin
 
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 					end;
 				2: if (waarde='e') or (waarde='E') then begin
 						tmpConn1 := rail1^.Volgende;
@@ -1581,17 +1653,17 @@ begin
 				3: begin
 						rail2 := ZoekRail(waarde);
 						if not assigned(rail2) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 						if rail2 <> tmpConn1.recht then
-							halt;
+							begin Leesfout_melding := 'Sein dient niet op een wissel geplaatst te worden.'; exit end;
 					end;
 				4: begin
 						if (waarde='e') or (waarde='E') then begin
 							if not tmpConn1.r_foutom then
-								halt;
+								begin Leesfout_melding := 'De rails zitten andersom aan elkaar bevestigd.'; exit end;
 						end else begin
 							if tmpConn1.r_foutom then
-								halt;
+								begin Leesfout_melding := 'De rails zitten andersom aan elkaar bevestigd.'; exit end;
 						end;
 						// Nu is alles correct.
 						TmpConn1.sein := tmpSein;
@@ -1605,26 +1677,26 @@ begin
 				7: if waarde <> '-' then begin
 						tmpErlaubnis := ZoekErlaubnis(waarde);
 						if not assigned(tmpErlaubnis) then
-							halt;
+							begin Leesfout_melding := 'Rijrichtingsveld '+waarde+' niet gevonden.'; exit end;
 						tmpSein^.A_Erlaubnis := tmpErlaubnis;
 					end;
 				8: if waarde <> '-' then begin
 						val(waarde, tmpSein^.A_Erlaubnisstand, code);
 						if (code <> 0) or (not assigned(tmpSein^.A_Erlaubnis)) then
-							halt;
+							begin Leesfout_melding := 'Stand voor rijrichtingsveld: Is geen getal, of er is geen rijrichtingsveld opgegeven.'; exit end;
 					end else
 						if assigned(tmpSein^.A_Erlaubnis) then
-							halt;
+							begin Leesfout_melding := 'Als een sein aan een rijrichtingsveld gekoppeld wordt, moet ook een richting worden opgegeven.'; exit end;
 				9: if waarde <> '-' then begin
 						val(waarde, tmpSein^.H_Maxsnelheid, code);
 						if (code <> 0) or tmpSein^.Bediend or tmpSein^.Autosein then
-							halt;
+							begin Leesfout_melding := 'Maximumsnelheid sein: Is geen getal, of het sein is bediend of een autosein.'; exit end;
 					end;
 				10: tmpSein^.Autovoorsein := (waarde = 'j') or (waarde = 'J');
 				11: if waarde <> '-' then begin
 						val(waarde, tmpSein^.V_Adviessnelheid, code);
 						if (code <> 0) or tmpSein^.Autovoorsein then
-							halt;
+							begin Leesfout_melding := 'Snelheidsaankondiging sein: Is geen getal, of het sein is een autovoorsein.'; exit end;
 					end;
 				12: tmpSein^.Haltevoorsein := (waarde = 'j') or (waarde = 'J');
 				13: if waarde <> '-' then begin
@@ -1635,7 +1707,7 @@ begin
 				14: if waarde <> '-' then
 						tmpSein^.Stationsnaam := waarde;
 				else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else if soort = 'm' then begin	// MEETPUNT!
 				case index of
@@ -1644,7 +1716,7 @@ begin
 						tmpMeetpunt^ := TpMeetpunt.Create;
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
-							halt;
+							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
 						tmpMeetpunt^.defect := false;
 						tmpMeetpunt^.Rail := rail1;
 						tmpMeetpunt^.vanwies := nil;
@@ -1659,7 +1731,7 @@ begin
 						if waarde <> '-' then begin
 							tmpErlaubnis := ZoekErlaubnis(waarde);
 							if not assigned(tmpErlaubnis) then
-								halt;
+								begin Leesfout_melding := 'Rijrichtingsveld '+waarde+' niet gevonden.'; exit end;
 							new(tmpMeetpuntLijst);
 							tmpMeetpuntLijst^.Meetpunt := tmpMeetpunt;
 							tmpMeetpuntLijst^.Volgende := tmpErlaubnis^.Meetpunten;
@@ -1668,7 +1740,7 @@ begin
 						end;
 					end;
 				else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else if soort = 'e' then begin	// RIJRICHTING!
 				case index of
@@ -1690,11 +1762,11 @@ begin
 				2: begin
 					val(waarde, tmpErlaubnis^.standaardrichting, code);
 					if (code <> 0) then
-						halt;
+						begin Leesfout_melding := 'Standaardrichting is geen getal.'; exit end;
 					tmpErlaubnis^.richting := tmpErlaubnis^.standaardrichting;
 				end
 				else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters.'; exit end;
 				end;
 			end else if soort = 'o' then begin	// OVERWEG
 				if index = 1 then begin
@@ -1707,7 +1779,7 @@ begin
 					tmpOverweg^.veranderd := false;
 					pAlleOverwegen := tmpOverweg;
 				end else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters.'; exit end;
 			end else if soort = 'vs' then begin	// VERSCHIJNPUNT
 				case index of
 				1: begin
@@ -1729,35 +1801,36 @@ begin
 				4: begin
 						val(waarde, tmpVerschijnpunt^.afstand, code);
 						if code <> 0 then
-							halt;
+							begin Leesfout_melding := 'Afstand is geen getal.'; exit end;
 					end;
 				5: if (waarde = 'A') or (waarde = 'a') then
 						tmpVerschijnpunt^.achteruit := true
 					else if (waarde = 'V') or (waarde = 'v') then
 						tmpVerschijnpunt^.achteruit := false
 					else
-						halt;
+						begin Leesfout_melding := 'Richting moet a (van achteruit) of v (van vooruit) zijn.'; exit end;
 				6: if (waarde = 'R') or (waarde = 'r') then
 						tmpVerschijnpunt^.Modus := 2
 					else if (waarde = 'S') or (waarde = 's') then
 						tmpVerschijnpunt^.Modus := 1
 					else
-						halt;
+						begin Leesfout_melding := 'Modus moet r (van rijdend) of s (van stilstaand) zijn.'; exit end;
 				7: begin
 						val(waarde, tmpVerschijnpunt^.startsnelheid, code);
 						if code <> 0 then
-							halt;
+							begin Leesfout_melding := 'Startsnelheid is geen getal.'; exit end;
 					end;
 				8: tmpVerschijnpunt^.erlaubnis := waarde;
 				9: begin
 						if waarde <> '-' then begin
 							val(waarde, tmpVerschijnpunt^.erlaubnisstand, code);
 							if code <> 0 then
-								halt;
+								begin Leesfout_melding := 'Rijrichting is geen getal.'; exit end;
 						end else
 							if tmpVerschijnpunt^.erlaubnis <> '-' then
-								halt;
-					end;
+								begin Leesfout_melding := 'Rijrichting opgegeven zonder bijbehorend rijrichtingsveld.'; exit end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else if soort = 'vd' then begin	// VERDWIJNPUNT
 				case index of
@@ -1768,19 +1841,20 @@ begin
 					pAlleVerdwijnpunten := tmpVerdwijnpunt;
 				end;
 				2: begin
-					if waarde = 'v' then
+					if (waarde = 'V') or (waarde = 'v') then
 						tmpVerdwijnpunt^.achteruit := false
-					else if waarde = 'a' then
+					else if (waarde = 'A') or (waarde = 'a') then
 						tmpVerdwijnpunt^.achteruit := true
 					else
-						halt;
+						begin Leesfout_melding := 'Richting moet a (van achteruit) of v (van vooruit) zijn.'; exit end;
 				end else
-					halt;
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
 			end else
-				halt;	// Verkeerde 'soort' opgegeven.
+				begin Leesfout_melding := 'Dit commando bestaat niet.'; exit end;	// Verkeerde 'soort' opgegeven.
 			inc(index);
 		end;
+	result := true;
 end;
 
 function TpCore.WagonsLaden;
@@ -2184,12 +2258,20 @@ begin
 	// Een 'eenmalig' defecte wissel werkt in principe weer.
 	if Wissel^.defect = wdEenmalig then
 		Wissel^.defect := wdHeel;
+	// Maar een wissel kan ook stuk gaan.
+	DoeWisselDefect(Wissel, true);
+end;
+
+procedure TpCore.DoeWisselDefect;
+begin
 	// Een wissel die werkt kan stuk gaan.
-	if GaatDefect(wisseldefectkans) then
-		if GaatDefect(wisselechtdefectkans) then
+	if GaatDefect(wisseldefectkans) then begin
+		if GaatDefect(wisselechtdefectkans) and magechtdefect then
 			Wissel^.defect := wdDefect
 		else
 			Wissel^.defect := wdEenmalig;
+		Wissel^.veranderd := true;
+	end;
 end;
 
 procedure TpCore.DoeMeetpunten;

@@ -161,7 +161,6 @@ var
 begin
 	tmpLijst := nil;
 	ZichtbaarToevRec(tmpLijst, Rail);
-	ZichtbaarToevRec(tmpLijst, Rail);
 	result := tmpLijst;
 end;
 

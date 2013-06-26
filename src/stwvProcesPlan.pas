@@ -7,7 +7,7 @@ uses stwvHokjes, stwvRijwegen, stwvRijwegLogica, stwpTijd, stwvCore,
 
 const
 	DoorkomstRijwegMaxWacht	= 10;
-	VertrekRijwegMaxWacht   = 0;
+	VertrekRijwegMaxWacht   = 5;
 
 type
 	TActiviteitSoort = (asDoorkomst, asVertrek, asAankomst, asKortestop, asNul);
@@ -39,6 +39,7 @@ type
 		Volgende:			PvProcesPlanPunt;
 
 		// Dynamische informatie
+		AnalyseGedaan:		boolean;
 		TNVVan:				PvMeetpunt;
 		TriggerPunt:		PvMeetpunt;
 		PrlRijweg:			PvPrlRijweg;
@@ -46,6 +47,10 @@ type
 
 	TProcesPlan = class
 	private
+		// Een lock die ervoor zorgt dat nooit twee ProbeerPlanpuntUitTeVoeren
+		// daadwerkelijk iets aan het veranderen zijn. De tweede aanroep zal
+		// 'false' retourneren.
+		Lock: Boolean;
 		function SplitsPunt(ProcesPlanPunt: PvProcesPlanPunt; Splitsspoor: string): PvProcesPlanPunt;
 		function Sort_Merge(links, rechts: PvProcesPlanPunt): PvProcesPlanPunt;
 		function Sort_List(PPP: PvProcesPlanPunt): PvProcesPlanPunt;
@@ -73,7 +78,20 @@ type
 		procedure TreinnummerWeg(Meetpunt: PvMeetpunt);
 	end;
 
+function ActiviteitSoortStr(ActiviteitSoort: TActiviteitSoort): string;
+
 implementation
+
+function ActiviteitSoortStr;
+begin
+	case ActiviteitSoort of
+	asDoorkomst: result := 'D';
+	asVertrek:	 result := 'V';
+	asAankomst:	 result := 'A';
+	asKortestop: result := 'K';
+	asNul:		 result := '*';
+	end;
+end;
 
 function TProcesPlan.Sort_Merge;
 var
@@ -171,6 +189,7 @@ var
 	PrlRijweg2:	PvPrlRijweg;
 	RijwegL1,
 	RijwegL2:	PvRijwegLijst;
+	EentjeTerugRijweg:PvRijweg;
 	Doe, OK:		boolean;
 begin
 	// Gegevens nieuwe punt instellen
@@ -187,6 +206,7 @@ begin
 	NieuwPunt^.NieuwNummerGedaan := false;
 	NieuwPunt^.RestNummer := '';
 	NieuwPunt^.RestNummerGedaan := false;
+	NieuwPunt^.AnalyseGedaan := false;
 	NieuwPunt^.TNVVan := nil;
 	NieuwPunt^.TriggerPunt := nil;
 	NieuwPunt^.PrlRijweg := nil;
@@ -199,6 +219,7 @@ begin
 	PrlRijweg1 := ZoekPrlRijweg(Core, ProcesPlanPunt^.van, ProcesPlanPunt^.naar,
 		ProcesPlanPunt^.dwang);
 	dwang := 0;
+	EentjeTerugRijweg := nil;
 	repeat
 		OK := false;
 		// Zoek de rijweg Splitsspoor->Naar met de geitereerde dwang.
@@ -211,6 +232,7 @@ begin
 		RijwegL1 := PrlRijweg1^.Rijwegen;
 		RijwegL2 := PrlRijweg2^.Rijwegen;
 		repeat
+			EentjeTerugRijweg := RijwegL1^.Rijweg;
 			RijwegL1 := RijwegL1^.Volgende;
 			// Is dat punt er niet? Dan de volgende dwang nemen.
 			if not assigned(RijwegL1) then
@@ -229,15 +251,23 @@ begin
 			end;
 		end;
 		if not OK then
-			inc(Dwang);
+			inc(Dwang)
 	until OK or (Dwang = 11);
 	if not OK then
 		Dwang := 0;
 	// En de gegevens bijwerken
 	ProcesPlanPunt^.van := Splitsspoor;
 	ProcesPlanPunt^.dwang := Dwang;
+	ProcesPlanPunt^.AnalyseGedaan := false;
+	UpdatePlanpunt(ProcesPlanPunt);
+	// Als triggerpunt stellen we het van-punt van de laatste reeds uitgevoerde
+	// rijweg in zodat dit laatste stuk indien mogelijk vroeg genoeg wordt
+	// ingesteld dat de trein niet met gele signalen te maken krijgt.
+	if assigned(EentjeTerugRijweg) then
+		if assigned(EentjeTerugRijweg^.Sein) then
+			ProcesPlanPunt^.TriggerPunt := EentjeTerugRijweg^.Sein^.VanTNVMeetpunt;
 
-	Log.Log('ProcesPlan: Regel aangepast: trein '+ProcesPlanPunt^.Treinnr+
+	Log.Log('Procesplan: Regel aangepast: trein '+ProcesPlanPunt^.Treinnr+
 	' moet verder van spoor '+ProcesPlanPunt^.van+' naar spoor '+ProcesPlanPunt^.naar);
 
 	result := NieuwPunt;
@@ -246,6 +276,7 @@ end;
 constructor TProcesPlan.Create;
 begin
 	inherited;
+	Lock := false;
 	ProcesPlanPuntenPending := nil;
 	ProcesPlanPuntenKlaar := nil;
 	KlaarAantal := 0;
@@ -270,6 +301,9 @@ end;
 
 procedure TProcesPlan.UpdatePlanpunt;
 begin
+	if ProcesPlanPunt^.AnalyseGedaan then
+		exit;
+
 	// Zoek de PrlRijweg
 	if assigned(ProcesPlanPunt^.PrlRijweg) then begin
 		if (ProcesPlanPunt^.PrlRijweg^.van <> ProcesPlanPunt^.Van) or
@@ -291,6 +325,8 @@ begin
 		ProcesPlanPunt^.TriggerPunt := ProcesPlanPunt^.PrlRijweg^.Rijwegen^.Rijweg^.Sein^.TriggerMeetpunt
 	else
 		ProcesPlanPunt^.TriggerPunt := nil;
+
+	ProcesPlanPunt^.AnalyseGedaan := true;
 end;
 
 function TProcesPlan.ProbeerPlanpuntUitTeVoeren;
@@ -311,7 +347,7 @@ begin
 				// We doen niks als nog een andere trein in de weg staat.
 				exit;
 	end;
-	// Kijk - indien nodig - op WaarWelPunt.
+	// Kijk - indien nodig - op TriggerPunt.
 	if (not TreinIsEr) and assigned(ProcesPlanPunt^.TriggerPunt) then
 		TreinIsEr := ProcesPlanPunt^.TriggerPunt^.treinnummer = ProcesPlanPunt^.Treinnr;
 	// We doen niks als de trein niet aanwezig is.
@@ -323,6 +359,8 @@ begin
 	PrlRijweg := ZoekPrlRijweg(Core, ProcesPlanPunt^.van, ProcesPlanPunt^.naar, ProcesPlanPunt^.Dwang);
 	if not assigned(PrlRijweg) then
 		exit;
+	if Lock then exit;
+	Lock := true;
 	if RijwegLogica.StelPrlRijwegIn(PrlRijweg, ProcesPlanPunt^.ROZ,
 		ProcesPlanPunt^.gefaseerd, ProcesPlanPunt^.Dwang) then
 		result := true
@@ -331,6 +369,7 @@ begin
 			(RijwegLogica.Prl_IngesteldTot <> '') then
 			// Procesplanpunt opdelen en bijwerken
 			MarkeerKlaar(SplitsPunt(ProcesPlanPunt, RijwegLogica.Prl_IngesteldTot));
+	Lock := false;
 end;
 
 procedure TProcesPlan.MarkeerKlaar;
@@ -361,22 +400,26 @@ var
 	ProcesPlanPunt,
 	tmpPPP: 						PvProcesPlanPunt;
 	TijdBereikt: 				boolean;
-	DoorkomstNietVerlopen: 	boolean;
-	VertrekNietVerlopen:		boolean;
+	DoorkomstVerlopen: 		boolean;
+	VertrekVerlopen:			boolean;
 	klaar:						boolean;
 begin
 	ProcesPlanPunt := ProcesPlanPuntenPending;
 	while assigned(ProcesPlanPunt) do begin
-		TijdBereikt := (GetTijd >= ProcesPlanPunt^.Insteltijd);
-		DoorkomstNietVerlopen := ((ProcesPlanPunt^.ActiviteitSoort <> asDoorkomst) or
-		(GetTijd <= ProcesPlanPunt^.Insteltijd+MkTijd(0,DoorkomstRijwegMaxWacht, 0)));
-		VertrekNietVerlopen := ((ProcesPlanPunt^.ActiviteitSoort <> asVertrek) or
-		(GetTijd <= ProcesPlanPunt^.Insteltijd+MkTijd(0,DoorkomstRijwegMaxWacht, 59)));
 		klaar := false;
-		if TijdBereikt and DoorkomstNietVerlopen and VertrekNietVerlopen and
-			ProcesPlanPunt^.ARI_toegestaan then begin
-			// Dit is een procesplanpunt waarvoor we iets moeten doen.
-			klaar := ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt);
+		if ProcesPlanPunt^.ARI_toegestaan then begin
+			TijdBereikt := (GetTijd >= ProcesPlanPunt^.Insteltijd);
+			DoorkomstVerlopen := ((ProcesPlanPunt^.ActiviteitSoort = asDoorkomst) and
+			(GetTijd > ProcesPlanPunt^.Insteltijd+MkTijd(0,DoorkomstRijwegMaxWacht, 0)));
+			VertrekVerlopen := ((ProcesPlanPunt^.ActiviteitSoort = asVertrek) and
+			(GetTijd > ProcesPlanPunt^.Insteltijd+MkTijd(0,VertrekRijwegMaxWacht, 59)));
+			if TijdBereikt then
+				if VertrekVerlopen or DoorkomstVerlopen then begin
+					ProcesPlanPunt^.ARI_toegestaan := false;
+					Log.Log(ProcesPlanPunt^.Treinnr+' '+ActiviteitSoortStr(ProcesPlanPunt^.ActiviteitSoort)+' uitgezet voor ARI; vertraging te groot.');
+				end else
+					// Dit is een procesplanpunt waarvoor we iets moeten doen.
+					klaar := ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt);
 		end;
 		if not klaar then
 			ProcesPlanPunt := ProcesPlanPunt^.Volgende
@@ -459,6 +502,7 @@ begin
 			PPP^.NieuwNummerGedaan := false;
 			PPP^.RestNummer := '';
 			PPP^.RestNummerGedaan := false;
+			PPP^.AnalyseGedaan := false;
 			PPP^.TNVVan := nil;
 			PPP^.TriggerPunt := nil;
 			PPP^.PrlRijweg := nil;

@@ -9,6 +9,17 @@ procedure WisselstandenLijstDispose(StandenLijst: PWisselstandLijst);
 function WisselstandenLijstBereken(Wissel: PvWissel; Stand: TWisselStand;
 	Flankbeveiliging: PvFlankbeveiliging; TotNuToe: PWisselstandLijst; WensenRespecteren: boolean): PWisselstandLijst;
 
+// De functies WisselstandKan, WisselKanOmgezet, RijwegKan en WisselsLiggenGoed
+// zijn beveiligd met een lock. Als het lock gezet is dan retourneren ze 'false'
+
+// Wanneer moet nu het lock worden gezet? Dat moet als volgt:
+// 1. <kijk of iets kan>
+// 2. RijveiligheidLock();
+// 3. <doe iets dat SendMsg veroorzaakt>
+// 4. RijveiligheidUnlock();
+// Zo wordt namelijk verhinderd dat bij een interruptie van SendMsg iets wordt
+// gedaan dat het resultaat van de gedane checks beïnvloedt.
+
 // Deze functie kijkt of een wissel in de gewenste stand kan worden
 // gezet en een rijweg erover mag worden ingesteld.
 // De functie levert ook 'true' als de wissel al goed ligt en er reeds
@@ -37,18 +48,23 @@ function RijwegKan(Rijweg: PvRijweg; ROZ: boolean;
 // 2 = rijweg is reeds ingesteld
 // 3 = rijrichting is momenteel niet toegestaan.
 // 4 = rijweg naar onbeveiligd spoor alleen met ROZ
+// 9 = lock
 function RijwegKanWaaromNiet: byte;
 
 // Vertel of de rijweg meteen geannuleerd mag worden of dat we approach
 // locking moeten toepassen.
 function MoetHerroepMetApproachLock(Rijweg: PvRijweg): boolean;
 
+function RijveiligheidLock: boolean;
+procedure RijveiligheidUnlock;
+
 implementation
 
 var
 	wisselok,
 	richtingok,
-	rozok:	boolean;
+	rozok,
+	lock:	boolean;
 
 
 // Dit is de basale domme functie die alleen naar dit ene wissel kijkt
@@ -118,6 +134,7 @@ var
 	tmpTotNuToe: PWisselstandLijst;
 begin
 	result := nil;
+
 	TotNuToeEind := TotNuToe;
 	if assigned(TotNuToeEind) then
 		while assigned(TotNuToeEind^.volgende) do
@@ -348,6 +365,11 @@ function WisselStandKan;
 var
 	StandenLijst: PWisselstandLijst;
 begin
+	if Lock then begin
+		result := false;
+		exit;
+	end;
+
 	// Eerst berekenen we alle standen die bij deze wisselstand horen.
 	StandenLijst := WisselstandenLijstBereken(Wissel, Stand, Flankbeveiliging, nil, false);
 
@@ -367,28 +389,41 @@ end;
 
 function WisselsLiggenGoed;
 var
-	tmpWissel: PvWissel;
-	tmpRechtdoor: boolean;
+	StandenLijst: 	PWisselstandLijst;
+	tmpStand:		PWisselstandLijst;
 begin
+	if Lock then begin
+		result := false;
+		exit;
+	end;
+
 	if not (Stand in [wsRechtdoor, wsAftakkend]) then begin
 		result := false;
 		exit;
 	end;
 
-	result := true;
-	tmpWissel := Wissel^.Groep^.EersteWissel;
-	tmpRechtdoor := Stand = wsRechtdoor;
-	while assigned(tmpWissel) do begin
-		if (tmpRechtdoor xor Wissel^.BasisstandRecht xor tmpWissel^.BasisstandRecht) then
-			result := result and WisselsLiggenGoed2(tmpWissel, wsRechtdoor)
-		else
-			result := result and WisselsLiggenGoed2(tmpWissel, wsAftakkend);
-		tmpWissel := tmpWissel^.Volgende;
+	// Eerst berekenen we alle standen die bij deze wisselstand horen.
+	StandenLijst := WisselstandenLijstBereken(Wissel, Stand, Flankbeveiliging, nil, false);
+	if not assigned(StandenLijst) then begin
+		result := false;
+		exit;
 	end;
+	tmpStand := StandenLijst;
+	result := true;
+	while assigned(tmpStand) do begin
+		result := result and WisselsLiggenGoed2(tmpStand^.Wissel, tmpStand^.Stand);
+		tmpStand := tmpStand^.Volgende;
+	end;
+
+	WisselstandenLijstDispose(StandenLijst);
 end;
 
 function WisselKanOmgezet;
 begin
+	if Lock then begin
+		result := false;
+		exit;
+	end;
 	case Wissel^.Wensstand of
 	wsRechtdoor: result := WisselStandKan(Wissel, wsAftakkend, Flankbeveiliging);
 	wsAftakkend: result := WisselStandKan(Wissel, wsRechtdoor, Flankbeveiliging);
@@ -412,6 +447,10 @@ var
 	StandenLijstEind: PWisselstandLijst;
 	ExtraLijst: PWisselstandLijst;
 begin
+	if Lock then begin
+		result := false;
+		exit;
+	end;
 	// Alle wissels moeten in de goede stand gelegd kunnen worden.
 	wisselok := true;
 	StandenLijst := nil;
@@ -461,6 +500,7 @@ end;
 function RijwegKanWaaromNiet;
 begin
 	result := 0;
+	if lock then result := 9;
 	if not richtingok then result := 3;
 	if not wisselok then result := 1;
 	if not rozok then result := 4;
@@ -480,4 +520,22 @@ begin
 	result := ok;
 end;
 
+function RijveiligheidLock;
+begin
+	if Lock then
+		result := false
+	else begin
+		Lock := true;
+		result := true;
+	end;
+end;
+
+procedure RijveiligheidUnlock;
+begin
+	Lock := false;
+end;
+
+
+begin
+	Lock := false;
 end.

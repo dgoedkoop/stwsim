@@ -524,7 +524,8 @@ begin
 						end else if tcmd = 'wtt' then begin		// WachT met Telefoneren
 							val(tail,tm,code);
 							if code = 0 then begin
-								Gesprek^.WachtMetBellen := MkTijd(0,tm,0);
+								Gesprek^.WachtMetBellen := GetTijd+MkTijd(0,tm,0);
+								Gesprek^.WachtOpdracht := true;
 								CommPhysics.AntwoordGegeven(Gesprek);
 								SendOK
 							end else

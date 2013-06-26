@@ -2,7 +2,7 @@ unit stwvCore;
 
 interface
 
-uses stwvMeetpunt, stwvSeinen, stwvRijwegen, stwvSporen, stwvMisc,
+uses sysutils, stwvMeetpunt, stwvSeinen, stwvRijwegen, stwvSporen, stwvMisc,
 	stwvTreinComm, stwvScore;
 
 // Dit is eigenlijk heel slecht geprogrammeerd. Niet object-georienteerd, maar
@@ -323,7 +323,7 @@ begin
 	result := nil;
 	s := core.vAlleSeinen;
 	while assigned(s) do begin
-		if s^.Naam = naam then begin
+		if uppercase(s^.Naam) = uppercase(naam) then begin
 			result := s;
 			exit;
 		end;
@@ -404,7 +404,7 @@ begin
 	while assigned(wg) do begin
 		w := wg^.EersteWissel;
 		while assigned(w) do begin
-			if w^.WisselID = naam then begin
+			if uppercase(w^.WisselID) = uppercase(naam) then begin
 				result := w;
 				exit;
 			end;
@@ -587,7 +587,8 @@ begin
 	result := nil;
 	Rijweg := Core^.vAlleRijwegen;
 	while assigned(Rijweg) do begin
-		if (Rijweg^.Sein^.Van = van) and (Rijweg^.Naar = naar) then begin
+		if (uppercase(Rijweg^.Sein^.Van) = uppercase(van)) and
+			(uppercase(Rijweg^.Naar) = uppercase(naar)) then begin
 			result := Rijweg;
 			break;
 		end;

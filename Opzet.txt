@@ -333,24 +333,63 @@ CHANGELOG:
 2 juli 2009:
 - Fix: geen crash meer als voor een trein een wissel ligt die wordt omgezet.
 
-8 juli 2010:
+8 juli 2009:
 - ROZ-rijweg naar spoor met andere rijweg in tegengestelde richting werkt nu
   realistisch: ROZ-rijweg wordt geactiveerd zodra laatste sectie van de andere
   rijweg is bezet gemeld.
 
-9 juli 2010:
+0.2.0.21 (9 juli 2009):
 - Enkelspoor- en dubbelenkelspoorbeveiliging realistischer gemaakt.
 - Rijrichting kan nu ook als meta-meetpunt voor de hele vrije baan werken.
 
-6 december 2011:
-- Fix: Geen stortvloed meer aan foutmeldingen 'unknown train' als je een TNV-nummer
-  een van niet bestaande trein aanklikt
-- Fix: Geen crash meer als een trein zichzelf probeert te hernummeren in een trein
-  waarvoor geen dienstregeling beschikbaar is
+0.2.0.24 (6 december 2011):
+- Fix: Geen stortvloed meer aan foutmeldingen 'unknown train' als je een
+  TNV-nummer een van niet bestaande trein aanklikt
+- Fix: Geen crash meer als een trein zichzelf probeert te hernummeren in een
+  trein waarvoor geen dienstregeling beschikbaar is
 
 7 december 2011:
-- Eiswissels en verzoekwissels (en daarbij de hele wissellogica geherprogrammeerd)
-- Op het scherm kan een wissel in rechte stand nu ook juist schuin worden weergegeven
+- Eiswissels en verzoekwissels (en daarbij de hele wissellogica
+  geherprogrammeerd)
+- Op het scherm kan een wissel in rechte stand nu ook juist schuin worden
+  weergegeven
+
+8 december 2011:
+- Systeem van eis- en verzoekwissels verbeterd
+- Fix: Geen programmacrash meer als een trein op een wissel dat in
+  ongedefinieerde stand ligt rijdt
+- Trein remt nu af als hij ziet dat een wissel in ongedefinieerde stand ligt
+- Fix: Het telefoonsysteem reageert nu juist wat betreft het opnieuw bellen. Bij
+  een opdracht om zoveel minuten te wachten wordt nu ook echt zoveel minuten
+  gewacht, en bij een bericht dat alleen ter kennisgeving is wordt nu niet meer
+  telkens opnieuw gebeld.
+- Fix: Bij een telefoongesprek wordt nu ook correct de verbinding verbroken als
+  een trein het gebied uit rijdt, ipv. dat een 'spookgesprek' actief blijft en
+  het tot foutmeldingen komt.
+- Er is nu een echte invoerregel waarmee je commando's kan geven.
+- Als titel van het programma / hoofdvenster nu niet meer StwSim maar de naam
+  van de simulatie
+- Fix: Als je een ongeldig bestand als parameter geeft dan worden nu na de
+  foutmelding dezelfde knoppen weergegeven als wanneer je het programma normaal
+  start.
+
+9 december 2011:
+- Fix: Race condition in ARI / rijweginstelling / wissels omzetten opgelost.
+- Fix: Bij check of alle wissels van een rijweg goed liggen om het sein op groen
+  te kunnen zetten wordt nu ook gekeken of alle eiswissels goed liggen.
+- Fix: ControleerAankondigingKnipperen variant voor Rijwegen moet ook een sectie
+  alleen dan laten knipperen als er niet reeds een aansluitende rijweg is
+  ingesteld.
+
+(0.2.0.27) 10 december 2011:
+- Procesleiding stelt het tweede deel van een gefaseerde rijweg nu op tijd in om
+  een trein met 'hoog groen' te kunnen laten rijden.
+- Procesleiding geeft nu een melding als een rijweg niet wordt uitgevoerd omdat
+  de vertraging te groot is.
+
+(0.2.0.28) 26 juni 2012:
+- Fix: Bug in de rijrichtingsvelden van (dubbel-)enkelspoor opgelost
+- Volgorde van de commandoregel aangepast; commando's komen nu achteraan
 
 BERICHTEN AAN DE MACHINIST:
 
@@ -395,7 +434,7 @@ uitgevoerd:
 3. Wagons loskoppelen
 4. Nieuw rijplan laden
 Deze extrafuncties vinden plaats na aankomst, en kunnen ook alléén uitgevoerd
-worden wanneer de trein stilstaat. 
+worden wanneer de trein stilstaat.
 Na een omdraaiinstructie staat een trein niet meer langs een gedefinieerd
 perron. Toch kan een vertrektijd worden genoemd.
 

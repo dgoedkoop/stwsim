@@ -82,6 +82,8 @@ function ZoekRail(pAlleRails: PpRailLijst; Naam: string): PpRail;
 
 function IsHierHoofdsein(Conn: PpRailConn): boolean;
 
+function ZoekOmgekeerdeConnectie(Conn: PpRailConn): PpRailConn;
+
 implementation
 
 uses stwpSeinen;
@@ -99,20 +101,31 @@ begin
 	end;
 end;
 
-procedure WisselOpenrijden;
+function ZoekOmgekeerdeConnectie;
 var
 	naarRail: 		PpRail;
 	naarAchteruit:	boolean;
-	wConn:			PpRailConn;
 begin
+	result := nil;
 	// Voor het openrijden moeten we de OMGEKEERDE connectie bekijken.
 	VolgendeRail(Conn, naarRail, naarAchteruit);
 	if not assigned(naarRail) then exit;	// Zou niet voor mogen komen, de trein
 														// moet dan al gecrasht zijn.
 	if naarAchteruit then
-		wConn := naarRail^.Volgende
+		result := naarRail^.Volgende
 	else
-		wConn := naarRail^.Vorige;
+		result := naarRail^.Vorige;
+end;
+
+procedure WisselOpenrijden;
+var
+	wConn:			PpRailConn;
+begin
+	// Voor het openrijden moeten we de OMGEKEERDE connectie bekijken.
+	wConn := ZoekOmgekeerdeConnectie(Conn);
+	if not assigned(wConn) then exit;	// Zou niet voor mogen komen, de trein
+													// moet dan al gecrasht zijn of er zit
+													// een fout in de simulatie-data
 	// En nu ons ding doen.
 	if not assigned(wConn^.WisselData) then exit;
 	if (wConn^.recht = Conn^.VanRail) and (wConn^.WisselData^.stand <> wsRechtdoor) then begin

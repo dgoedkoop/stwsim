@@ -7,7 +7,7 @@ uses stwpTijd, stwpDatatypes;
 type
 	TpTelefoongesprekType = (tgtBellen, tgtGebeldWorden);
 	TpTelefoongesprekStatus = (tgsSS, tgsSS2, tgsSS3, tgsSB, tgsSB2,
-		tgsG1, tgsG2, tgsWachtOpAntwoord, tgsG4, tgsG5, tgsH, tgsE);
+		tgsG1, tgsG2, tgsWachtOpAntwoord, tgsG4, tgsG5, tgsAbort, tgsH, tgsE);
 
 	TSender = ^TObject;
 
@@ -21,6 +21,7 @@ type
 		tekstOK:			string;
 		OphangenErg:	boolean;			// Opnieuw bellen als de trdl ophangt?
 		WachtMetBellen:	integer;
+		WachtOpdracht: boolean;
 		// Voor meer info
 		userdata:		pointer;
 
@@ -44,6 +45,7 @@ begin
 	OphangenErg := false;
 	Userdata := nil;
 	Self.Owner := Owner;
+	WachtOpdracht := false;
 	WachtMetBellen := RandomWachtTijd(mintijd_wachtmetbellen, maxtijd_wachtmetbellen);
 	case Soort of
 	tgtBellen: begin

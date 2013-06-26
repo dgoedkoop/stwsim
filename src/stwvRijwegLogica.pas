@@ -47,6 +47,7 @@ type
 		SendMsg:	TvSendMsg;
 		// Teruggave
 		Prl_IngesteldTot: string;
+		StartupBezig: boolean;
 
 		constructor Create;
 		// Overwegen
@@ -57,9 +58,12 @@ type
 		function DoeRijweg(van, naar: string; ROZ, Auto: boolean): boolean;
 		function StelRijwegIn(Rijweg: PvRijweg; ROZ, Auto: boolean; WatMetActief: TWatMetActief): boolean;
 		function StelPrlRijwegIn(PrlRijweg: PvPrlRijweg; ROZ, gefaseerd: Boolean; Dwang: byte): boolean;
+		function ZetWisselOm(Wissel: PvWissel): boolean;
 		// Herroepen van rijwegen
 		procedure DeclaimRijweg(ActieveRijweg: PvActieveRijwegLijst);
 		function HerroepRijweg(seinnaam: string): boolean;
+		// Interpretatie
+		procedure VoerStringUit(opdracht: string);
 		// Periodieke check
 		procedure DoeActieveRijwegen;
 		// Save-load
@@ -147,6 +151,13 @@ var
 	Gevonden:	boolean;
 	MeetpuntL:	PvMeetpuntLijst;
 begin
+	// Als na deze rijweg al een andere rijweg ligt, dan moet deze rijweg i.i.g.
+	// niet gaan knipperen. Deze situatie komt bijvoorbeeld voor als
+	// Procesleiding eerst twee rijwegen in een keer instelt die pas een stapje
+	// later geactiveerd worden.
+	if assigned(Rijweg^.NaarSein) then
+		if assigned(Rijweg^.NaarSein^.RijwegOnderdeel) then
+			exit;
 	// De laatste sectie van deze rijweg moet gaan knipperen indien voor deze
 	// rijweg een andere rijweg of vrije baan ligt die bezet is.
 	if Rijweg^.Sein^.RijwegenNaarSeinBestaan then begin
@@ -512,6 +523,7 @@ end;
 constructor TRijwegLogica.Create;
 begin
 	AankSound := LoadSound('snd_aank');
+   StartupBezig := true;
 end;
 
 procedure TRijwegLogica.SaveActieveRijwegen;
@@ -578,8 +590,8 @@ begin
 		while assigned(Meetpunt) do begin
 			if Meetpunt^.RijwegOnderdeel = ActieveRijweg then begin
 				stringwrite(f, Meetpunt^.meetpuntID);
-{				boolwrite  (f, Meetpunt^.OnterechtBezet);
-				boolwrite  (f, Meetpunt^.Knipperen);}
+				boolwrite  (f, Meetpunt^.OnterechtBezet);
+{				boolwrite  (f, Meetpunt^.Knipperen);}
 			end;
 			Meetpunt := Meetpunt^.Volgende;
 		end;
@@ -647,8 +659,8 @@ begin
 			stringread(f, MeetpuntID);
 			Meetpunt := ZoekMeetpunt(Core, MeetpuntID);
 			Meetpunt^.RijwegOnderdeel := ActieveRijweg;
-{			boolread  (f, Meetpunt^.OnterechtBezet);
-			boolread  (f, Meetpunt^.Knipperen);}
+			boolread  (f, Meetpunt^.OnterechtBezet);
+{			boolread  (f, Meetpunt^.Knipperen);}
 		end;
 		intread(f, SeinCount);
 		for j := 1 to SeinCount do begin
@@ -783,6 +795,7 @@ begin
 	end;
 end;
 
+// Niet beveiligd met lock. Is dat erg?
 procedure TRijwegLogica.DoeOverwegen;
 var
 	Overweg:			PvOverweg;
@@ -878,6 +891,8 @@ begin
 	end;
 end;
 
+// Niet beveiligd met lock, want dit is een event handler van een eenmalige
+// gebeurtenis waarbij gewoon gedaan moet worden wat gedaan moet worden.
 procedure TRijwegLogica.MarkeerBezet;
 var
 	ActieveRijweg: PvActieveRijwegLijst;
@@ -897,13 +912,14 @@ begin
 	if not assigned(ActieveRijweg) then exit;
 
 	// Kijk of de bezetmelding terecht is
-	if not ControleerTerecht(Meetpunt) then begin
-		Meetpunt^.OnterechtBezet := true;
-		Log.Log('Onverwachte bezetmelding in rijweg van '+
-			KlikpuntTekst(ActieveRijweg^.Rijweg^.Sein^.Van, false)+' naar '+
-			KlikpuntTekst(ActieveRijweg^.Rijweg^.Naar, false)+'.');
-	end else
-		Meetpunt^.OnterechtBezet := false;
+	if not StartupBezig then
+		if not ControleerTerecht(Meetpunt) then begin
+			Meetpunt^.OnterechtBezet := true;
+			Log.Log('Onverwachte bezetmelding in rijweg van '+
+				KlikpuntTekst(ActieveRijweg^.Rijweg^.Sein^.Van, false)+' naar '+
+				KlikpuntTekst(ActieveRijweg^.Rijweg^.Naar, false)+'.');
+		end else
+			Meetpunt^.OnterechtBezet := false;
 
 	// Sein op rood zetten en pending-status bijwerken.
 	if (ActieveRijweg^.Pending = 2) then begin
@@ -1068,6 +1084,7 @@ begin
 	DoeOverwegen;
 end;
 
+// Geen lock, want ook dit is iets eenmaligs.
 function TRijwegLogica.HerroepRijweg;
 var
 	ActieveRijweg: 	PvActieveRijwegLijst;
@@ -1168,6 +1185,8 @@ end;
 // - De inactief-hokjes worden gekleurd
 // - De kruising-hokjes worden ingesteld
 // - Seinen worden op groen gezet, indien mogelijk.
+// Deze functie gebruikt RijveiligheidLock omdat het veiligheidskritisch is dat
+// een sein pas op groen gaat als ook écht alles goed ligt.
 procedure TRijwegLogica.DoeActieveRijwegen;
 var
 	ActieveRijweg:		PvActieveRijwegLijst;
@@ -1352,12 +1371,13 @@ begin
 					DoelseinGoed := true;
 
 			// Alles OK? Dan kan het sein op groen.
-			if OverwegenGoed and DoelseinGoed then begin
+			if OverwegenGoed and DoelseinGoed and RijveiligheidLock then begin
 				if ActieveRijweg^.ROZ then
 					SendMsg.SendSetSein(Rijweg^.Sein, 'gk')
 				else
 					SendMsg.SendSetSein(Rijweg^.Sein, 'g');
 				ActieveRijweg^.Pending := 2;
+				RijveiligheidUnlock;
 			end;
 		end;
 		ActieveRijweg := ActieveRijweg^.Volgende;
@@ -1467,8 +1487,11 @@ begin
 		exit;
 	end;
 
+	result := false;
+	if not RijveiligheidLock then exit;
 	// Nu stellen we de rijweg in, inclusief wissels en rijrichting
 	StelRijwegInNu(Rijweg, ROZ, Auto);
+	RijveiligheidUnlock;
 
 	result := true;
 end;
@@ -1493,6 +1516,7 @@ begin
 	result := StelRijwegIn(Rijweg, ROZ, Auto, wmaError);
 end;
 
+// Geen lock, want de ouder-functie StelRijwegIn doet dat.
 procedure TRijwegLogica.StelRijwegInNu;
 var
 	Wissel: PvWisselstand;
@@ -1621,6 +1645,137 @@ begin
 				Prl_IngesteldTot := '';
 		end;
 	end;
+end;
+
+// Deze functie gebruikt RijveiligheidLock om te voorkomen dat halverwege het
+// instellen van de wissels een parallelle functie iets anders gaat doen.
+function TRijwegLogica.ZetWisselOm;
+var
+	StandenLijst, tmpStand: PWisselstandLijst;
+	Stand: TWisselStand;
+begin
+	if assigned(Wissel) then
+		if WisselKanOmgezet(Wissel, Core.vFlankbeveiliging) then begin
+			if Wissel^.WensStand = wsRechtdoor then
+				Stand := wsAftakkend
+			else
+				Stand := wsRechtdoor;
+			StandenLijst := WisselstandenLijstBereken(Wissel, Stand,
+				Core.vFlankbeveiliging, nil, true);
+			if not RijveiligheidLock then begin result := false; exit end;
+			tmpStand := StandenLijst;
+			while assigned(tmpStand) do begin
+				SendMsg.SendWissel(tmpStand^.Wissel, tmpStand^.Stand);
+				tmpStand := tmpStand^.Volgende;
+			end;
+			RijveiligheidUnlock;
+			WisselstandenLijstDispose(StandenLijst);
+			result := true
+		end else
+			result := false
+	else
+		result := false
+end;
+
+procedure TRijwegLogica.VoerStringUit;
+type
+	PString = ^TString;
+	TString = record
+		s: string;
+		v: PString;
+	end;
+var
+	// Voor de syntax-analyse
+	gesplitst: PString;
+	tmpstr: PString;
+	count,p: integer;
+	// Voor wisseldingen omdat daar geen eigen functie voor bestaat
+	wissel: PvWissel;
+
+	function rpos(substr, str: string): integer;
+	var
+		i: integer;
+	begin
+		result := 0;
+		for i := length(str)-length(substr)+1 downto 1 do
+			if copy(str, i, length(substr)) = substr then begin
+				result := i;
+				exit
+			end
+	end;
+
+begin
+	new(tmpstr);
+	gesplitst := tmpstr;
+	tmpstr^.s := opdracht;
+	tmpstr^.v := nil;
+	count := 1;
+	p := rpos(' ', tmpstr^.s);
+	while p>0 do begin
+		new(tmpstr^.v);
+		tmpstr^.v.s := copy(tmpstr^.s, 1, p-1);
+		tmpstr^.s := copy(tmpstr^.s, p+1, length(tmpstr^.s)-p{-1});
+		p := pos(' ', tmpstr^.v^.s);
+		tmpstr := tmpstr^.v;
+		tmpstr^.v := nil;
+		count := count + 1;
+	end;
+	if gesplitst^.s = 'n' then begin
+		if count = 3 then
+			DoeRijweg('r'+gesplitst^.v.v.s,'r'+gesplitst^.v.s,false,false)
+		else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'roz' then begin
+		if count = 3 then
+			DoeRijweg('r'+gesplitst^.v.v.s,'r'+gesplitst^.v.s,true,false)
+		else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'a' then begin
+		if count = 3 then
+			DoeRijweg('r'+gesplitst^.v.v.s,'r'+gesplitst^.v.s,false,true)
+		else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'h' then begin
+		if count = 2 then
+			HerroepRijweg('s'+gesplitst^.v.s)
+		else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'ib' then begin
+		if count = 2 then begin
+			wissel := ZoekWissel(Core,gesplitst^.v^.s);
+			if assigned(wissel) then begin
+				if not ZetWisselOm(Wissel) then
+					Log.Log('Wissel '+Wissel^.WisselID+' kan niet worden omgezet.');
+			end else
+				Log.Log('Element niet gevonden.');
+		end else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'vhb' then begin
+		if count = 2 then begin
+			wissel := ZoekWissel(Core,gesplitst^.v^.s);
+			if assigned(wissel) then
+				Wissel^.Groep^.bedienverh := not Wissel^.Groep^.bedienverh
+			else
+				Log.Log('Wissel niet gevonden.');
+		end else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+	if gesplitst^.s = 'vhr' then begin
+		if count = 2 then begin
+			wissel := ZoekWissel(Core,gesplitst^.v^.s);
+			if assigned(wissel) then
+				Wissel^.rijwegverh := not Wissel^.rijwegverh
+			else
+				Log.Log('Wissel niet gevonden.');
+		end else
+			Log.Log('Verkeerd aantal argumenten opgegeven.');
+	end else
+		Log.Log('Ongeldig commando opgegeven.');
 end;
 
 end.

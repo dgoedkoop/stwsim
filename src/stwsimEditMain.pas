@@ -407,7 +407,8 @@ type
 		procedure UpdateSubrouteUpDownCtls;
 		procedure UpdateControls;
 		procedure SwapSubroutes(eersteIdx, tweedeIdx: integer);
-		procedure AddScherm(ID: integer; titel: string; waar: firstlast; details: boolean);
+		// waar: -1=eind, 0=begin, 1=na het eerste scherm, ...
+		procedure AddScherm(ID: integer; titel: string; waar: integer; details: boolean);
 		function GetScherm(ID: Integer): PTabList;
 		function SchermTitel(ID: integer): string;
 		function SchermNieuwID: integer;
@@ -954,6 +955,7 @@ end;
 procedure TstwseMain.AddScherm;
 var
 	Tab, l: PTabList;
+	i: integer;
 begin
 	new(Tab);
 	Tab^.Titel := Titel;
@@ -982,7 +984,7 @@ begin
 	Tab^.Gleisplan.ShowPointPositions := false;
 	Tab^.Gleisplan.OnbekendeWisselsKnipperen := false;
 	Tab^.Gleisplan.Visible := true;
-	if waar = flLast then begin
+	if waar = -1 then begin
 		Tab^.Volgende := nil;
 		l := FirstTab;
 		if not assigned(l) then
@@ -993,9 +995,16 @@ begin
 			l^.volgende := Tab;
 		end;
 	end;
-	if waar = flFirst then begin
+	if waar = 0 then begin
 		Tab^.Volgende := FirstTab;
 		FirstTab := Tab;
+	end;
+	if waar > 0 then begin
+		l := FirstTab;
+		for i := 1 to waar-1 do
+			l := l^.Volgende;
+		Tab^.Volgende := l^.Volgende;
+		l^.Volgende := Tab;
 	end;
 	RijwegLogica.Tabs := FirstTab;
 end;
@@ -1234,9 +1243,9 @@ procedure TstwseMain.tsButClick(Sender: TObject);
 begin
 	if nsEdit.Text <> '' then begin
 		if tsLast.checked then
-			AddScherm(SchermNieuwID, nsEdit.Text, flLast, detailsOn.Checked)
+			AddScherm(SchermNieuwID, nsEdit.Text, -1, detailsOn.Checked)
 		else
-			AddScherm(SchermNieuwID, nsEdit.Text, flFirst, detailsOn.Checked);
+			AddScherm(SchermNieuwID, nsEdit.Text, SchermenTab.TabIndex, detailsOn.Checked);
 		UpdateChg.Schermaantal := true;
 		UpdateChg.Schermen := true;
 		UpdateControls;
@@ -2012,7 +2021,7 @@ begin
 			if schermID > 0 then begin
 				stringread(f, schermnaam);
 				boolread(f, details);
-				AddScherm(schermID, Schermnaam, flLast, details);
+				AddScherm(schermID, Schermnaam, -1, details);
 				GetScherm(schermID).Gleisplan.LoadPlan(f);
 			end;
 		until schermID = 0;

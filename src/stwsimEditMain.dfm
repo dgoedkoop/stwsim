@@ -48,7 +48,7 @@ object stwseMain: TstwseMain
       Top = 0
       Width = 842
       Height = 237
-      ActivePage = wTab
+      ActivePage = gplTab
       Align = alClient
       Constraints.MinHeight = 193
       TabOrder = 0
@@ -515,7 +515,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 3
           end
           object ovmaDBut: TButton
@@ -2095,7 +2095,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 13
+            ItemHeight = 0
             ParentFont = False
             TabOrder = 0
             OnChange = mElBoxChange
@@ -2121,7 +2121,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 13
+            ItemHeight = 0
             ParentFont = False
             TabOrder = 2
             OnChange = wElBoxChange
@@ -2137,7 +2137,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 13
+            ItemHeight = 0
             ParentFont = False
             TabOrder = 3
             OnChange = sElBoxChange
@@ -2182,7 +2182,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 13
+            ItemHeight = 0
             ParentFont = False
             TabOrder = 6
             OnChange = mTnBoxChange
@@ -2198,7 +2198,7 @@ object stwseMain: TstwseMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = []
-            ItemHeight = 13
+            ItemHeight = 0
             ParentFont = False
             TabOrder = 7
             OnChange = eElBoxChange

@@ -216,13 +216,16 @@ var
 
 	GevSein:			PpSein;
 	GevTrein:		PpTrein;
+	GevWissel:		PpWissel;
 	GevTreinAfstand:	double;
 	GevSeinAfstand:	double;
+	GevWisselAfstand: double;
 	GevOmgekeerd:	boolean;
 	intAfstand:		double;
 	remopdracht:	boolean;
 
 	tmpConn:			PpRailConn;
+	omgConn:			PpRailConn;
 	oudeRail:		PpRail;
 begin
 	// Plan van aanpak:
@@ -273,7 +276,6 @@ begin
 
 	// CRITERIUM 3 - Wat zien we voor ons?
 	// Een station? Een rood of andersoortig snelheidsverlagend sein?
-	// Een trein voor ons?
 	KijkAfstand := TreinVooruitblik;
 	tmpRail := Trein^.pos_rail;
 	tmpAchteruit := Trein^.achteruit;
@@ -310,7 +312,31 @@ begin
 			KijkAfstand := KijkAfstand - GevSeinAfstand;
 			basisAfstand := basisAfstand + GevSeinAfstand;
 		end;
-	until not assigned(GevSein);
+	until (not assigned(GevSein)) or (not assigned(tmpRail));
+
+	// CRITERIUM 3B - Een wissel dat niet goed ligt?
+	KijkAfstand := TreinVooruitblik;
+	tmpRail := Trein^.pos_rail;
+	tmpAchteruit := Trein^.achteruit;
+	tmpPos := Trein^.pos_dist;
+	basisAfstand := 0;
+	repeat
+		// Zoek zoek, zoek de wissel!
+		Core.ZoekVolgendeWissel(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
+			GevWissel, GevWisselAfstand);
+		if assigned(GevWissel) then begin
+			if not (GevWissel^.stand in [wsRechtdoor, wsAftakkend]) then begin
+				// Berekenen of we alvast moeten gaan afremmen
+				intAfstand := ((mssnelheid / WensMaxRemvertraging) * mssnelheid / 2);
+				if basisAfstand + GevSeinAfstand < IntAfstand + 10 then
+					if kracht > -remkrachtwens then begin
+						kracht := -remkrachtwens;	// Remmen met gewenste snelheid.
+					end;
+			end;
+			KijkAfstand := KijkAfstand - GevSeinAfstand;
+			basisAfstand := basisAfstand + GevSeinAfstand;
+		end;
+	until (not assigned(GevWissel)) or (not assigned(tmpRail));
 
 	// CRITERIUM 4 - Een trein voor onze neus.
 	Core.ZoekVolgendeTrein(Trein, TreinVooruitblik, GevTrein, GevTreinAfstand, GevOmgekeerd);
@@ -395,7 +421,7 @@ begin
 
 		// Dit is van toepassing bij doodlopende stukken spoor: die verwijzen
 		// terug naar zichzelf.
-		if Trein^.pos_rail = oudeRail then begin
+		if (Trein^.pos_rail = oudeRail) and assigned(tmpRail) then begin
 			// Botsing!
 			Trein^.Modus := tmGecrasht;
 			Trein^.Achteruit := not Trein^.Achteruit;
@@ -405,14 +431,21 @@ begin
 		HerkenFlankbotsingen(Trein);
 
 		// Zijn wij misschien over een sein gereden?
-		if tmpConn^.sein <> nil then begin
+		if tmpConn^.sein <> nil then
 			LeesSeinbeeld(Trein, tmpConn^.Sein);
 
-			// Als we een nieuw meetpunt binnenrijden dan gaat dat eventueel
-			// defect.
-			if tmpConn^.isolatiepunt then
-				Core.DoeMeetpuntDefect(Trein^.pos_rail^.meetpunt);
-		end;
+		// Als we een nieuw meetpunt binnenrijden dan gaat dat eventueel
+		// defect.
+		if tmpConn^.isolatiepunt then
+			Core.DoeMeetpuntDefect(Trein^.pos_rail^.meetpunt);
+
+		// Als we een wissel op rijden dan raakt dat misschien uit de controle
+		if tmpConn^.wissel then
+			Core.DoeWisselDefect(tmpConn^.WisselData, false);
+		omgConn := ZoekOmgekeerdeConnectie(tmpConn);
+		if assigned(omgConn) then
+			if omgConn^.wissel then
+				Core.DoeWisselDefect(omgConn^.WisselData, false);
 	end;
 end;
 
@@ -620,7 +653,7 @@ begin
 			if assigned(Trein^.StationModusPlanpunt) and
 				(Trein^.StationModusPlanpunt^.Perron <> '') and
 				(Trein^.StationModusPlanpunt^.Perron <> '0') then
-				gesprek^.tekstX := treindefectberichtstart+treindefectberichten[round(random*6)+1]
+				gesprek^.tekstX := treindefectberichtstart+treindefectberichten[round(random*treindefectberichtaantal-1)+1]
 			else
 				// Als we niet bij een perron staan is 'hij doet het niet'
 				// het enige zinvolle excuus.
@@ -704,16 +737,17 @@ begin
 end;
 
 procedure TpTreinPhysics.RijTrein;
-type
-	TWaaromStilstaan = (stWeetniet, stSein, stTrein, stStroom, stDoorrood);
 var
 	tmpRail:			PpRail;
 	tmpAchteruit:	boolean;
 	tmpPos:			double;
 	GevSein:			PpSein;
 	GevTrein:		PpTrein;
+	GevWissel:		PpWissel;
 	GevTreinAfstand:	double;
 	GevSeinAfstand:	double;
+	GevWisselAfstand: double;
+	GevAfstand:		double;
 	GevOmgekeerd:	boolean;
 	basisafstand:	double;
 	kijkafstand:	double;
@@ -759,31 +793,48 @@ begin
 				KijkAfstand := KijkAfstand - GevSeinAfstand;
 				basisAfstand := basisAfstand + GevSeinAfstand;
 			end;
-		until not assigned(GevSein);
+		until (not assigned(GevSein)) or (not assigned(tmpRail));
+		// Een verkeerd ingesteld wissel misschien?
+		KijkAfstand := TreinVooruitblik;
+		tmpRail := Trein^.pos_rail;
+		tmpAchteruit := Trein^.achteruit;
+		tmpPos := Trein^.pos_dist;
+		basisAfstand := 0;
+		repeat
+			Core.ZoekVolgendeWissel(tmpRail, tmpAchteruit, tmpPos, KijkAfstand,
+				GevWissel, GevWisselAfstand);
+			if assigned(GevWissel) then begin
+				if not (GevWissel^.stand in [wsRechtdoor, wsAftakkend]) then
+					break;
+				KijkAfstand := KijkAfstand - GevSeinAfstand;
+				basisAfstand := basisAfstand + GevSeinAfstand;
+			end;
+		until (not assigned(GevWissel)) or (not assigned(tmpRail));
 		// Of misschien een trein?
 		Core.ZoekVolgendeTrein(Trein, TreinVooruitblik, GevTrein, GevTreinAfstand, GevOmgekeerd);
 		// Kijken wat het nu precies is.
-		if assigned(GevSein) then
-			if assigned(GevTrein) then
-				if GevSeinAfstand < GevTreinAfstand then
-					waaromstilstaan := stSein
-				else
-					waaromstilstaan := stTrein
-			else
-				waaromstilstaan := stSein
-		else
-			if assigned(GevTrein) then
-				waaromstilstaan := stTrein
-			else
-				waaromstilstaan := stWeetniet;
+		waaromstilstaan := stWeetniet;
+		GevAfstand := -1;
+		if assigned(GevSein) then begin
+			waaromstilstaan := stSein;
+			GevAfstand := GevSeinAfstand;
+		end;
+		if assigned(GevTrein) and ((GevTreinAfstand < GevAfstand) or (GevAfstand = -1)) then begin
+			waaromstilstaan := stTrein;
+			GevAfstand := GevTreinAfstand;
+		end;
+		if assigned(GevWissel) and ((GevWisselAfstand < GevAfstand) or (GevAfstand = -1)) then
+			waaromstilstaan := stWissel;
 		if not Trein^.el_ok then
 			waaromstilstaan := stStroom;
 		if Trein^.doorroodgereden then
 			waaromstilstaan := stDoorrood;
 		// Nu hebben we de reden. Kijk of we een bericht moeten sturen.
 		if waaromstilstaan <> stWeetniet then
-			if not assigned(Core.ZoekTelefoongesprek(Trein)) then begin	// Alleen als we niet in gesprek zijn.
-				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, Waaromstilstaan in [stStroom, stDoorrood]);
+			if (not assigned(Core.ZoekTelefoongesprek(Trein)))	// Niet bellen als we al in gesprek zijn
+				and not ((waaromstilstaan = Trein^.vorigewaaromstilstaan) // En niet bellen als we hier al over hebben gebeld...
+				 and (waaromstilstaan in [stTrein, stStroom, stWissel, stWeetniet])) then begin	// ... en het iets is waar maar 1 keer over gebeld moet worden.
+				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, Waaromstilstaan in [stStroom, stDoorrood, stWissel]);
 				Gesprek^.OphangenErg := Waaromstilstaan in [stSein, stDoorrood];
 				case Waaromstilstaan of
 				stSein: begin
@@ -801,18 +852,24 @@ begin
 				stDoorrood: begin
 					Gesprek^.tekstX := 'Ik ben door rood gereden!';
 					Gesprek^.tekstXsoort := pmsSTSpassage;
+				end;
+				stWissel: begin
+					Gesprek^.tekstX := 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
+					Gesprek^.tekstXsoort := pmsVraagOK;
 				end
 				else
-					Gesprek^.tekstX := 'Ik bel u op maar weet niet waarom!?';
+					Gesprek^.tekstX := 'Ik bel u op omdat ik stil sta maar weet niet waarom!?';
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				new(PpTreinTelefoonSoort(Gesprek^.userdata));
 				PpTreinTelefoonSoort(Gesprek^.userdata)^ := ttsStilstaan;
+				Trein^.vorigewaaromstilstaan := waaromstilstaan;
 			end;
 	end else begin
 		Gesprek := ZoekTelefoongesprek(Trein, ttsStilstaan);
 		if assigned(Gesprek) then
 			CommPhysics.ProbleemOpgelost(Gesprek);
+		Trein^.vorigewaaromstilstaan := stUndef;
 	end;
 end;
 

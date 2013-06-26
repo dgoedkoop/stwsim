@@ -1,0 +1,110 @@
+Werkdagen!
+
+141 - 149	Schiphol - Hengelo (120 min / nr+2)
+148 - 140	Hengelo - Schiphol (120 min / nr-2)
+
+241 - 243	Schiphol - Hengelo (120 min / nr+2)
+242 - 240	Hengelo - Schiphol (120 min / nr-2)
+
+625 - 689	Amsterdam C - Schiphol - Den Haag HS - Rotterdam (60 min / nr+4)
+612 - 664	Rotterdam - Den Haag HS - Schiphol - Amsterdam C (60 min / nr+4)
+668 		Rotterdam - Den Haag HS - Schiphol - Amsterdam C (1 minuut later aan Asdc)
+672 - 676	Rotterdam - Den Haag HS - Schiphol - Amsterdam C (60 min / nr+4)
+
+719		Schiphol - Groningen (di t/m vr met een deel voor Leeuwarden)
+723 - 751	Schiphol - Groningen / Leeuwarden (60 min / nr+4)
+755		Schiphol - Groningen
+759		Schiphol - Groningen / Leeuwarden (60 min / nr+4)
+763 - 767	Schiphol - Groningen (60 min / nr+4)
+771 		Schiphol - Groningen / Leeuwarden
+775 - 779	Schiphol - Groningen / Leeuwarden (60 min / nr+4) (wo,do +10 min v. Zl)
+783 - 787	Schiphol - Groningen / Leeuwarden (60 min / nr+4, check uitzonderingen)
+716		Groningen - Schiphol (afwijkende tijden naar gelang weekdag Gn-Zl)
+720		Groningen - Schiphol
+724		Groningen / Leeuwarden - Schiphol
+728 - 732	Groningen - Schiphol (60 min / nr+4)
+736 - 752	Groningen / Leeuwarden - Schiphol (60 min / nr+4)
+756		Groningen - Schiphol
+760 - 780	Groningen / Leeuwarden - Schiphol (60 min / nr+4)
+784		Groningen / Leeuwarden - Schiphol (Shl aan +1 afh. v. dag vd. week)
+
+905 - 969	Breda - Amsterdam C
+910 - 978	Amsterdam C - Breda
+
+1617 - 1673	Schiphol - Enschede (120 min / nr+8)
+1677 - 1685	Schiphol - Enschede (60 min / nr+4)
+1689		Schiphol - Amersfoort (- Amersfoort Schothorst op sommige dagen)
+1614 - 1626	Enschede - Schiphol (60 min / nr+4)
+1634 - 1682	Enschede - Schiphol (120 min / nr+8)
+
+2623 - 2693	Amsterdam C - Schiphol - Den Haag C
+2695		Amsterdam C - Schiphol - Den Haag C (bepaalde tijden afh. van dag vd. week)
+2608 - 2678	Den Haag C - Schiphol - Amsterdam C
+2680		Den Haag C - Schiphol - Amsterdam C (bepaalde tijden afh. van dag vd. week)
+
+3123 - 3179	Schiphol - Utrecht - Nijmegen
+3112		           Utrecht - Schiphol
+3114 - 3116	  Arnhem - Utrecht - Schiphol
+3118 - 3170	Nijmegen - Utrecht - Schiphol
+
+3217 - 3291	Hoofddorp - Schiphol - Amsterdam C
+3206		Amsterdam C - Schiphol - Hoofddorp (behalve maandag +2 alle stops)
+3208 - 3280	Amsterdam C - Schiphol - Hoofddorp
+
+3317		 Enkhuizen - Hoorn - Schiphol - Hoofddorp
+3319 - 3391	Hoorn Kersenboogerd - Schiphol - Hoofddorp
+3316 - 3384	Hoofddorp - Schiphol - Hoorn Kersenboogerd
+
+3519 - 3533	Schiphol - Utrecht - Eindhoven
+3535 - 3537	Schiphol - Utrecht - Eindhoven (2 minuten later aan Ehv)
+3539 - 3573	Schiphol - Utrecht - Eindhoven
+3575 - 3585	Schiphol - Utrecht
+3587 - 3589	Schiphol - Utrecht - Nijmegen (3589 alleen do,vr door naar Utrecht-Nijmegen)
+3516		Den Bosch - Utrecht - Schiphol
+3518 - 3572	Eindhoven - Utrecht - Schiphol
+3574 - 3584	(Nijmegen -)Utrecht - Schiphol
+
+3723		           Schiphol - Lelystad
+3725 - 3773	Den Haag - Schiphol - Lelystad
+3775 - 3781	Den Haag - Schiphol
+3714		           Duivendrecht - Schiphol - Den Haag
+3716 - 3768	Lelystad - Duivendrecht - Schiphol - Den Haag
+3770 - 3776	                          Schiphol - Den Haag
+
+4317		                    Hoofddorp - Schiphol - Lelystad
+4319		Den Haag - Leiden - Hoofddorp - Schiphol - Lelystad
+4321 - 4371	Den Haag - Leiden - Hoofddorp - Schiphol - Almere Oostvaarders
+4373 - 4375	Den Haag - Leiden - Hoofddorp - Schiphol - Lelystad
+4377 - 4391	           Leiden - Hoofddorp - Schiphol - Lelystad (4391 di t/m vr. afw.)
+4395		                    Hoofddorp - Schiphol - Lelystad (vr, 4393 ontbreekt)
+4308		Lelystad - Schiphol - Hoofddorp - Leiden
+4310		Lelystad - Schiphol - Hoofddorp - Leiden - Den Haag (di,do afw.)
+4312 - 4362	Almere Oostvaarders - Schiphol - Hoofddorp - Leiden - Den Haag
+4364 - 4368	Almere Oostvaarders - Schiphol - Hoofddorp - Leiden
+4370 - 4382	Lelystad - Schiphol - Hoofddorp - Leiden (4382 ma,di afw.)
+4384		Lelystad - Schiphol - Hoofddorp (vr)
+4386		Lelystad - Schiphol - Hoofddorp (ma t/m do afw.)
+
+5715		Den Haag - Leiden - Hoofddorp - Schiphol - Hilversum - Utrecht (do,vr afw.)
+5717 - 5721	                    Hoofddorp - Schiphol - Hilversum - Utrecht
+5723 - 5731	           Leiden - Hoofddorp - Schiphol - Hilversum - Utrecht
+5733 - 5759	                    Hoofddorp - Schiphol - Hilversum - Utrecht
+5761 - 5767	           Leiden - Hoofddorp - Schiphol - Hilversum - Utrecht
+5769 - 5789	                    Hoofddorp - Schiphol - Hilversum - Utrecht (5789 ma-do afw.)
+5712 - 5714	Utrecht - Hilversum - Schiphol - Hoofddorp
+5716 - 5722	Utrecht - Hilversum - Schiphol - Hoofddorp - Leiden
+5724 - 5750	Utrecht - Hilversum - Schiphol - Hoofddorp
+5752 - 5758	Utrecht - Hilversum - Schiphol - Hoofddorp - Leiden
+5760 - 5786	Utrecht - Hilversum - Schiphol - Hoofddorp (5786 niet op donderdag)
+
+9201 - 9261	Roosendaal - Rotterdam - Den Haag HS - Schiphol - Amsterdam C (60 min / nr+4)
+9212 - 9276	Amsterdam C - Schiphol - Den Haag HS - Rotterdam - Roosendaal (60 min / nr+4)
+
+9303 - 9315	Parijs - Amsterdam (60 min / nr+6)
+9327		Parijs - Amsterdam
+9339		Parijs - Amsterdam
+9351 - 9381	Parijs - Amsterdam (60 min / nr+6; 9363 alleen vr)
+9310		Amsterdam - Parijs
+9322 - 9328	Amsterdam - Parijs (60 min / nr+6)
+9340		Amsterdam - Parijs
+9352 - 9388	Amsterdam - Parijs (60 min / nr+6; 9370 niet vr.)

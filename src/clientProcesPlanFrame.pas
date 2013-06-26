@@ -83,13 +83,7 @@ var
 	s: string;
 begin
 	s := Pad(PPP^.Treinnr, 8, #32, vaVoor) + '  ';
-	case PPP^.ActiviteitSoort of
-	asDoorkomst:s := s + Pad('D', 3, #32, vaAchter);
-	asVertrek:	s := s + Pad('V', 3, #32, vaAchter);
-	asAankomst:	s := s + Pad('A', 3, #32, vaAchter);
-	asKortestop:s := s + Pad('K', 3, #32, vaAchter);
-	asNul:		s := s + Pad('*', 3, #32, vaAchter);
-	end;
+	s := s + Pad(ActiviteitSoortStr(PPP^.ActiviteitSoort), 3, #32, vaAchter);
 	s := s + Pad(TijdStr(PPP^.Plantijd, false), 8, #32, vaAchter);
 	s := s + Pad(TijdStr(PPP^.Insteltijd, false), 8, #32, vaAchter);
 	s := s + Pad(PPP^.van, 7, #32, vaAchter);

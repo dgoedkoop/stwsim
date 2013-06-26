@@ -13,10 +13,10 @@ type
 		Core: PpCore;
 		// Functies
 		procedure NeemTelefoonOp(Gesprek: PpTelefoongesprek; Owner: TSender);
-		procedure HangOp(Gesprek: PpTelefoongesprek; Owner: TSender);
 		procedure SendMsg(Gesprek: PpTelefoongesprek; Owner: TSender; soort: TpMsgSoort; Msg: string);
 		procedure BelTreindienstleider(Gesprek: PpTelefoongesprek; Owner: TSender);
 		procedure VoerStapjeUit(Gesprek: PpTelefoongesprek);
+		procedure HangOp(Gesprek: PpTelefoongesprek; Owner: TSender);
 	public
 		constructor Create(Core: PpCore; SendMsg: PpSendMsg);
 		// Events
@@ -125,7 +125,7 @@ begin
 			Gesprek^.Status := tgsSS
 		end else
 			Gesprek^.Status := tgsE;
-	tgsSB, tgsSB2, tgsG4: Gesprek^.Status := tgsE;
+	tgsSB, tgsSB2,tgsG4: Gesprek^.Status := tgsE;
 	end;
 
 	VoerStapjeUit(Gesprek);
@@ -151,7 +151,12 @@ begin
 		if Gesprek^.tekstXsoort <> pmsVraagOK then
 			SendMsg(Gesprek, Gesprek^.Owner, pmsInfo, Gesprek^.tekstOK);
 		HangOp(Gesprek, Gesprek^.Owner);
-		Gesprek^.Status := tgsE;
+		if Gesprek^.WachtOpdracht then begin
+			Gesprek^.Status := tgsSS;
+			Gesprek^.VolgendeStatusTijd := Gesprek^.WachtMetBellen;
+			Gesprek^.WachtOpdracht := false
+		end else
+			Gesprek^.Status := tgsE;
 	end;
 	tgsH: begin
 		HangOp(Gesprek, Gesprek^.Owner);
@@ -162,7 +167,7 @@ end;
 
 procedure TpCommPhysics.CheckWacht;
 begin
-	if not (Gesprek^.Status in [tgsSS, tgsSB, tgsG1, tgsG4]) then exit;
+	if not (Gesprek^.Status in [tgsSS, tgsSB, tgsG1, tgsG4, tgsAbort]) then exit;
 	if not TijdVerstreken(Gesprek^.VolgendeStatusTijd) then exit;
 
 	case Gesprek^.Status of
@@ -170,6 +175,7 @@ begin
 	tgsSB: Gesprek^.Status := tgsSB2;
 	tgsG1: Gesprek^.Status := tgsG2;
 	tgsG4: Gesprek^.Status := tgsG5;
+	tgsAbort: Gesprek^.Status := tgsH;
 	end;
 
 	VoerStapjeUit(Gesprek);

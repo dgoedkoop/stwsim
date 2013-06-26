@@ -65,13 +65,10 @@ type
     TelefoonShow: TAction;
     Broadcast: TAction;
     Hulpmiddelen1: TMenuItem;
-    vannaarPanel: TPanel;
-    vanVeld: TLabel;
-	 naarVeld: TLabel;
     Splitter1: TSplitter;
     tijdLabel: TLabel;
-	 Button1: TButton;
-    Button2: TButton;
+    voerInBut: TButton;
+    cancelBut: TButton;
 	 LaatProcesplanZien: TAction;
     N2: TMenuItem;
     LaatProcesplanZien1: TMenuItem;
@@ -116,6 +113,7 @@ type
 	 SGSave: TAction;
     Spelopslaanals1: TMenuItem;
     Wisselreparatie: TAction;
+    invoerEdit: TEdit;
 	 procedure FormCreate(Sender: TObject);
 	 procedure TijdTimerTimer(Sender: TObject);
 	 procedure SimOpenenExecute(Sender: TObject);
@@ -156,6 +154,10 @@ type
 	 procedure EerstDienstBewerkenActionExecute(Sender: TObject);
 	 procedure SGSaveExecute(Sender: TObject);
 	 procedure SGOpenenExecute(Sender: TObject);
+    procedure invoerEditChange(Sender: TObject);
+    procedure invoerEditEnter(Sender: TObject);
+    procedure invoerEditExit(Sender: TObject);
+    procedure voerInButClick(Sender: TObject);
 	private
 		// Belangrijkste
 		pCore:		PpCore;
@@ -182,8 +184,6 @@ type
 		selMeetpunt: PvMeetpunt;
 		selWissel:	 PvWissel;
 		selSein:		 PvSein;
-		selVan,
-		selNaar:		 string;
 		// Telefoon
 		rinkelen: boolean;
 		rinkelsound: THandle;
@@ -191,6 +191,7 @@ type
 		// Sim-bediening
 		pauze: 	boolean;
 		gestart:	boolean;
+		closewarn:boolean;
 		// Intern
 		FormShown: boolean;
 		TimeSet: boolean;
@@ -301,9 +302,9 @@ end;
 
 procedure TstwsimMainForm.LoadInfra;
 var
-	i: integer;
+	i,j: integer;
 	aantal: integer;
-	s: string;
+	s,r: string;
 begin
 	intread(f, aantal);
 	for i := 1 to aantal do begin
@@ -312,7 +313,13 @@ begin
 			1: pCore.simnaam := s;
 			2: pCore.simversie := s;
 		else
-			pCore.LoadRailString(s);
+			if not pCore.LoadRailString(s) then begin
+				for j := 1 to length(s) do
+					if s[j]=#9 then s[j] := #32;
+				str(i,r);
+				Application.MessageBox(pchar('Regel: '+r+' ('+s+')'+#13#10+'Fout: '+pCore.Leesfout_melding),'Fout bij laden simulatie', MB_OK+MB_ICONEXCLAMATION);
+				halt;
+			end;
 		end;
 	end;
 end;
@@ -321,6 +328,7 @@ procedure TstwsimMainForm.LoadFile;
 var
 	f: file;
 	magic, schermnaam: string;
+	naam: string;
 	schermID: integer;
 	schermdetails: boolean;
 begin
@@ -340,6 +348,10 @@ begin
 	end;
 
 	LoadInfra(f);
+
+	naam := pCore.simnaam;
+	Caption := naam;
+	Application.Title := naam;
 
 	LoadThings(vCore, f);
 
@@ -472,13 +484,8 @@ begin
 		UpdateChg.Schermen := false;
 	end;
 	if UpdateChg.Vannaar then begin
-		vanVeld.Caption := KlikpuntTekst(selVan, false);
-		naarVeld.Caption := KlikpuntTekst(selNaar, false);
-		RijwegNormaal.Enabled := (selVan<>'') and (selNaar<>'');
-		RijwegROZ.Enabled := (selVan<>'') and (selNaar<>'');
-		RijwegAuto.Enabled := (selVan<>'') and (selNaar<>'');
-		RijwegHo.Enabled := (selVan<>'') or (selNaar<>'');
-		RijwegCancel.Enabled := (selVan<>'');
+		voerInBut.Enabled := (invoerEdit.Text<>'');
+		cancelBut.Enabled := (invoerEdit.Text<>'');
 		UpdateChg.Vannaar := false;
 	end;
 	if UpdateChg.Menus then begin
@@ -603,14 +610,13 @@ begin
 	RinkelStapjes := 0;
 	RinkelSound := LoadSound('snd_tele');
 
-	selVan := '';
-	selNaar := '';
 	UpdateChg.Vannaar := true;
 	UpdateChg.Berichten := true;
 	UpdateControls;
 
 	FormShown := false;
 	TimeSet := false;
+	closewarn := false;
 	gestart := false;
 	pauze := true;
 end;
@@ -809,25 +815,9 @@ begin
 end;
 
 procedure TstwsimMainForm.WisselSwitchExecute(Sender: TObject);
-var
-	StandenLijst, tmpStand: PWisselstandLijst;
-	Stand: TWisselStand;
 begin
 	if assigned(selWissel) then
-		if WisselKanOmgezet(selWissel, vCore.vFlankbeveiliging) then begin
-			if selWissel^.WensStand = wsRechtdoor then
-				Stand := wsAftakkend
-			else
-				Stand := wsRechtdoor;
-			StandenLijst := WisselstandenLijstBereken(selWissel, Stand,
-				vCore.vFlankbeveiliging, nil, true);
-			tmpStand := StandenLijst;
-			while assigned(tmpStand) do begin
-				vSendMsg.SendWissel(tmpStand^.Wissel, tmpStand^.Stand);
-				tmpStand := tmpStand^.Volgende;
-			end;
-			WisselstandenLijstDispose(StandenLijst);
-		end;
+		RijwegLogica.ZetWisselOm(selWissel);
 end;
 
 procedure tstwsimMainForm.GleisplanMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -864,22 +854,26 @@ begin
                TreinStatus.Execute;
 		end;
 		2: begin
-			if PvHokjeLetter(selHokje.grdata)^.Spoornummer <> '' then begin
-				if selVan = '' then
-					selVan := MaakKlikpunt(selHokje)
-				else if selNaar = '' then
-					selNaar := MaakKlikpunt(selHokje);
+			if (PvHokjeLetter(selHokje.grdata)^.Spoornummer <> '') and not pauze then begin
+				if invoerEdit.Text <> '' then
+					if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
+						invoerEdit.Text := invoerEdit.Text + ' ';
+				invoerEdit.Text := invoerEdit.Text + PvHokjeLetter(selHokje.grdata)^.Spoornummer;
+				invoerEdit.SelStart := length(invoerEdit.Text);
 				UpdateChg.Vannaar := true;
 				UpdateControls;
 			end;
 		end;
 		3: begin
-			if selVan = '' then
-				selVan := MaakKlikpunt(selHokje)
-			else if selNaar = '' then
-				selNaar := MaakKlikpunt(selHokje);
-			UpdateChg.Vannaar := true;
-			UpdateControls;
+			if not pauze then begin
+				if invoerEdit.Text <> '' then
+					if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
+						invoerEdit.Text := invoerEdit.Text + ' ';
+				invoerEdit.Text := invoerEdit.Text + PvHokjeSein(selHokje.grdata)^.Sein^.Naam;
+				invoerEdit.SelStart := length(invoerEdit.Text);
+				UpdateChg.Vannaar := true;
+				UpdateControls;
+			end;
 		end;
 	end;
 end;
@@ -950,54 +944,60 @@ begin
 
 	stwssDienstregForm.Core := pCore^;
 
+	SimOpenPanel.Visible := true;
+	ActiveControl := SimOpenBut;
+
 	if paramCount = 1 then
 		LoadFile(ParamStr(1))
-	else begin
-		SimOpenPanel.Visible := true;
-      ActiveControl := SimOpenBut;
-	end;
 end;
 
 procedure TstwsimMainForm.RijwegHoExecute(Sender: TObject);
 begin
-	selVan := '';
-	selNaar := '';
+	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
 	UpdateControls;
 end;
 
 procedure TstwsimMainForm.RijwegNormaalExecute(Sender: TObject);
 begin
-	RijwegLogica.DoeRijweg(selVan, selNaar, false, false);
-	selVan := '';
-	selNaar := '';
+	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
+		invoerEdit.Text := invoerEdit.Text + ' ';
+	invoerEdit.Text := invoerEdit.Text+'n';
+	RijwegLogica.VoerStringUit(invoerEdit.Text);
+	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
 	UpdateControls;
 end;
 
 procedure TstwsimMainForm.RijwegROZExecute(Sender: TObject);
 begin
-	RijwegLogica.DoeRijweg(selVan, selNaar, true, false);
-	selVan := '';
-	selNaar := '';
+	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
+		invoerEdit.Text := invoerEdit.Text + ' ';
+	invoerEdit.Text := invoerEdit.Text+'roz';
+	RijwegLogica.VoerStringUit(invoerEdit.Text);
+	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
 	UpdateControls;
 end;
 
 procedure TstwsimMainForm.RijwegAutoExecute(Sender: TObject);
 begin
-	RijwegLogica.DoeRijweg(selVan, selNaar, false, true);
-	selVan := '';
-	selNaar := '';
+	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
+		invoerEdit.Text := invoerEdit.Text + ' ';
+	invoerEdit.Text := invoerEdit.Text+'a';
+	RijwegLogica.VoerStringUit(invoerEdit.Text);
+	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
 	UpdateControls;
 end;
 
 procedure TstwsimMainForm.RijwegCancelExecute(Sender: TObject);
 begin
-	RijwegLogica.HerroepRijweg(selVan);
-	selVan := '';
-	selNaar := '';
+	if invoerEdit.Text[length(invoerEdit.Text)] <> ' ' then
+		invoerEdit.Text := invoerEdit.Text + ' ';
+	invoerEdit.Text := invoerEdit.Text+'h';
+	RijwegLogica.VoerStringUit(invoerEdit.Text);
+	invoerEdit.Text := '';
 	UpdateChg.Vannaar := true;
 	UpdateControls;
 end;
@@ -1057,8 +1057,11 @@ end;
 procedure TstwsimMainForm.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
-	CanClose := Application.MessageBox('Weet u zeker dat u StwSim wilt afsluiten?',
-		'Afsluiten', MB_ICONWARNING+MB_YESNO) = mrYes;
+	if closewarn then
+		CanClose := Application.MessageBox('Weet u zeker dat u de simulatie wilt afsluiten?',
+			'Afsluiten', MB_ICONWARNING+MB_YESNO) = mrYes
+	else
+		CanClose := true;
 end;
 
 procedure TstwsimMainForm.LaatProcesplanZienExecute(Sender: TObject);
@@ -1292,6 +1295,7 @@ begin
 	if not gestart then begin
 		// Initialiseren
 		pCore.StartUp;
+		rijwegLogica.StartupBezig := false;
 		if not TimeSet then begin
 			SetTijd(PCore.StartTijd);
 			TimeSet := true;
@@ -1306,6 +1310,8 @@ begin
 			Tab := Tab^.Volgende;
 		end;
 
+      closewarn := true;
+
 		gestart := true;
 	end;
 
@@ -1316,7 +1322,14 @@ begin
 	if pauze then
 		PauzePanel.BringToFront;
 	DoorspoelAction.Enabled := not pauze;
-   telBtn.Enabled := not pauze;
+	telBtn.Enabled := not pauze;
+
+	RijwegNormaal.Enabled := not Pauze;
+	RijwegROZ.Enabled := not Pauze;
+	RijwegAuto.Enabled := not Pauze;
+	RijwegHo.Enabled := not Pauze;
+	invoerEdit.Enabled := not Pauze;
+
 	tijdLabel.Caption := TijdStr(GetTijd, false);
 end;
 
@@ -1375,6 +1388,7 @@ end;
 procedure TstwsimMainForm.EerstDienstBewerkenActionExecute(
   Sender: TObject);
 begin
+	closewarn := true;
 	EnableControls;
 	SimStartPanel.Visible := false;
 	PauzePanel.Visible := true;
@@ -1388,6 +1402,32 @@ begin
 		EnableControls;
 		PauzeAction.Execute;
 	end;
+end;
+
+procedure TstwsimMainForm.invoerEditChange(Sender: TObject);
+begin
+	UpdateChg.Vannaar := true;
+	UpdateControls;
+end;
+
+procedure TstwsimMainForm.invoerEditEnter(Sender: TObject);
+begin
+	voerInBut.Default := true;
+	cancelBut.Cancel := true;
+end;
+
+procedure TstwsimMainForm.invoerEditExit(Sender: TObject);
+begin
+	voerInBut.Default := false;
+	cancelBut.Cancel := false;
+end;
+
+procedure TstwsimMainForm.voerInButClick(Sender: TObject);
+begin
+	RijwegLogica.VoerStringUit(invoerEdit.Text);
+	invoerEdit.Text := '';
+	UpdateChg.Vannaar := true;
+	UpdateControls;
 end;
 
 end.

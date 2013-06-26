@@ -1,7 +1,7 @@
 object stwsimMainForm: TstwsimMainForm
   Left = 215
   Top = 167
-  Width = 728
+  Width = 729
   Height = 547
   Caption = 'StwSim'
   Color = clBtnFace
@@ -25,13 +25,13 @@ object stwsimMainForm: TstwsimMainForm
   object BedienPanel: TPanel
     Left = 0
     Top = 0
-    Width = 720
+    Width = 721
     Height = 81
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object Splitter1: TSplitter
-      Left = 209
+      Left = 210
       Top = 0
       Width = 3
       Height = 77
@@ -41,7 +41,7 @@ object stwsimMainForm: TstwsimMainForm
     object msgMemo: TMemo
       Left = 0
       Top = 0
-      Width = 209
+      Width = 210
       Height = 77
       Align = alClient
       ParentColor = True
@@ -50,7 +50,7 @@ object stwsimMainForm: TstwsimMainForm
       TabOrder = 0
     end
     object statPanel: TPanel
-      Left = 212
+      Left = 213
       Top = 0
       Width = 508
       Height = 77
@@ -107,54 +107,44 @@ object stwsimMainForm: TstwsimMainForm
           0000000000000000000000000000000000FFFFFFFFFFFFFFFFFF}
         ParentFont = False
       end
-      object vannaarPanel: TPanel
-        Left = 8
-        Top = 20
-        Width = 491
-        Height = 25
-        Anchors = [akLeft, akRight, akBottom]
-        BevelOuter = bvNone
-        BorderStyle = bsSingle
-        TabOrder = 0
-        object vanVeld: TLabel
-          Left = 0
-          Top = 3
-          Width = 80
-          Height = 15
-          AutoSize = False
-        end
-        object naarVeld: TLabel
-          Left = 96
-          Top = 3
-          Width = 80
-          Height = 15
-          AutoSize = False
-        end
-      end
-      object Button1: TButton
+      object voerInBut: TButton
         Left = 8
         Top = 52
         Width = 75
         Height = 25
-        Action = RijwegNormaal
         Anchors = [akLeft, akBottom]
-        Caption = 'Rijweg'
-        TabOrder = 1
+        Caption = 'Voer in'
+        TabOrder = 0
+        OnClick = voerInButClick
       end
-      object Button2: TButton
+      object cancelBut: TButton
         Left = 88
         Top = 52
         Width = 75
         Height = 25
         Action = RijwegHo
         Anchors = [akLeft, akBottom]
+        Enabled = False
+        TabOrder = 1
+      end
+      object invoerEdit: TEdit
+        Left = 8
+        Top = 20
+        Width = 490
+        Height = 23
+        Anchors = [akLeft, akTop, akRight]
+        Enabled = False
+        ParentColor = True
         TabOrder = 2
+        OnChange = invoerEditChange
+        OnEnter = invoerEditEnter
+        OnExit = invoerEditExit
       end
     end
     object hsepPanel: TPanel
       Left = 0
       Top = 77
-      Width = 720
+      Width = 721
       Height = 4
       Align = alBottom
       BevelOuter = bvNone
@@ -164,7 +154,7 @@ object stwsimMainForm: TstwsimMainForm
   object SchermenTab: TTabControl
     Left = 0
     Top = 81
-    Width = 720
+    Width = 721
     Height = 25
     Align = alTop
     Style = tsButtons
@@ -529,7 +519,7 @@ object stwsimMainForm: TstwsimMainForm
     end
     object RijwegHo: TAction
       Category = 'Rijweg'
-      Caption = 'Annuleer'
+      Caption = 'Herstel'
       ShortCut = 27
       OnExecute = RijwegHoExecute
     end

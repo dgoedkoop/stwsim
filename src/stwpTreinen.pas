@@ -9,6 +9,9 @@ const
 	RemwegSnelheid	 		 = 40;
 
 type
+	TWaaromStilstaan = (stWeetniet, stSein, stTrein, stStroom, stDoorrood,
+							  stWissel, stUndef);
+
 	PpWagon = ^TpWagon;
 	TpWagon = record
 		lengte:		double;	// m
@@ -58,6 +61,8 @@ type
 		doorroodgereden:		boolean;
 		doorroodopdracht:		boolean;
 		doorroodverderrijden:boolean;
+
+		vorigewaaromstilstaan:	TWaaromStilstaan;
 
 		// Berekende algemene gegevens
 		bedienbaar:	boolean;
@@ -365,6 +370,7 @@ begin
 	doorroodgereden := false;
 	doorroodopdracht := false;
 	doorroodverderrijden := false;
+	vorigewaaromstilstaan := stUndef;
 	bezetterails := nil;
 	defect := false;
 	wissen := false;
