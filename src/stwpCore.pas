@@ -10,7 +10,10 @@ uses SysUtils, math, stwpRails, stwpMeetpunt, stwpSeinen,
 // Een paar nuttige algemene definities.
 const
 	DienstIOMagic		= 'STWSIMDIENST.1';
-	SaveIOMagic			= 'STWSIMSAVE.12';
+	SaveIOMagic			= 'STWSIMSAVE.';
+   CurrentSgVersion  = 15;
+   ScenIOMagic			= 'STWSIMSCEN.';
+   CurrentScVersion  = 1;
 
 	tps					= 10;
 
@@ -33,20 +36,24 @@ const
 	doorroodrozsnelheid  	= 40;
 	rozsnelheid 				= 40; 	// Snelheid voor geel-knipper
 
-	wisseldefectkans 					= 1/400;
-	wisselechtdefectkans				= 1/5;	// in de overige gevallen helpt omzetten
+	// Punctualiteit is zo ongeveer 87,5% volgens de 3-minuten-norm.
+   df_punctualiteit					= 0.875;
+
+	df_wisseldefectkans 				= 1/400;
+	df_wisselechtdefectkans			= 1/5;	// in de overige gevallen helpt omzetten
 	wisseldefectonderwegmintijd	= 10;
 	wisseldefectonderwegmaxtijd	= 20;
 	wisseldefectreparatiemintijd	= 3;
 	wisseldefectreparatiemaxtijd	= 10;
 	storingsdienstnaam				= 'Storingsdienst';
 
-	meetpuntdefectbijtreinkans		= 1/1500;
-	seindefectkans						= 1/4000;
+	df_meetpuntdefectbijtreinkans	= 1/1500;
+	df_seindefectkans					= 1/4000;
 	seindefectmintijd					= 10;
 	seindefectmaxtijd					= 20;
 
-	treindefectkans			 	= 1/200;
+	df_treindefectkans			 	= 1/200;
+   tekstberichtover           = 'Over.';
 	treindefectberichtstart 	= 'Sorry, we kunnen nog niet weg, want ';
 	treindefectberichtaantal 	= 5;
 	treindefectberichten: array[1..treindefectberichtaantal] of string = (
@@ -57,7 +64,8 @@ const
 	'er moet een schoolklas mee.');
 	treindefectmintijd			= 5;
 	treindefectmaxtijd			= 15;
-	treindefectopgelostbericht = 'We kunnen nu vertrekken!';
+
+	treinklaarmeldingbericht = 'We kunnen nu vertrekken! ' + tekstberichtover;
 
 	zstvhHoofdsein = 1;
 	zstvhSnelheidsbordje = 2;
@@ -119,8 +127,20 @@ type
 
 		Leesfout_melding:		string;
 
+   	// Instelbare defecten
+	   punctualiteit					: double;
+   	wisseldefectkans				: double;
+	   wisselechtdefectkans			: double;
+   	meetpuntdefectbijtreinkans	: double;
+	   seindefectkans					: double;
+      treindefectkans				: double;
 	private
-
+      procedure InitStateVars;
+      procedure InitMeetpuntState(Meetpunt: PpMeetpunt);
+      procedure InitWisselState(Wissel: PpWissel);
+      procedure InitSeinState(Sein: PpSein);
+      procedure InitErlaubnisState(Erlaubnis: PpErlaubnis);
+      procedure InitOverwegState(Overweg: PpOverweg);
 	public
 		constructor Create;
 		destructor Destroy; override;
@@ -194,6 +214,10 @@ type
 		procedure ZendSeinen;
 		procedure DoeMeetpunten;
 		procedure ZendMeetpunten;
+      procedure DoeErlaubnisse;
+      procedure ZendErlaubnisse;
+      procedure DoeWissels;
+      procedure ZendWissels;
 		procedure ZendTreinInfo;
 		function TreinenDoenIets: boolean;
 		procedure DoeStapje;
@@ -204,6 +228,7 @@ type
 
 		procedure LaadMatDienstVerschijn(var f: file; wat: TSaveWhat);
 		procedure SaveMatDienstVerschijn(var f: file; wat: TSaveWhat);
+      procedure DestroyState;
 	end;
 
 
@@ -227,10 +252,15 @@ begin
 	pAlleTreinen			:= nil;
 	pAlleTreinInfo			:= nil;
 
-   CheatGeenDefecten    := false;
+   InitStateVars;
+end;
 
+procedure TpCore.InitStateVars;
+begin
 	new(pMonteur);
 	pMonteur^ := TpMonteur.Create;
+
+   CheatGeenDefecten    := false;
 
 	ScoreInfo.AankomstOpTijd := 0;
 	ScoreInfo.AankomstBinnenDrie := 0;
@@ -238,9 +268,18 @@ begin
 	ScoreInfo.PerronCorrect := 0;
 	ScoreInfo.PerronFout := 0;
 
+   starttijd := 0;
+   stoptijd := 0;
 	Tijd_t := 0;
 
 	Leesfout_melding := '';
+
+   punctualiteit := df_punctualiteit;
+  	wisseldefectkans := df_wisseldefectkans;
+   wisselechtdefectkans	:= df_wisselechtdefectkans;
+  	meetpuntdefectbijtreinkans	:= df_meetpuntdefectbijtreinkans;
+   seindefectkans	:= df_seindefectkans;
+   treindefectkans := df_treindefectkans;
 end;
 
 function TpCore.NieuwTelefoongesprek(Sender: TSender; Soort: TpTelefoongesprekType; Meteen: boolean): PpTelefoongesprek;
@@ -1394,6 +1433,8 @@ begin
 	VerschijnItem := VerschijnLijst;
 	while assigned(VerschijnItem) do begin
 		Plaats := VerschijnItem^.Plaats;
+      if assigned(Plaats^.ScenarioVS) then
+      	Plaats := Plaats^.ScenarioVS;
 		if VerschijnItem^.gedaan or
 			not (assigned(Plaats) and assigned(VerschijnItem^.wagons)) then begin
 			VerschijnItem := VerschijnItem^.Volgende;
@@ -1419,8 +1460,8 @@ begin
 			VerschijnItem^.treinweg_voldaan then
 			magversch := GetTijd >= (rt + VerschijnItem^.treinweg_wachten);
 
-		// Punctualiteit is zo ongeveer 87,5% volgens de 3-minuten-norm.
-		k := Power(0.5, 1/(tps*60));
+		// Punctualiteit wordt gegeven volgens de norm van max. 2:59 minuten vertraagd
+		k := Power(1-Punctualiteit, 1/(tps*60*3));
 		magversch := magversch and ((random>=k) or (not Plaats^.vertragingmag) or CheatGeenDefecten);
 
 		if magversch then begin
@@ -1748,12 +1789,8 @@ begin
 						end;
 						if tmpAft then begin
 							new(tmpWissel);
-							tmpWissel^.stand := wsRechtdoor;
-							tmpWissel^.nw_stand := wsRechtdoor;
-							tmpWissel^.defect := wdHeel;
-							tmpWissel^.Monteur := nil;
+                     InitWisselState(tmpWissel);
 							tmpWissel^.vanwie := nil;
-							tmpWissel^.veranderd := true;
 						end;
 					end;
 				6: if not tmpaft then begin
@@ -1884,22 +1921,16 @@ begin
 						new(tmpSein);
 						tmpSein^.volgende := pAlleSeinen;
 						pAlleSeinen := tmpSein;
-						tmpSein^.Bediend_Stand := 0;
 						tmpSein^.Autosein := false;
 						tmpSein^.A_Erlaubnis := nil;
 						tmpSein^.A_Erlaubnisstand := 0;
-						tmpSein^.B_Meetpunt := nil;
-						tmpSein^.H_MovementAuthority.HasAuthority := false;
-						tmpSein^.V_AdviesAuthority.HasAuthority := false;
-						tmpSein^.H_Baanmaxsnelheid := -1;
-						tmpSein^.V_Baanmaxsnelheid := -1;
-						tmpSein^.Autovoorsein := false;
 						tmpSein^.Stationsnaam := '';
 						tmpSein^.vanwie := nil;
-						tmpSein^.veranderd := true;
-						tmpSein^.groendefect := false;
-						tmpSein^.geeldefect := false;
-
+						tmpSein^.Autovoorsein := false;
+						tmpSein^.H_Baanmaxsnelheid := -1;
+						tmpSein^.V_Baanmaxsnelheid := -1;
+						tmpSein^.B_Meetpunt := nil;
+						InitSeinState(tmpSein);
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
 							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
@@ -2013,14 +2044,11 @@ begin
 						rail1 := ZoekRail(waarde);
 						if not assigned(rail1) then
 							begin Leesfout_melding := 'Rail '+waarde+' niet gevonden.'; exit end;
-						tmpMeetpunt^.magdefect := true;
-						tmpMeetpunt^.defect := false;
 						tmpMeetpunt^.Rail := rail1;
 						tmpMeetpunt^.vanwies := nil;
-						tmpMeetpunt^.veranderd := true;
 						tmpMeetpunt^.volgende := pAlleMeetpunten;
 						tmpMeetpunt^.Erlaubnis := nil;
-						tmpMeetpunt^.rijrichting := 0;
+                  InitMeetpuntState(tmpMeetpunt);
 						pAlleMeetpunten := tmpMeetpunt;
 					end;
 				2:	tmpMeetpunt^.Naam := waarde;
@@ -2045,15 +2073,10 @@ begin
 					new(tmpErlaubnis);
 					tmpErlaubnis^.Meetpunten := nil;
 					tmpErlaubnis^.standaardrichting := 0;
-					tmpErlaubnis^.richting := 0;
 					tmpErlaubnis^.naam := waarde;
 					tmpErlaubnis^.volgende := pAlleErlaubnisse;
 					tmpErlaubnis^.vanwies := nil;
-					tmpErlaubnis^.r_veranderd := true;
-					tmpErlaubnis^.b_veranderd := true;
-					tmpErlaubnis^.bezet := false;
-					tmpErlaubnis^.voorvergendeld := false;
-					tmpErlaubnis^.vergrendeld := false;
+               InitErlaubnisState(tmpErlaubnis);
 					pAlleErlaubnisse := tmpErlaubnis;
 				end;
 				2: begin
@@ -2069,11 +2092,9 @@ begin
 				if index = 1 then begin
 					new(tmpOverweg);
 					tmpOverweg^.Naam := waarde;
-					tmpOverweg^.Status := 0;
-					tmpOverweg^.VolgendeStatusTijd := -1;
 					tmpOverweg^.volgende := pAlleOverwegen;
 					tmpOverweg^.vanwie := nil;
-					tmpOverweg^.veranderd := false;
+               InitOverwegState(tmpOverweg);
 					pAlleOverwegen := tmpOverweg;
 				end else
 					begin Leesfout_melding := 'Te veel parameters.'; exit end;
@@ -2090,6 +2111,7 @@ begin
 						tmpVerschijnpunt^.startsnelheid := 0;
 						tmpVerschijnpunt^.erlaubnis := nil;
 						tmpVerschijnpunt^.erlaubnisstand := 0;
+                  tmpVerschijnpunt^.ScenarioVS := nil;
 						tmpVerschijnpunt^.Volgende := pAlleVerschijnpunten;
 						pAlleVerschijnpunten := tmpVerschijnpunt;
 					end;
@@ -2182,8 +2204,8 @@ var
 	index: integer;
 	p: integer;
 	soort: string;
-	// Spoor
-	tmpRail: PpRailLijst;
+   kommagetal: double;
+   code: integer;
 	// Seinen
 	tmpMeetpunt: PpMeetpunt;
 	// Verschijnen
@@ -2220,34 +2242,6 @@ begin
 					// Stel de kortsluitlans in
 					tmpMeetpunt^.kortsluitlans := true;
 					tmpMeetpunt^.kortsluitlansiswegensscenario := true;
-					// Breek dit meetpunt los van het spoorplan
-					tmpRail := pAlleRails;
-					while assigned(tmpRail) do begin
-						if tmpRail^.Rail^.meetpunt = tmpMeetpunt then begin
-							if tmpRail^.Rail^.Volgende^.recht^.meetpunt <> tmpMeetpunt then begin
-								if not tmpRail^.Rail^.Volgende^.r_foutom then begin
-									tmpRail^.Rail^.Volgende^.recht^.Vorige^.recht := tmpRail^.Rail^.Volgende^.recht;
-									tmpRail^.Rail^.Volgende^.recht^.Vorige^.r_foutom := true;
-								end else begin
-									tmpRail^.Rail^.Volgende^.recht^.Volgende^.recht := tmpRail^.Rail^.Volgende^.recht;
-									tmpRail^.Rail^.Volgende^.recht^.Volgende^.r_foutom := true;
-								end;
-								tmpRail^.Rail^.Volgende^.recht := tmpRail^.Rail;
-								tmpRail^.Rail^.Volgende^.r_foutom := true;
-							end else if tmpRail^.Rail^.Vorige^.recht^.meetpunt <> tmpMeetpunt then begin
-								if not tmpRail^.Rail^.Vorige^.r_foutom then begin
-									tmpRail^.Rail^.Vorige^.recht^.Vorige^.recht := tmpRail^.Rail^.Vorige^.recht;
-									tmpRail^.Rail^.Vorige^.recht^.Vorige^.r_foutom := true;
-								end else begin
-									tmpRail^.Rail^.Vorige^.recht^.Volgende^.recht := tmpRail^.Rail^.Vorige^.recht;
-									tmpRail^.Rail^.Vorige^.recht^.Volgende^.r_foutom := true;
-								end;
-								tmpRail^.Rail^.Vorige^.recht := tmpRail^.Rail;
-								tmpRail^.Rail^.Vorige^.r_foutom := false;
-							end;
-						end;
-						tmpRail := tmpRail^.volgende;
-					end;
 				end else
 					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
@@ -2278,6 +2272,72 @@ begin
 					tmpOudeVerschijnpunt^.Naam := tmpVerschijnpuntBkp^.Naam;
 					tmpOudeVerschijnpunt^.Volgende := tmpVerschijnpuntBkp^.Volgende;
 					dispose(tmpVerschijnpuntBkp);
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'pct' then begin	// PUNCTUALITEIT
+				case index of
+				1: begin
+            	val(waarde, kommagetal, code);
+               if code = 0 then
+                  punctualiteit := kommagetal / 100
+               else
+               	begin Leesfout_melding := 'Punctualiteitswaarde '+waarde+' is geen getal'; exit end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'wdk' then begin	// WISSEL-DEFECT-KANS
+				case index of
+				1: begin
+            	val(waarde, kommagetal, code);
+               if (code = 0) or (kommagetal < 1) then
+                  wisseldefectkans := 1 / kommagetal
+               else
+               	begin Leesfout_melding := 'De waarde '+waarde+' voor de wissel-defect-kans is geen getal groter dan 1'; exit end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'wde' then begin	// WISSEL-ECHT-DEFECT-KANS
+				case index of
+				1: begin
+            	val(waarde, kommagetal, code);
+               if (code = 0) or (kommagetal < 1) then
+                  wisselechtdefectkans := 1 / kommagetal
+               else
+               	begin Leesfout_melding := 'De waarde '+waarde+' voor de wissel-echt-defect-kans is geen getal groter dan 1'; exit end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'mdk' then begin	// MEETPUNT-DEFECT-KANS
+				case index of
+				1: begin
+            	val(waarde, kommagetal, code);
+               if (code = 0) or (kommagetal < 1) then
+                  meetpuntdefectbijtreinkans := 1 / kommagetal
+               else
+               	begin Leesfout_melding := 'De waarde '+waarde+' voor de sectiestoring-kans is geen getal groter dan 1'; exit end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'sdk' then begin	// SEINSTORING-KANS
+				case index of
+				1: begin
+            	val(waarde, kommagetal, code);
+               if (code = 0) or (kommagetal < 1) then
+                  seindefectkans := 1 / kommagetal
+               else
+               	begin Leesfout_melding := 'De waarde '+waarde+' voor de seinstoring-kans is geen getal groter dan 1'; exit end;
+				end else
+					begin Leesfout_melding := 'Te veel parameters'; exit end;
+				end;
+			end else if soort = 'tdk' then begin	// TREIN-DEFECT-KANS
+				case index of
+				1: begin
+            	val(waarde, kommagetal, code);
+               if (code = 0) or (kommagetal < 1) then
+                  treindefectkans := 1 / kommagetal
+               else
+               	begin Leesfout_melding := 'De waarde '+waarde+' voor de trein-defect-kans is geen getal groter dan 1'; exit end;
 				end else
 					begin Leesfout_melding := 'Te veel parameters'; exit end;
 				end;
@@ -2783,6 +2843,51 @@ begin
 	end;
 end;
 
+procedure TpCore.DoeErlaubnisse;
+var
+	Erlaubnis: PpErlaubnis;
+begin
+	Erlaubnis := pAlleErlaubnisse;
+	while assigned(Erlaubnis) do begin
+		DoeErlaubnis(Erlaubnis);
+		Erlaubnis := Erlaubnis^.Volgende;
+	end;
+end;
+
+procedure TpCore.ZendErlaubnisse;
+var
+	Erlaubnis: PpErlaubnis;
+begin
+	Erlaubnis := pAlleErlaubnisse;
+	while assigned(Erlaubnis) do begin
+		SendMsg^.SendErlaubnisMsg(Erlaubnis);
+		SendMsg^.SendErlaubnisAlsMeetpuntMsg(Erlaubnis);
+		Erlaubnis := Erlaubnis^.Volgende;
+	end;
+end;
+
+procedure TpCore.DoeWissels;
+var
+	Wissel: PpWissel;
+begin
+	Wissel := pAlleWissels;
+	while assigned(Wissel) do begin
+		DoeWissel(Wissel);
+		Wissel := Wissel^.Volgende;
+	end;
+end;
+
+procedure TpCore.ZendWissels;
+var
+	Wissel: PpWissel;
+begin
+	Wissel := pAlleWissels;
+	while assigned(Wissel) do begin
+		SendMsg^.SendWisselMsg(Wissel);
+		Wissel := Wissel^.Volgende;
+	end;
+end;
+
 procedure TpCore.ZendMeetpunten;
 var
 	Meetpunt: PpMeetpunt;
@@ -2836,35 +2941,21 @@ end;
 // - Externe connecties afhandelen
 procedure TpCore.DoeStapje;
 var
-	Wissel: 		PpWissel;
-	Erlaubnis: 	PpErlaubnis;
 	Overweg:		PpOverweg;
 begin
 
 	DoeVerschijnen;
-
-	// Wissels doen
-	Wissel := pAlleWissels;
-	while assigned(Wissel) do begin
-		DoeWissel(Wissel);
-		SendMsg^.SendWisselMsg(Wissel);
-		Wissel := Wissel^.Volgende;
-	end;
-
+	DoeWissels;
 	DoeMeetpunten;
-
+   DoeErlaubnisse;
 	DoeSeinen;
 
-	// Erlaubnisse bijwerken
-	Erlaubnis := pAlleErlaubnisse;
-	while assigned(Erlaubnis) do begin
-		DoeErlaubnis(Erlaubnis);
-		SendMsg^.SendErlaubnisMsg(Erlaubnis);
-		SendMsg^.SendErlaubnisAlsMeetpuntMsg(Erlaubnis);
-		Erlaubnis := Erlaubnis^.Volgende;
-	end;
-
+   // ZendErlaubnisse moet voor ZendMeetpunten, zodat bij het registreren van
+   // een treinnummer altijd de stand van de erlaubnis bekend is en er dus
+   // correct bepaald kan worden of een aankondiging nodig is.
+   ZendErlaubnisse;
 	ZendMeetpunten;
+   ZendWissels;
 	ZendSeinen;
    ZendTreinInfo;
 
@@ -2929,10 +3020,17 @@ begin
 	end;
 
 	DoeMeetpunten;
+   DoeErlaubnisse;
 	DoeSeinen;
+   DoeWissels;
 
+   // ZendErlaubnisse moet voor ZendMeetpunten, zodat bij het registreren van
+   // een treinnummer altijd de stand van de erlaubnis bekend is en er dus
+   // correct bepaald kan worden of een aankondiging nodig is.
+   ZendErlaubnisse;
 	ZendMeetpunten;
 	ZendSeinen;
+   ZendWissels;
 
 	Tijd_t := 0;
 
@@ -2956,12 +3054,14 @@ begin
 		dispose(pAlleRails);
 		pAlleRails := tmp;
 	end;
+   pAlleRails := nil;
 	while assigned(pAlleMeetpunten) do begin
 		tmp := pAlleMeetpunten^.Volgende;
 		pAlleMeetpunten^.Destroy;
 		dispose(pAlleMeetpunten);
 		pAlleMeetpunten := tmp;
 	end;
+   pAlleMeetpunten := nil;
 	while assigned(pAlleErlaubnisse) do begin
 		tmp := pAlleErlaubnisse^.Volgende;
 		while assigned(pAlleErlaubnisse^.Meetpunten) do begin
@@ -2972,37 +3072,145 @@ begin
 		dispose(pAlleErlaubnisse);
 		pAlleErlaubnisse := tmp;
 	end;
+   pAlleErlaubnisse := nil;
 	while assigned(pAlleSeinen) do begin
 		tmp := pAlleSeinen^.Volgende;
 		dispose(pAlleSeinen);
 		pAlleSeinen := tmp;
 	end;
+   pAlleSeinen := nil;
 	while assigned(pAlleSeinBeperkingen) do begin
 		tmp := pAlleSeinBeperkingen^.Volgende;
 		dispose(pAlleSeinBeperkingen);
 		pAlleSeinBeperkingen := tmp;
 	end;
+   pAlleSeinBeperkingen := nil;
 	while assigned(pAlleWissels) do begin
 		tmp := pAlleWissels^.Volgende;
 		dispose(pAlleWissels);
 		pAlleWissels := tmp;
 	end;
+   pAlleWissels := nil;
 	while assigned(pAlleVerschijnpunten) do begin
 		tmp := pAlleVerschijnpunten^.Volgende;
 		dispose(pAlleVerschijnpunten);
 		pAlleVerschijnpunten := tmp;
 	end;
+   pAlleVerschijnpunten := nil;
 	while assigned(pAlleVerdwijnpunten) do begin
 		tmp := pAlleVerdwijnpunten^.Volgende;
 		dispose(pAlleVerdwijnpunten);
 		pAlleVerdwijnpunten := tmp;
 	end;
+   pAlleVerdwijnpunten := nil;
 	while assigned(pAlleOverwegen) do begin
 		tmp := pAlleOverwegen^.Volgende;
 		dispose(pAlleOverwegen);
 		pAlleOverwegen := tmp;
 	end;
-	while assigned(pAlleGesprekken) do begin
+   pAlleOverwegen := nil;
+
+   DestroyState;
+	inherited;
+end;
+
+procedure TpCore.InitMeetpuntState;
+begin
+	Meetpunt^.Bezet := false;
+	Meetpunt^.Treinnaam := '';
+	Meetpunt^.magdefect := true;
+	Meetpunt^.defect := false;
+	Meetpunt^.rijrichting := 0;
+	Meetpunt^.kortsluitlans := false;
+	Meetpunt^.kortsluitlansiswegensscenario := false;
+	Meetpunt^.veranderd := true;
+end;
+
+procedure TpCore.InitErlaubnisState;
+begin
+   Erlaubnis^.richting := 0;
+   Erlaubnis^.bezet := false;
+   Erlaubnis^.voorvergendeld := false;
+   Erlaubnis^.vergrendeld := false;
+   Erlaubnis^.r_veranderd := true;
+   Erlaubnis^.b_veranderd := true;
+end;
+
+procedure TpCore.InitSeinState;
+begin
+	Sein^.H_MovementAuthority.HasAuthority := false;
+	Sein^.V_AdviesAuthority.HasAuthority := false;
+	Sein^.Bediend_Stand := 0;
+	Sein^.groendefect := false;
+	Sein^.geeldefect := false;
+	Sein^.veranderd := true;
+end;
+
+procedure TpCore.InitWisselState;
+begin
+	Wissel^.stand := wsRechtdoor;
+	Wissel^.nw_stand := wsRechtdoor;
+	Wissel^.defect := wdHeel;
+	Wissel^.Monteur := nil;
+	Wissel^.veranderd := true;
+end;
+
+procedure TpCore.InitOverwegState;
+begin
+	Overweg^.Status := 0;
+	Overweg^.VolgendeStatusTijd := -1;
+   Overweg^.veranderd := false;
+end;
+
+procedure TpCore.DestroyState;
+var
+	tmpMeetpunt: PpMeetpunt;
+   tmpErlaubnis: PpErlaubnis;
+   tmpSein: PpSein;
+   tmpWissel: PpWissel;
+   tmpOverweg: PpOverweg;
+   tmp, tmp2: Pointer;
+begin
+	// Deze dingen moeten alleen worden gereset.
+   // pAlleRails heeft geen status.
+   tmpMeetpunt := pAlleMeetpunten;
+	while assigned(tmpMeetpunt) do begin
+   	InitMeetpuntState(tmpMeetpunt);
+		tmpMeetpunt := tmpMeetpunt^.volgende;
+	end;
+   tmpErlaubnis := pAlleErlaubnisse;
+	while assigned(tmpErlaubnis) do begin
+   	InitErlaubnisState(tmpErlaubnis);
+		tmpErlaubnis := tmpErlaubnis^.Volgende;
+	end;
+   tmpSein := pAlleSeinen;
+	while assigned(tmpSein) do begin
+   	InitSeinState(tmpSein);
+		tmpSein := tmpSein^.Volgende;
+	end;
+   // pAlleSeinbeperkingen heeft geen status.
+   tmpWissel := pAlleWissels;
+	while assigned(tmpWissel) do begin
+		InitWisselState(tmpWissel);
+		tmpWissel := tmpWissel^.Volgende;
+	end;
+   (*
+	while assigned(pAlleVerschijnpunten) do begin
+		tmp := pAlleVerschijnpunten^.Volgende;
+		dispose(pAlleVerschijnpunten);
+		pAlleVerschijnpunten := tmp;
+	end;
+   pAlleVerschijnpunten := nil; *)
+
+   // pAlleVerdwijnpunten heeft geen status
+   tmpOverweg := pAlleOverwegen;
+	while assigned(tmpOverweg) do begin
+   	InitOverwegState(tmpOverweg);
+		tmpOverweg := tmpOverweg^.Volgende;
+	end;
+
+	// De volgende dingen moeten helemaal worden gewist
+  	while assigned(pAlleGesprekken) do begin
 		tmp := pAlleGesprekken^.Volgende;
 		pAlleGesprekken^.Destroy;
 		dispose(pAlleGesprekken);
@@ -3046,13 +3254,15 @@ begin
 	end;
 	while assigned(pAlleTreinInfo) do begin
 		tmp := pAlleTreinInfo^.Volgende;
-		dispose(pAlleTreinInfo); 
+		dispose(pAlleTreinInfo);
 		pAlleTreinInfo := tmp;
 	end;
+
 	pMonteur^.Destroy;
 	dispose(pMonteur);
 	pMonteur := nil;
-	inherited;
+
+	InitStateVars;
 end;
 
 end.

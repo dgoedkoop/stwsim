@@ -194,11 +194,12 @@ begin
 	Meetpunt := Van^.pos_rail^.meetpunt;
 	if not assigned(Meetpunt) then exit;
 	case soort of
-	pmsStoptonend:	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',r,'+s);
-	pmsSTSpassage:	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',sts,'+s);
-	pmsVraagOK:		SendPlainString('comm_msg:t,'+Van^.Treinnummer+',ok,'+s);
-	pmsTreinOpdracht:		SendPlainString('comm_msg:t,'+Van^.Treinnummer+',tact,'+s);
-	pmsInfo:			SendPlainString('comm_msg:t,'+Van^.Treinnummer+',i,'+s);
+	pmsStoptonend:	 	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',r,'+s);
+	pmsSTSpassage:	 	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',sts,'+s);
+	pmsKlaarmelding:	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',km,'+s);
+	pmsVraagOK:		 	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',ok,'+s);
+	pmsTreinOpdracht:	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',tact,'+s);
+	pmsInfo:			  	SendPlainString('comm_msg:t,'+Van^.Treinnummer+',i,'+s);
 	end;
 end;
 

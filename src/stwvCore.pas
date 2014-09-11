@@ -70,6 +70,7 @@ function ZoekPrlRijweg(core: PvCore; van, naar: string; dwang: byte): PvPrlRijwe
 
 function AddActieveRijweg(core: PvCore; Rijweg: PvRijweg; ROZ, Auto: boolean): PvActieveRijwegLijst;
 procedure DeleteActieveRijweg(core: PvCore; ActieveRijweg: PvActieveRijwegLijst);
+procedure DestroyActieveRijwegen(core: PvCore);
 
 procedure SaveKruisingHokje(var f: file; KruisingHokje: PvKruisingHokje);
 procedure SaveSein(var f: file; Sein: PvSein);
@@ -77,14 +78,15 @@ procedure LoadSein(var f: file; core: PvCore; Sein: PvSein);
 procedure SaveRijweg(var f: file; Rijweg: PvRijweg);
 procedure LoadRijweg(var f: file; core: PvCore; Rijweg: PvRijweg);
 procedure SavePrlRijweg(var f: file; PrlRijweg: PvPrlRijweg);
-procedure LoadPrlRijweg(var f: file; core: PvCore; PrlRijweg: PvPrlRijweg; modus: integer);
+procedure LoadPrlRijweg(var f: file; core: PvCore; PrlRijweg: PvPrlRijweg);
 procedure SaveSubroute(var f: file; Subroute: PvSubroute);
 procedure LoadSubroute(var f: file; core: PvCore; Subroute: PvSubroute);
 
 procedure SaveWisselMeetpuntStatus(var f: file; Core: PvCore);
-procedure LoadWisselMeetpuntStatus(var f: file; Core: PvCore);
+procedure LoadWisselMeetpuntStatus(var f: file; SgVersion: integer; Core: PvCore);
+procedure ClearWisselMeetpuntStatus(Core: PvCore);
 
-procedure LoadThings(Core: PvCore; var f: file; modus: integer);
+procedure LoadThings(Core: PvCore; var f: file);
 procedure SaveThings(Core: PvCore; var f: file);
 
 procedure BerekenAankondigingen(Core: PvCore);
@@ -380,6 +382,7 @@ var
 	s, l: PvSein;
 begin
 	new(s);
+   s^.Stand_wens := '';
 	s^.Naam := '';
 	s^.Van := '';
 	s^.TriggerMeetpunt := nil;
@@ -912,13 +915,13 @@ var
 	van, naar: string;
 	i, count:  integer;
 	// Fix voor oude modus
-	x: byte;
+{	x: byte;}
 begin
 	byteread(f, PrlRijweg^.Dwang);
 	van := '';
 	naar := '';
-	case modus of
-		0: begin
+{	case modus of
+		0, 1: begin}
 			intread(f, count);
 			if count > 0 then begin
 				stringread(f, van);
@@ -935,8 +938,8 @@ begin
 					van := naar;
 				end;
 			end;
-		end;
-		1: begin
+{		end;
+		2: begin
 			// Oude modus
 			stringread(f, naar);
 			while naar <> '' do begin
@@ -955,7 +958,7 @@ begin
 			if x <> 0 then
 				seek(f, filepos(f)-1);
 		end;
-	end;
+	end; }
 end;
 
 procedure SaveSubroute;
@@ -1150,7 +1153,7 @@ begin
 			end;
 			'l': begin
 				PrlRijweg := NieuwePrlRijweg(core);
-				LoadPrlRijweg(f, Core, PrlRijweg, modus);
+				LoadPrlRijweg(f, Core, PrlRijweg);
 			end;
 			'p': klaar := true;
 		end;
@@ -1327,6 +1330,7 @@ begin
 	while assigned(Meetpunt) do begin
 		stringwrite(f, Meetpunt^.meetpuntID);
 		boolwrite(f, Meetpunt^.bezet);
+      stringwrite(f, Meetpunt^.treinnummer);
 		Meetpunt := Meetpunt^.Volgende;
 	end;
 end;
@@ -1366,7 +1370,51 @@ begin
 		stringread(f, MeetpuntID);
 		Meetpunt := ZoekMeetpunt(Core, MeetpuntID);
 		boolread(f, Meetpunt^.bezet);
+      if SgVersion >= 14 then
+      	stringread(f, Meetpunt^.treinnummer);
 	end;
+end;
+
+procedure ClearWisselMeetpuntStatus;
+var
+	Wissel: PvWissel;
+	WisselGroep: PvWisselGroep;
+	Meetpunt: PvMeetpunt;
+   Sein: PvSein;
+begin
+	Wisselgroep := Core^.vAlleWisselGroepen;
+   while assigned(Wisselgroep) do begin
+   	Wissel := Wisselgroep^.EersteWissel;
+      while assigned(Wissel) do begin
+         Wissel^.WensStand := wsEgal;
+         Wissel^.Stand := wsOnbekend;
+         Wissel^.RijwegOnderdeel := nil;
+         Wissel^.rijwegverh := false;
+         Wissel^.changed := false;
+      	Wissel := Wissel^.Volgende;
+      end;
+      Wisselgroep^.bedienverh := false;
+      Wisselgroep^.OnbekendAanwezig := false;
+      Wisselgroep := Wisselgroep^.Volgende;
+   end;
+   Meetpunt := Core^.vAlleMeetpunten;
+   while assigned(Meetpunt) do begin
+   	Meetpunt^.bezet := false;
+      Meetpunt^.treinnummer := '';
+      Meetpunt^.RijwegOnderdeel := nil;
+      Meetpunt^.changed := false;
+      Meetpunt^.OnterechtBezet := false;
+      Meetpunt^.Knipperen := false;
+      Meetpunt := Meetpunt^.volgende;
+   end;
+   Sein := Core^.vAlleSeinen;
+   while assigned(Sein) do begin
+   	Sein^.Stand_wens := '';
+      Sein^.RijwegOnderdeel := nil;
+      Sein^.DoelVanRijweg := nil;
+      Sein^.changed := false;
+      Sein := Sein^.Volgende; 
+   end;
 end;
 
 procedure BerekenRijwegenNaarSeinen;
@@ -1539,11 +1587,7 @@ begin
 			Dispose(vAlleErlaubnisse);
 			vAlleErlaubnisse := tmp;
 		end;
-		while assigned(vActieveRijwegen) do begin
-			tmp := vActieveRijwegen^.Volgende;
-			Dispose(vActieveRijwegen);
-			vActieveRijwegen := tmp;
-		end;
+      DestroyActieveRijwegen(Core);
 		while assigned(vAllePrlRijwegen) do begin
 			tmp := vAllePrlRijwegen^.Volgende;
 			while assigned(vAllePrlRijwegen^.Rijwegen) do begin
@@ -1587,6 +1631,17 @@ begin
 	end;
 	Dispose(Core);
 	Core := nil;
+end;
+
+procedure DestroyActieveRijwegen;
+var
+	tmp: PvActieveRijwegLijst;
+begin
+	while assigned(Core^.vActieveRijwegen) do begin
+		tmp := Core^.vActieveRijwegen^.Volgende;
+		Dispose(Core^.vActieveRijwegen);
+		Core^.vActieveRijwegen := tmp;
+	end;
 end;
 
 end.

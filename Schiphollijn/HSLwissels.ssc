@@ -1,0 +1,27 @@
+STWSIMSCEN.1
+Schiphollijn
+1.0
+Er is een spoedreparatie nodig aan de hogesnelheidswissels bij Hoofddorp.
+
+Op station Hoofddorp zijn kortsluitlansen aangebracht. Maar ook bij Schiphol zijn de buitenste twee sporen onbruikbaar vanwege het ontbreken van geschikte overloopwissels. Er zijn overeenkomstig verhinderingen aangebracht.
+EOT
+
+k	209_2
+k	209_3
+k	201_7
+k	201_8
+k	210_3
+k	210_4
+k	204_8
+k	204_9
+c	vhb 1111
+c	vhb 1109
+
+c	vhb 1061
+c	vhb 1065
+c	vhr 1079
+c	vhr 1071
+c	vhb 1083B
+c	vhb 1087B
+c	vhr 1083B
+c	vhr 1087B

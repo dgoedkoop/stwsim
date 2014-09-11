@@ -41,7 +41,7 @@ const
 	maxtijd_wachtmetbellen	= 4;
 	mintijd_opnemen			= 1/60;
 	maxtijd_opnemen			= 20/60;
-	tekst_ok						= 'Begrepen!';
+	tekst_ok						= 'Begrepen! Over en sluiten.';
 
 constructor TpTelefoongesprek.Create;
 begin

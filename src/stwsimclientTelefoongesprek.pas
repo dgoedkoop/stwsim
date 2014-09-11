@@ -48,18 +48,19 @@ uses stwsimclientNieuweDienst, stwsimClientNieuwPlanpunt,
 {$R *.DFM}
 
 const
-	stsp   = 'Aanwijzing STS-passage verstrekken...';
-	stspa  = 'Aanwijzing STS-passage intrekken';
-	vnstsp = 'Rijd voorzichtig op zicht verder.';
-	wtt2   = 'Wacht nog even, u kunt zometeen verder.';
-	wtt5   = 'Wacht nog even, u kunt binnen 5 minuten verder.';
-	wtt15  = 'Wacht, het kan nog wel een kwartier duren voordat u verder kunt.';
-	ra		 = 'Sla het huidige dienstregelingpunt over';
-	raw	 = 'Sla dienstregelingpunt ... over';
-	nr		 = 'Nieuw dienstregelingpunt ...';
-	lr		 = 'Rijd verder met nieuwe dienstregeling en nieuw treinnummer ...';
-	rw		 = 'Wissel repareren.';
-	ok		 = 'Begrepen!';
+	stsp   = 'Aanwijzing STS-passage verstrekken... Over.';
+	stspa  = 'Aanwijzing STS-passage intrekken. Over.';
+	vnstsp = 'Rijd voorzichtig op zicht verder. Over.';
+	wtt2   = 'Wacht nog even, u kunt zometeen verder. Over.';
+	wtt5   = 'Wacht nog even, u kunt binnen 5 minuten verder. Over.';
+	wtt15  = 'Wacht, het kan nog wel een kwartier duren voordat u verder kunt. Over.';
+	ra		 = 'Sla het huidige dienstregelingpunt over. Over.';
+	raw	 = 'Sla dienstregelingpunt ... over. Over.';
+	nr		 = 'Nieuw dienstregelingpunt ... Over.';
+	lr		 = 'Rijd verder met nieuwe dienstregeling en nieuw treinnummer ... Over.';
+	rw		 = 'Wissel ... repareren. Over.';
+   kmb	 = 'Klaarmelding ontvangen! Over en sluiten.';
+	ok		 = 'Begrepen! Over en sluiten.';
 
 function CheckInput(s: string): boolean;
 begin
@@ -134,6 +135,10 @@ begin
 		watList.Items.Add(wtt5);
 		GesprekStatus := gsVerwachtAntwoord;
 	end else
+	if Soort = vmsKlaarmelding then begin
+		watList.Items.Add(kmb);
+		GesprekStatus := gsVerwachtAntwoord;
+	end else
 	if Soort = vmsVraagOK then begin
 		watList.Items.Add(ok);
 		GesprekStatus := gsVerwachtAntwoord;
@@ -184,6 +189,7 @@ begin
 	end;
 	if wat = stspa then	msg := 'stspa';
 	if wat = vnstsp then msg := 'vnstsp';
+	if wat = kmb then msg := 'kmb';
 	if wat = wtt2 then msg := 'wtt,2';
 	if wat = wtt5 then msg := 'wtt,5';
 	if wat = wtt15 then msg := 'wtt,15';

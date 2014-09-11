@@ -5,7 +5,7 @@ interface
 uses lists, stwpCore, serverSendMsg, stwpSeinen, stwpMeetpunt,
 	stwpRails, stwpTreinen, sysutils, stwpRijplan, stwpTijd, stwpOverwegen,
 	stwsimComm, stwpDatatypes, stwpTelefoongesprek, stwpMonteur,
-	stwpMonteurPhysics, stwpCommPhysics, stwpTreinInfo;
+	stwpMonteurPhysics, stwpCommPhysics, stwpTreinInfo, stwvMisc;
 
 const
 	LF = #$0A;
@@ -369,14 +369,14 @@ begin
 			Trein := Core.ZoekTrein(nummer);
 			if assigned(Trein) then begin
 				Gesprek := Core.NieuwTelefoongesprek(Trein, tgtGebeldWorden, true);
-				Gesprek^.tekstX := 'Hier trein '+Trein^.Treinnummer+'. Zegt u het maar.';
+				Gesprek^.tekstX := 'Hier trein '+StringToNato(Trein^.Treinnummer)+'. Zegt u het maar. Over.';
 				Gesprek^.tekstXsoort := pmsTreinOpdracht;
 				SendOK
 			end else
 				SendError(unknowntrainerror);
 		end else if Wat = 'r' then begin
 			Gesprek := Core.NieuwTelefoongesprek(Core.pMonteur, tgtGebeldWorden, true);
-			Gesprek^.tekstX := 'Met de storingsdienst. Waarmee kan ik u van dienst zijn?';
+			Gesprek^.tekstX := 'Met de storingsdienst. Waarmee kan ik u van dienst zijn? Over.';
 			Gesprek^.tekstXsoort := pmsMonteurOpdracht;
 			SendOK
 		end else
@@ -476,6 +476,10 @@ begin
 							SendOK;
 							CommPhysics.AntwoordGegeven(Gesprek);
 							Trein^.doorroodverderrijden := true;
+						end else if tcmd = 'kmb' then begin	// KlaarMelding Bevestigen
+							SendOK;
+							CommPhysics.AntwoordGegeven(Gesprek);
+							Trein^.klaarmeldingvereist := false;
 						end else if tcmd = 'ra' then begin		// Rijplanpunt Annuleren
 							SendOK;
 							CommPhysics.AntwoordGegeven(Gesprek);
@@ -495,7 +499,7 @@ begin
 								else
 									Trein^.Planpunten := rppunt^.volgende;
 							end else
-								Gesprek^.tekstOK := 'Sorry, maar ik kom niet langs station '+tail+'.';
+								Gesprek^.tekstOK := 'Sorry, maar ik kom niet langs station '+tail+'. Over en sluiten.';
 						end else if tcmd = 'nr' then begin		// Nieuw Rijplanpunt
 							SendOK;
 							CommPhysics.AntwoordGegeven(Gesprek);
@@ -522,9 +526,9 @@ begin
 										v_rppunt^.volgende := rppunt;
 									end;
 								end else
-									Gesprek^.tekstOK := 'Sorry, maar dat snap ik niet!';
+									Gesprek^.tekstOK := 'Sorry, maar dat snap ik niet! Over en sluiten.';
 							end else
-								Gesprek^.tekstOK := 'Sorry, maar ik kom niet langs station '+rppunt_na+'.';
+								Gesprek^.tekstOK := 'Sorry, maar ik kom niet langs station '+rppunt_na+'. Over en sluiten.';
 						end else if tcmd = 'wtt' then begin		// WachT met Telefoneren
 							val(tail,tm,code);
 							if code = 0 then begin
@@ -562,7 +566,7 @@ begin
 						Opdracht.Wat := mrwWissel;
 						Opdracht.ID := nummer;
 						if not MonteurPhysics.StuurMonteur(Core.pMonteur, Opdracht) then
-							Gesprek^.tekstOK := 'Sorry, maar ik heb nu geen tijd.';
+							Gesprek^.tekstOK := 'Sorry, maar ik heb nu geen tijd. Over en sluiten.';
 						CommPhysics.AntwoordGegeven(Gesprek)
 					end else
 						SendError('unknown repair thing');
@@ -584,7 +588,7 @@ begin
 					if Trein^.pos_rail = RailLijst^.Rail then
 						if not assigned(Core.ZoekTelefoongesprek(Trein)) then begin
 							Gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
-							Gesprek^.tekstX := 'Trein '+Trein^.Treinnummer+' meldt zich!';
+							Gesprek^.tekstX := 'Trein '+StringToNato(Trein^.Treinnummer)+' meldt zich! Over.';
 							Gesprek^.tekstXsoort := pmsInfo;
 						end;
 					Trein := Trein^.Volgende;

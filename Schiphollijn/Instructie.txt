@@ -1,0 +1,43 @@
+Welkom op de treindienstleidingpost van de Schiphollijn
+
+1. Introductie
+
+Deze simulatie omvat de Schiphollijn, vanaf de aftakking bij Leiden via
+Hoofddorp en Schiphol tot voorbij Amsterdam Lelylaan en de vrije baan naar
+station Amsterdam Zuid. De simulatie wordt geleverd met de dienstregeling van
+een doordeweekse dag in 2012. Procesplannen hiervoor worden ook meegeleverd.
+
+2. Noodzakelijke handmatige handelingen
+
+'s Ochtends vroeg starten op sommige sporen van Hoofddorp Opstel meerdere
+treinen achter elkaar. De eerste hiervan wordt in TNV ingevoerd maar het nummer
+van de later vertrekkende treinen kan niet automatisch worden ingevoerd en moet
+dus handmatig gebeuren. Dit dient op de volgende tijdstippen te gebeuren:
+
+Om 5:41 vertrekt 74317 van spoor 221, 75717 (en 73723) blijft achter
+Om 5:42 vertrekt 71617 van spoor 222, 70719 (en 70723) blijft achter
+Om 5:55 vertrekt 75717 van spoor 221, 73723 blijft achter
+Om 6:12 vertrekt 70719 van spoor 222, 70723 blijft achter
+
+3. Ingepland inhalen
+
+Op station Hoofddorp worden sprinters die op spoor 201 en 204 stoppen ingehaald
+door intercity's die via de sporen 209 en 210 passeren. Het gaat hierbij om de
+volgende treinseries:
+
+4300 wordt ingehaald door 2600 telkens rond kwart over en kwart voor
+5700 wordt ingehaald door 3700 telkens rond vijf over en vijf voor half
+
+4. Sporen op Hoofddorp Opstel
+
+De sporen 213, 214 en 215 zijn gereserveerd voor de Berlijntrein van NS Hispeed.
+Ook al zijn deze sporen het grootste deel van de dag vrij, het is niet de
+bedoeling hier gewone NS-treinen te laten keren.
+
+Spoor 211 wordt gebruikt voor de locomotief van de Berlijntrein. De manier
+waarop deze wordt gebruikt is de volgende:
+1. Een trein uit Duitsland komt binnen op spoor 213. De locomotief hiervan wordt
+	afgekoppeld,
+2. Een nieuwe locomotief rijdt van spoor 211 naar 213 en wordt aangekoppeld,
+3. De trein rijdt terug naar Duitsland,
+4. De achtergebleven locomotief wordt naar spoor 211 verplaatst.

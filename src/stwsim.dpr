@@ -1,7 +1,6 @@
 program stwsim;
 
 uses
-{	FastMM4,}
   Forms,
   stwsimMain in 'stwsimMain.pas' {stwsimMainForm},
   stwsimClientInfo in 'stwsimClientInfo.pas' {stwscInfoForm},
@@ -58,7 +57,9 @@ uses
   stwvGleisplan in 'stwvGleisplan.pas',
   stwvSeinen in 'stwvSeinen.pas',
   stwpTreinInfo in 'stwpTreinInfo.pas',
-  stwvTreinInfo in 'stwvTreinInfo.pas';
+  stwvTreinInfo in 'stwvTreinInfo.pas',
+  KkVersion in 'KkVersion.pas',
+  stwsimClientScenario in 'stwsimClientScenario.pas' {stwscScenarioForm};
 
 {$R *.RES}
 
@@ -82,5 +83,6 @@ begin
   Application.CreateForm(TstwssTreinnrForm, stwssTreinnrForm);
   Application.CreateForm(TstwssVerschijnpuntForm, stwssVerschijnpuntForm);
   Application.CreateForm(TstwscTelefoonBelForm, stwscTelefoonBelForm);
+  Application.CreateForm(TstwscScenarioForm, stwscScenarioForm);
   Application.Run;
 end.

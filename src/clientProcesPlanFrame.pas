@@ -86,7 +86,8 @@ end;
 procedure TstwscProcesPlanFrame.UpdateControls;
 begin
 	selPunt := FindSelected;
-	VoernuuitAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt) and Procesplan.IsTreinAanwezig(selPunt, true);
+	VoernuuitAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt) and
+   	Procesplan.IsTreinAanwezig(selPunt, true) and Procesplan.ControleerCombineerTrein(selPunt);
 	BewerkAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
 	DelAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
 	VVAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
@@ -162,7 +163,8 @@ begin
 		s := s + Pad(inttostr(PPP^.Dwang), 4, #32, vaAchter)
 	else
 		s := s + Pad('', 4, #32, vaAchter);
-	if (PPP^.NieuwNummer <> '') or (PPP^.RestNummer <> '') then
+	if (PPP^.NieuwNummer <> '') or (PPP^.RestNummer <> '') or
+   	(PPP^.CombineerNummer <> '') then
 		s := s + 'm';
 	if PPP^.H then
 		s := s + 'H';
@@ -229,10 +231,13 @@ procedure TstwscProcesPlanFrame.VoernuuitActExecute(Sender: TObject);
 begin
 	selPunt := FindSelected;
 	if assigned(selPunt) then
-		if ProcesPlan.MagHandmatigUitvoeren(selPunt) then
+		if ProcesPlan.MagHandmatigUitvoeren(selPunt) then begin
 			if ProcesPlan.ProbeerPlanpuntUitTeVoeren(selPunt, false) = irHelemaal then
 				ProcesPlan.MarkeerKlaar(selPunt);
-	UpdateLijst;
+			UpdateLijst;
+			if ProcesPlan.ARI then
+				ProcesPlan.DoeStapje;
+		end;
 end;
 
 procedure TstwscProcesPlanFrame.BewerkActExecute(Sender: TObject);
@@ -243,12 +248,13 @@ var
 	Dwang: byte;
 	ari_oud: boolean;
 	nwtijd: integer;
+	editPunt: PvProcesPlanPunt;
 begin
-	selPunt := FindSelected;
-	if assigned(selPunt) then begin
+	editPunt := FindSelected;
+	if assigned(editPunt) then begin
 		stwscPlanregelEditForm.Core := Core;
-		stwscPlanregelEditForm.treinnrEdit.Text := selPunt^.Treinnr;
-		case selPunt^.ActiviteitSoort of
+		stwscPlanregelEditForm.treinnrEdit.Text := editPunt^.Treinnr;
+		case editPunt^.ActiviteitSoort of
 		asDoorkomst: stwscPlanregelEditForm.actBox.ItemIndex := 0;
 		asVertrek:   stwscPlanregelEditForm.actBox.ItemIndex := 1;
 		asAankomst:  stwscPlanregelEditForm.actBox.ItemIndex := 2;
@@ -256,25 +262,26 @@ begin
 		asRangeren:  stwscPlanregelEditForm.actBox.ItemIndex := 4;
 		asNul:       stwscPlanregelEditForm.actBox.ItemIndex := 5;
 		end;
-		stwscPlanregelEditForm.vanEdit.Text := selPunt^.van;
-		stwscPlanregelEditForm.naarEdit.Text := selPunt^.naar;
-		stwscPlanregelEditForm.rozCheck.Checked := selPunt^.ROZ;
-		stwscPlanregelEditForm.HCheck.Checked := selPunt^.H;
-		FmtTijd(selPunt^.Insteltijd, u, m, s);
+		stwscPlanregelEditForm.vanEdit.Text := editPunt^.van;
+		stwscPlanregelEditForm.naarEdit.Text := editPunt^.naar;
+		stwscPlanregelEditForm.rozCheck.Checked := editPunt^.ROZ;
+		stwscPlanregelEditForm.HCheck.Checked := editPunt^.H;
+		FmtTijd(editPunt^.Insteltijd, u, m, s);
 		us := inttostr(u); if length(us)=1 then us := '0'+us;
 		ms := inttostr(m); if length(ms)=1 then ms := '0'+ms;
 		stwscPlanregelEditForm.instelUurEdit.Text := us;
 		stwscPlanregelEditForm.instelMinEdit.Text := ms;
-		stwscPlanregelEditForm.nieuwNrEdit.Text := selPunt^.NieuwNummer;
-		stwscPlanregelEditForm.RestNrEdit.Text := selPunt^.RestNummer;
+		stwscPlanregelEditForm.nieuwNrEdit.Text := editPunt^.NieuwNummer;
+		stwscPlanregelEditForm.RestNrEdit.Text := editPunt^.RestNummer;
+		stwscPlanregelEditForm.CombineerNrEdit.Text := editPunt^.CombineerNummer;
 		stwscPlanregelEditForm.UpdateDwangen;
-		if stwscPlanregelEditForm.dwangBox.Items.Count >= selPunt^.Dwang+1 then
-			stwscPlanregelEditForm.dwangBox.ItemIndex := selPunt^.Dwang
+		if stwscPlanregelEditForm.dwangBox.Items.Count >= editPunt^.Dwang+1 then
+			stwscPlanregelEditForm.dwangBox.ItemIndex := editPunt^.Dwang
 		else
 			stwscPlanregelEditForm.dwangBox.ItemIndex := -1;
 		// Tijdens het bewerken mag de regel niet automatisch worden uitgevoerd.
-		Ari_Oud := selPunt^.ARI_toegestaan;
-		selPunt^.ARI_toegestaan := false;
+		Ari_Oud := editPunt^.ARI_toegestaan;
+		editPunt^.ARI_toegestaan := false;
 		// En GO
 		if stwscPlanregelEditForm.ShowModal = mrOK then begin
 			val(stwscPlanregelEditForm.instelUurEdit.Text, u, code);
@@ -295,33 +302,36 @@ begin
 				exit;
 			end;
 			nwtijd := MkTijd(u,m,0);
-			if selPunt^.Insteltijd <> nwtijd then begin
-				selPunt^.VerwerkteVertraging := selPunt^.VerwerkteVertraging + nwtijd - selPunt^.Insteltijd;
-				selPunt^.Insteltijd := nwtijd;
+			if editPunt^.Insteltijd <> nwtijd then begin
+				editPunt^.VerwerkteVertraging := editPunt^.VerwerkteVertraging + nwtijd - editPunt^.Insteltijd;
+				editPunt^.Insteltijd := nwtijd;
 			end;
-			selPunt^.Treinnr := stwscPlanregelEditForm.treinnrEdit.Text;
+			editPunt^.Treinnr := stwscPlanregelEditForm.treinnrEdit.Text;
 			case stwscPlanregelEditForm.actBox.ItemIndex of
-			0: selPunt^.ActiviteitSoort := asDoorkomst;
-			1: selPunt^.ActiviteitSoort := asVertrek;
-			2: selPunt^.ActiviteitSoort := asAankomst;
-			3: selPunt^.ActiviteitSoort := asKortestop;
-			4: selPunt^.ActiviteitSoort := asRangeren;
-			5: selPunt^.ActiviteitSoort := asNul;
+			0: editPunt^.ActiviteitSoort := asDoorkomst;
+			1: editPunt^.ActiviteitSoort := asVertrek;
+			2: editPunt^.ActiviteitSoort := asAankomst;
+			3: editPunt^.ActiviteitSoort := asKortestop;
+			4: editPunt^.ActiviteitSoort := asRangeren;
+			5: editPunt^.ActiviteitSoort := asNul;
 			end;
-			selPunt^.van := Van;
-			selPunt^.naar := Naar;
-			selPunt^.Dwang := Dwang;
-			selPunt^.ROZ := stwscPlanregelEditForm.rozCheck.Checked;
-			selPunt^.H := stwscPlanregelEditForm.HCheck.Checked;
-			selPunt^.NieuwNummer := stwscPlanregelEditForm.nieuwNrEdit.Text;
-			selPunt^.RestNummer := stwscPlanregelEditForm.RestNrEdit.Text;
-			selPunt^.AnalyseGedaan := false;
-			selPunt^.Bewerkt := true;
+			editPunt^.van := Van;
+			editPunt^.naar := Naar;
+			editPunt^.Dwang := Dwang;
+			editPunt^.ROZ := stwscPlanregelEditForm.rozCheck.Checked;
+			editPunt^.H := stwscPlanregelEditForm.HCheck.Checked;
+			editPunt^.NieuwNummer := stwscPlanregelEditForm.nieuwNrEdit.Text;
+			editPunt^.RestNummer := stwscPlanregelEditForm.RestNrEdit.Text;
+			editPunt^.CombineerNummer := stwscPlanregelEditForm.CombineerNrEdit.Text;
+			editPunt^.AnalyseGedaan := false;
+			editPunt^.Bewerkt := true;
 		end;
-		selPunt^.ARI_toegestaan := ari_oud;
+		editPunt^.ARI_toegestaan := ari_oud;
 		ProcesPlan.Sorteer;
 		UpdateLijst;
-		Markeer(selPunt);
+		Markeer(editPunt);
+		if ProcesPlan.ARI then
+			ProcesPlan.DoeStapje;
 	end;
 end;
 
@@ -433,6 +443,8 @@ end;
 procedure TstwscProcesPlanFrame.ARICheckClick(Sender: TObject);
 begin
 	ProcesPlan.ARI := not GetARI;
+	if ProcesPlan.ARI then
+		ProcesPlan.DoeStapje;
 end;
 
 end.

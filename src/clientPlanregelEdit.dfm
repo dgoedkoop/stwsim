@@ -4,7 +4,7 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Planregel bewerken'
-  ClientHeight = 240
+  ClientHeight = 264
   ClientWidth = 368
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -74,11 +74,18 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
     Caption = 'Nieuw nummer:'
   end
   object Label9: TLabel
-    Left = 112
-    Top = 156
+    Left = 16
+    Top = 180
     Width = 178
     Height = 13
     Caption = 'Nummer voor achterblijvend treindeel:'
+  end
+  object Label10: TLabel
+    Left = 16
+    Top = 204
+    Width = 162
+    Height = 13
+    Caption = 'Combineren met trein met nummer:'
   end
   object treinnrEdit: TEdit
     Left = 112
@@ -151,14 +158,14 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
     TabOrder = 7
   end
   object nieuwNrEdit: TEdit
-    Left = 16
-    Top = 176
+    Left = 200
+    Top = 152
     Width = 89
     Height = 21
     TabOrder = 8
   end
   object RestNrEdit: TEdit
-    Left = 112
+    Left = 200
     Top = 176
     Width = 89
     Height = 21
@@ -166,7 +173,7 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
   end
   object Button1: TButton
     Left = 288
-    Top = 208
+    Top = 232
     Width = 75
     Height = 25
     Caption = 'Opslaan'
@@ -176,7 +183,7 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
   end
   object CancelBut: TButton
     Left = 208
-    Top = 208
+    Top = 232
     Width = 75
     Height = 25
     Cancel = True
@@ -191,5 +198,12 @@ object stwscPlanregelEditForm: TstwscPlanregelEditForm
     Height = 17
     Caption = 'H-criterium'
     TabOrder = 12
+  end
+  object CombineerNrEdit: TEdit
+    Left = 200
+    Top = 200
+    Width = 89
+    Height = 21
+    TabOrder = 13
   end
 end

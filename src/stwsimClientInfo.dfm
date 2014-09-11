@@ -14,6 +14,7 @@ object stwscInfoForm: TstwscInfoForm
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -51,12 +52,12 @@ object stwscInfoForm: TstwscInfoForm
       ParentFont = False
       Transparent = True
     end
-    object Label2: TLabel
+    object VerLabel: TLabel
       Left = 32
       Top = 56
-      Width = 115
+      Width = 18
       Height = 16
-      Caption = '© Daan Goedkoop'
+      Caption = 'x.y'
       Color = clBlack
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clYellow
@@ -70,7 +71,7 @@ object stwscInfoForm: TstwscInfoForm
     object Label3: TLabel
       Left = 168
       Top = 80
-      Width = 88
+      Width = 87
       Height = 16
       Caption = 'BETA-VERSIE'
       Color = clBlack
@@ -82,6 +83,7 @@ object stwscInfoForm: TstwscInfoForm
       ParentColor = False
       ParentFont = False
       Transparent = True
+      Visible = False
     end
     object Memo1: TMemo
       Left = 8
@@ -96,13 +98,13 @@ object stwscInfoForm: TstwscInfoForm
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       Lines.Strings = (
-        'StwSim'
-        'Copyright © 2007-2012, Daan Goedkoop. '
+        'StwSim © 2007-2014, Daan Goedkoop. '
         ''
         'StwSim mag gratis gebruikt worden voor  '
-        'privé-doeleinden. Het gebruik voor commerciële of '
-        'educatieve doeleinden, alsmede het wijzigen van '
-        'het programma is niet toegestaan.'
+        'privé-doeleinden. Voor gebruik voor educatieve '
+        'doeleinden is voorafgaande toestemming vereist. '
+        'Het gebruik voor commerciële doeleinden, alsmede '
+        'het wijzigen van het programma is niet toegestaan.'
         ''
         'De correctheid van StwSim kan niet worden '
         'gegarandeerd. Gebruik van StwSim in'

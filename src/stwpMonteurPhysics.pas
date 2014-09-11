@@ -11,11 +11,12 @@ type
 	private
 		Core: PpCore;
 		procedure RepareerKlaar(Monteur: PpMonteur);
-		procedure RepareerStart(Monteur: PpMonteur);
+		procedure RepareerStart(Monteur: PpMonteur; IsOnOpenGame: boolean);
 	public
 		constructor Create(Core: PpCore);
 		function StuurMonteur(Monteur: PpMonteur; Opdracht: TpMonteurOpdracht): boolean;
 		procedure CheckWacht(Monteur: PpMonteur);
+      procedure InitAfterOpenGame(Monteur: PpMonteur);
 	end;
 
 implementation
@@ -40,6 +41,12 @@ begin
 	Monteur.VolgendeStatusTijd := RandomWachtTijd(mintijd_onderweg, maxtijd_onderweg);
 	Monteur.Opdracht := Opdracht;
 	result := true;
+end;
+
+procedure TpMonteurPhysics.InitAfterOpenGame;
+begin
+	if Monteur.Status = msRepareren then
+      RepareerStart(Monteur, true);
 end;
 
 procedure TpMonteurPhysics.RepareerKlaar;
@@ -82,9 +89,11 @@ begin
 		mrwWissel: begin
 			Wissel := Core.ZoekWissel(Monteur.Opdracht.ID);
 			if not assigned(Wissel) then begin
-				Gesprek := Core.NieuwTelefoongesprek(Monteur, tgtBellen, true);
-				Gesprek^.tekstX := 'Het gevraagde wissel '+Monteur.Opdracht.ID+' kan ik niet vinden!';
-				Gesprek^.tekstXsoort := pmsVraagOK;
+         	if not IsOnOpenGame then begin
+					Gesprek := Core.NieuwTelefoongesprek(Monteur, tgtBellen, true);
+					Gesprek^.tekstX := 'Het gevraagde wissel '+Monteur.Opdracht.ID+' kan ik niet vinden!';
+					Gesprek^.tekstXsoort := pmsVraagOK;
+            end;
 				Monteur.Status := msWachten;
 			end else begin
 				if not PpMeetpunt(Wissel^.Meetpunt)^.kortsluitlansiswegensscenario then begin
@@ -92,7 +101,8 @@ begin
 					PpMeetpunt(Wissel^.Meetpunt)^.veranderd := true;
 				end;
 				Wissel^.Monteur := Monteur;
-				Monteur.VolgendeStatusTijd := RandomWachtTijd(mintijd_repareren, maxtijd_repareren);
+            if not IsOnOpenGame then
+					Monteur.VolgendeStatusTijd := RandomWachtTijd(mintijd_repareren, maxtijd_repareren);
 			end;
 		end;
 	end;
@@ -106,7 +116,7 @@ begin
 	case Monteur.Status of
 	msOnderweg: begin
 		Monteur.Status := msRepareren;
-		RepareerStart(Monteur);
+		RepareerStart(Monteur, false);
 	end;
 	msRepareren: begin
 		Monteur.Status := msWachten;

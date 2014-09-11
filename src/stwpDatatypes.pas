@@ -8,7 +8,8 @@ type
 	TpWisselDefect = (wdHeel, wdEenmalig, wdDefect);
 	TpMonteur = (mNiks, mOnderweg, mRepareren);
 	TpMsgSoort = (pmsStoptonend, pmsSTSpassage, pmsVraagOK,
-						pmsTreinOpdracht, pmsMonteurOpdracht, pmsInfo);
+						pmsTreinOpdracht, pmsMonteurOpdracht, pmsInfo,
+                  pmsKlaarmelding);
 
 implementation
 

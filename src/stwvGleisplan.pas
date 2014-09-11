@@ -20,6 +20,9 @@ type
 		wisselblinkonbekend: boolean;
 		hokjes:		PvHokjesArray;
 		grimg: TPicture;
+      selmode: integer;
+      selx1, sely1, selx2, sely2: integer;
+      destx1, desty1, destx2, desty2: integer;
 		function GetWisselBlinkOnbekend: boolean;
 		procedure SetWisselBlinkOnbekend(waarde: boolean);
 		function GetMaxX: integer;
@@ -38,7 +41,10 @@ type
 		procedure SetBlinkUit(uit: boolean);
 		function GetLATPZ: boolean;
 		procedure SetLATPZ(waarde: boolean);
+      procedure SetSelMode(nwmode: integer);
+      function GetSelMode: integer;
 		procedure CopyPlaatje(nx,ny,vx,vy: integer);
+      procedure PaintSelection;
 	protected
 		procedure Paint; override;
 	public
@@ -46,6 +52,8 @@ type
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 		procedure Empty(x,y: integer);
+      function GetHokjeDuplicate(x, y: integer): TvHokje;
+      procedure PutHokje(x, y: integer; hokje: TvHokje);
 		procedure PutText(x,y: integer; text: string; kleur: byte; spoornummer: string; seinwisselnr: boolean);
 		procedure PutSpoor(x,y: integer; grx,gry: integer; meetpunt: PvMeetpunt);
 		procedure PutTreinnummer(x,y: integer; meetpunt: PvMeetpunt; maxlen: integer);
@@ -63,15 +71,26 @@ type
 		procedure PaintWisselGroep(Groep: PvWisselGroep);
 		procedure PaintSein(Sein: PvSein);
 		procedure PaintErlaubnis(Erlaubnis: PvErlaubnis);
+		procedure PaintHokjeBrdr(x,y: integer);
 		procedure PaintHokje(x,y: integer);
 		procedure PaintBlink;
 		function GetHokje(x,y: integer): TvHokje;
+      function ValidMouseCoords(mx, my: integer): boolean;
+      function ValidCoord(x, y: integer): boolean;
 		procedure WatHier(mx,my: integer; var x,y: integer; var Hokje: TvHokje);
 		procedure SavePlan(var f: file);
 		procedure LoadPlan(var f: file);
 		procedure SaveInactieveEnKruisingHokjes(var f: file);
 		procedure LoadInactieveEnKruisingHokjes(var f: file);
+      procedure ClearInactieveEnKruisingHokjes;
+      procedure SetSelCoord(x, y: integer);
+      function SetDestCoordRel(x, y: integer): boolean;
+      function GetLastDestCoordRel(var x, y: integer): boolean;
+      function GetSelectionCoordinates(var x1, y1, x2, y2: integer): boolean;
+      function InSelRect(x, y: integer): boolean;
+      procedure SelMoveDest;
 	published
+   	property SelectionMode: integer read GetSelMode write SetSelMode default 0;
 		property KnipperGedoofd: boolean read GetBlinkUit write SetBlinkUit default false;
 		property OnbekendeWisselsKnipperen: boolean read GetWisselBlinkOnbekend write SetWisselBlinkOnbekend default true;
 		property MaxX: integer read GetMaxX write SetMaxX;
@@ -138,19 +157,24 @@ var
 begin
 	if nmaxx = imaxx then exit;
 
+   // Als we het scherm verkleinen, oude hokjes weghalen.
+   if nmaxx < imaxx then
+   	for x := nmaxx+1 to imaxx do
+      	for y := 0 to imaxy do
+            Empty(x, y);
 	// Nieuw geheugen claimen
 	GetMem(NewHokjes, sizeof(TvHokje)*(nmaxx+1)*(imaxy+1));
 	// Gegevens overkopiëren & nieuwe lege hokjes initialiseren
 	for y := 0 to imaxy do
 		if nmaxx > imaxx then begin
-			move(hokjes^[y*(imaxx+1)], NewHokjes^[y*(nmaxx+1)], imaxx*sizeof(TvHokje));
+			move(hokjes^[y*(imaxx+1)], NewHokjes^[y*(nmaxx+1)], (imaxx+1)*sizeof(TvHokje));
 			for x := imaxx+1 to nmaxx do begin
 				NewHokjes^[y*(nmaxx+1)+x].soort := 0;
 				NewHokjes^[y*(nmaxx+1)+x].grdata := nil;
 				NewHokjes^[y*(nmaxx+1)+x].dyndata := nil;
 			end;
 		end else
-			move(hokjes^[y*(imaxx+1)], NewHokjes^[y*(nmaxx+1)], nmaxx*sizeof(TvHokje));
+			move(hokjes^[y*(imaxx+1)], NewHokjes^[y*(nmaxx+1)], (nmaxx+1)*sizeof(TvHokje));
 	// Oude geheugen vrijgeven
 	FreeMem(hokjes, sizeof(TvHokje)*(imaxx+1)*(imaxy+1));
 	// Instellen
@@ -173,6 +197,11 @@ var
 begin
 	if nmaxy = imaxy then exit;
 
+   // Als we het scherm verkleinen, oude hokjes weghalen.
+   if nmaxy < imaxy then
+   	for y := nmaxy+1 to imaxy do
+      	for x := 0 to imaxx do
+            Empty(x, y);
 	// Nieuw geheugen claimen
 	GetMem(NewHokjes, sizeof(TvHokje)*(imaxx+1)*(nmaxy+1));
 	// Gegevens overkopiëren & nieuwe lege hokjes initialiseren
@@ -386,6 +415,72 @@ begin
 	end;
 end;
 
+procedure TvGleisplan.PaintHokjeBrdr;
+begin
+   if selmode >= 1 then begin
+   	// Normal selection
+      Canvas.Pen.Color := clGreen;
+      Canvas.Pen.Style := psSolid;
+   	if (x = selx1) and (y >= sely1) and (y <= sely2) then begin
+			Canvas.MoveTo(x*8, y*16);
+         Canvas.LineTo(x*8, y*16+16);
+      end;
+   	if (x = selx2) and (y >= sely1) and (y <= sely2) then begin
+			Canvas.MoveTo(x*8+7, y*16);
+         Canvas.LineTo(x*8+7, y*16+16);
+      end;
+   	if (y = sely1) and (x >= selx1) and (x <= selx2) then begin
+			Canvas.MoveTo(x*8, y*16);
+         Canvas.LineTo(x*8+8, y*16);
+      end;
+   	if (y = sely2) and (x >= selx1) and (x <= selx2) then begin
+			Canvas.MoveTo(x*8, y*16+15);
+         Canvas.LineTo(x*8+8, y*16+15);
+      end;
+   	// Destination frame
+      if desty1 > -1 then begin
+	      Canvas.Pen.Color := clBlue;
+	   	if (x = destx1) and (y >= desty1) and (y <= desty2) then begin
+				Canvas.MoveTo(x*8, y*16);
+	         Canvas.LineTo(x*8, y*16+16);
+	      end;
+	   	if (x = destx2) and (y >= desty1) and (y <= desty2) then begin
+				Canvas.MoveTo(x*8+7, y*16);
+	         Canvas.LineTo(x*8+7, y*16+16);
+	      end;
+	   	if (y = desty1) and (x >= destx1) and (x <= destx2) then begin
+				Canvas.MoveTo(x*8, y*16);
+	         Canvas.LineTo(x*8+8, y*16);
+	      end;
+	   	if (y = desty2) and (x >= destx1) and (x <= destx2) then begin
+				Canvas.MoveTo(x*8, y*16+15);
+	         Canvas.LineTo(x*8+8, y*16+15);
+	      end;
+      end;
+      Canvas.Pen.Style := psClear;
+   end;
+   if fLaatAlleTreinnrPosZien then begin
+      Canvas.Pen.Color := clWhite;
+      Canvas.Pen.Style := psDot;
+   	if (x = 0) then begin
+			Canvas.MoveTo(x*8, y*16);
+         Canvas.LineTo(x*8, y*16+16);
+      end;
+   	if (x = imaxx) then begin
+			Canvas.MoveTo(x*8+7, y*16);
+         Canvas.LineTo(x*8+7, y*16+16);
+      end;
+   	if (y = 0) then begin
+			Canvas.MoveTo(x*8, y*16);
+         Canvas.LineTo(x*8+8, y*16);
+      end;
+   	if (y = imaxy) then begin
+			Canvas.MoveTo(x*8, y*16+15);
+         Canvas.LineTo(x*8+8, y*16+15);
+      end;
+   end;
+end;
+
 procedure TvGleisplan.PaintHokje;
 const
 	DOSTransArr: array[0..15] of TColor =
@@ -405,6 +500,7 @@ var
 	WisselShowStand: boolean;
 	WisselBlink: boolean;
 begin
+	if not ValidCoord(x, y) then exit;
 	Hokje := hokjes^[y*(imaxx+1)+x];
 	// Kijk of we een treinnummer moeten tekenen
 	if assigned(Hokje.DynData) then begin
@@ -417,20 +513,27 @@ begin
 					Teken := Meetpunt^.Treinnummer[WelkeLetter]
 				else
 					Teken := 'X';
+	   		Canvas.Pen.Style := psClear;
 				Canvas.Font.Name := 'Fixedsys';
 				Canvas.Font.Size := 9;
 				Canvas.Font.Color := DOSTransArr[15];
 				Canvas.Brush.Style := bsSolid;
 				Canvas.Brush.Color := clSilver;
 				Canvas.Textout(x*8, y*16, Teken);
+            Canvas.Pen.Style := psSolid;
+            Canvas.Pen.Color := clBlack;
 				Canvas.Brush.Style := bsSolid;
 				Canvas.Brush.Color := clBlack;
 				Canvas.Rectangle(x*8, y*16+15, x*8+8, y*16+16);
+            PaintHokjeBrdr(x, y);
 				exit;
 			end;
 		end;
 	end;
+
 	if Hokje.soort = 0 then begin
+   	Canvas.Pen.Style := psSolid;
+      Canvas.Pen.Color := clBlack;
 		Canvas.Brush.Style := bsSolid;
 		Canvas.Brush.Color := clBlack;
 		Canvas.Rectangle(x*8, y*16, x*8+8, y*16+16);
@@ -579,12 +682,15 @@ begin
 		CopyPlaatje(x,y,grx,gry);
 	end else if Hokje.Soort = 2 then begin	// TEKST
 		if (not PvHokjeLetter(Hokje.grdata)^.SeinWisselNr) or isswnr then begin
+      	Canvas.Pen.Style := psClear;
 			Canvas.Font.Name := 'Fixedsys';
 			Canvas.Font.Size := 9;
 			Canvas.Font.Color := DOSTransArr[PvHokjeLetter(Hokje.grdata)^.Kleur];
 			Canvas.Brush.Style := bsSolid;
 			Canvas.Brush.Color := clBlack;
 			Canvas.Textout(x*8, y*16, PvHokjeLetter(Hokje.grdata)^.Letter);
+         Canvas.Pen.Style := psSolid;
+         Canvas.Pen.Color := clBlack;
 			Canvas.Brush.Style := bsSolid;
 			Canvas.Brush.Color := clBlack;
 			Canvas.Rectangle(x*8, y*16+15, x*8+8, y*16+16);
@@ -594,6 +700,8 @@ begin
 			CopyPlaatje(x,y,grx,gry);
 		end;
 	end;
+
+   PaintHokjeBrdr(x, y);
 end;
 
 procedure TvGleisplan.PaintBlink;
@@ -649,6 +757,11 @@ begin
 	hokjes := nil;
 	grimg := TPicture.Create;
 	grimg.Bitmap.Handle := LoadBitmap(hInstance, 'gr_bmp');
+   selmode := 0;
+   selx1 := -1;
+   sely1 := -1;
+   destx1 := -1;
+   desty1 := -1;
 end;
 
 procedure TvGleisplan.PutText;
@@ -1189,6 +1302,228 @@ begin
 		end;
       PaintHokje(x,y);
 	until wat = 'p';
+end;
+
+procedure TvGleisplan.ClearInactieveEnKruisingHokjes;
+var
+	x, y: integer;
+   Hokje: ^TvHokje;
+begin
+	for x := 0 to imaxx do
+   	for y := 0 to imaxy do begin
+			Hokje := @Hokjes^[y*(imaxx+1)+x];
+			if Hokje^.Soort = 1 then begin
+				PvHokjeSpoor(Hokje.grdata)^.InactiefWegensRijweg := false;
+				PvHokjeSpoor(Hokje^.grdata)^.RechtsonderKruisRijweg := 0
+			end;
+			if Hokje.Soort = 5 then
+				PvHokjeWissel(Hokje^.grdata)^.InactiefWegensRijweg := false;
+      end;
+end;
+
+procedure TvGleisplan.PaintSelection;
+var
+	x, y: integer;
+begin
+   // Opnieuw tekenen
+   if selx1 > -1 then begin
+   	for x := selx1 to selx2 do begin
+      	PaintHokje(x, sely1);
+         PaintHokje(x, sely2)
+      end;
+      for y := sely1+1 to sely2-1 do begin
+      	PaintHokje(selx1, y);
+         PaintHokje(selx2, y);
+      end;
+      if destx1 > -1 then begin
+      	for x := destx1 to destx2 do begin
+         	PaintHokje(x, desty1);
+            PaintHokje(x, desty2);
+         end;
+         for y := desty1+1 to desty2-1 do begin
+         	PaintHokje(destx1, y);
+            PaintHokje(destx2, y);
+         end;
+      end;
+   end;
+end;
+
+procedure TvGleisplan.SetSelMode;
+begin
+	selmode := nwmode;
+   PaintSelection;
+   if selmode = 0 then begin
+   	selx1 := -1;
+      sely1 := -1;
+      destx1 := -1;
+      desty1 := -1;
+   end;
+end;
+
+function TvGleisplan.GetSelMode;
+begin
+	result := selmode;
+end;
+
+procedure TvGleisplan.SetSelCoord;
+var
+	oldmode: integer;
+begin
+	// Huidige selectie wissen van scherm
+	oldmode := selmode;
+   selmode := 0;
+   PaintSelection;
+   selmode := oldmode;
+   // Coordinaten aanpassen
+   if selx1 = -1 then begin
+   	selx1 := x;
+      selx2 := x;
+      sely1 := y;
+      sely2 := y;
+   end else begin
+   	if x > selx1 then
+      	selx2 := x
+      else begin
+      	selx2 := selx1;
+      end;
+      if y > sely1 then
+      	sely2 := y
+      else
+      	sely2 := sely1;
+   end;
+   // En tekenen.
+   PaintSelection;
+end;
+
+function TvGleisplan.SetDestCoordRel;
+var
+	oldmode: integer;
+begin
+	if (not ValidCoord(selx1+x, sely1+y)) or (not ValidCoord(selx2+x, sely2+y)) then begin
+   	result := false;
+      exit;
+   end;
+   result := true;
+	// Huidige selectie wissen van scherm
+	oldmode := selmode;
+   selmode := 0;
+   PaintSelection;
+   selmode := oldmode;
+   // Nieuwe tekenen
+	destx1 := selx1+x;
+   desty1 := sely1+y;
+	destx2 := selx2+x;
+   desty2 := sely2+y;
+   PaintSelection;
+end;
+
+function TvGleisplan.GetLastDestCoordRel;
+begin
+	if destx1 = -1 then
+   	result := false
+   else begin
+   	result := true;
+      x := destx1 - selx1;
+      y := desty1 - sely1;
+   end;
+end;
+
+function TvGleisplan.GetSelectionCoordinates;
+begin
+	if selx1 > -1 then begin
+   	result := true;
+   	x1 := selx1;
+      x2 := selx2;
+      y1 := sely1;
+      y2 := sely2;
+   end else
+   	result := false;
+end;
+
+function TvGleisplan.InSelRect;
+begin
+	if selx1 = -1 then
+   	result := false
+   else
+   	result := (x >= selx1) and (x <= selx2) and (y >= sely1) and (y <= sely2);
+end;
+
+function TvGleisplan.ValidMouseCoords;
+begin
+	result := (mx >= 0) and (my >= 0) and (mx <= imaxx * 8 + 7) and (my <= imaxy * 16 + 15);
+end;
+
+function TvGleisplan.ValidCoord;
+begin
+	result := (x >= 0) and (y >= 0) and (x <= imaxx) and (y <= imaxy);
+end;
+
+procedure TvGleisplan.SelMoveDest;
+var
+	oldmode: integer;
+begin
+	// Huidige selectie wissen van scherm
+	oldmode := selmode;
+   selmode := 0;
+   PaintSelection;
+   selmode := oldmode;
+   // Selectie verplaatsen
+   selx1 := destx1;
+   selx2 := destx2;
+   sely1 := desty1;
+   sely2 := desty2;
+   desty1 := -1;
+   desty2 := -1;
+   PaintSelection;
+end;
+
+function TvGleisplan.GetHokjeDuplicate;
+var
+	grdata: pointer;
+   DynData: PvHokjeTreinNummer;
+begin
+	// Vraag het hokje op
+	result := Hokjes^[y*(imaxx+1)+x];
+	// Maak een kopie van de dynamische data
+   grdata := nil;
+	case result.soort of
+   1: begin
+	   	new(PvHokjeSpoor(grdata));
+      	PvHokjeSpoor(grdata)^ := PvHokjeSpoor(result.grdata)^;
+   	end;
+   2: begin
+	   	new(PvHokjeLetter(grdata));
+      	PvHokjeLetter(grdata)^ := PvHokjeLetter(result.grdata)^;
+   	end;
+   3: begin
+	   	new(PvHokjeSein(grdata));
+      	PvHokjeSein(grdata)^ := PvHokjeSein(result.grdata)^;
+   	end;
+   4: begin
+	   	new(PvHokjeLS(grdata));
+      	PvHokjeLS(grdata)^ := PvHokjeLS(result.grdata)^;
+   	end;
+   5: begin
+	   	new(PvHokjeWissel(grdata));
+      	PvHokjeWissel(grdata)^ := PvHokjeWissel(result.grdata)^;
+   	end;
+   6: begin
+	   	new(PvHokjeErlaubnis(grdata));
+      	PvHokjeErlaubnis(grdata)^ := PvHokjeErlaubnis(result.grdata)^;
+   	end;
+   end;
+   result.grdata := grdata;
+   if assigned(result.Dyndata) then begin
+		new(DynData);
+   	DynData^ := result.Dyndata^;
+	   result.DynData := DynData;
+   end;
+end;
+
+procedure TvGleisplan.PutHokje;
+begin
+	Empty(x, y);
+   Hokjes^[y*(imaxx+1)+x] := Hokje;
 end;
 
 procedure Register;

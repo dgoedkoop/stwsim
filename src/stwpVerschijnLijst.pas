@@ -17,6 +17,7 @@ type
 		baanvaksnelheid:  integer;
 		erlaubnis:			PpErlaubnis;
 		erlaubnisstand:	byte;
+      ScenarioVS:			PpVerschijnPunt;
 		Volgende:			PpVerschijnPunt;
 	end;
 

@@ -231,6 +231,7 @@ begin
 		if assigned(TelefoonMsgEvent) then begin
 			if soortstr = 'r' then TelefoonMsgEvent(Metwie, vmsTreinStoptonend, tekst);
 			if soortstr = 'sts' then TelefoonMsgEvent(Metwie, vmsTreinSTSpassage, tekst);
+			if soortstr = 'km' then TelefoonMsgEvent(Metwie, vmsKlaarmelding, tekst);
 			if soortstr = 'ok' then TelefoonMsgEvent(Metwie, vmsVraagOK, tekst);
 			if soortstr = 'tact' then TelefoonMsgEvent(Metwie, vmsTreinOpdracht, tekst);
 			if soortstr = 'mact' then TelefoonMsgEvent(Metwie, vmsMonteurOpdracht, tekst);

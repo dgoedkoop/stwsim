@@ -707,10 +707,88 @@
   betreffende trein aanwezig was, waardoor ARI nooit werd uitgeschakeld bij
   te veel vertraging.
 
-31 juli 2012:
+(0.2.0.38) 31 juli 2012:
 - Fix: De nieuwe ARI stuurde vaak treinen de verkeerde kant op als op hetzelfde
   spoor twee treinen kort na elkaar kwamen.
 - Fix: De functie om dienstregelingen te kopieren vergat de tijden op te hogen
   als een trein werd negeerd als deze al bestond.
 - Inladen van de dienstregeling niet afbreken als bepaald materieel niet wordt
   gevonden, maar slechts een waarschuwing weergeven.
+
+2 augustus 2012:
+- Mogelijkheid voor korte zich herhalende geluiden als aankondiging ingebouwd,
+  maar van die mogelijkheid wordt nog geen gebruik gemaakt.
+
+(1.0) 3 augustus 2012:
+- Fix: Als tijdens het bewerken van een procesplanregel een andere regel wordt
+  uitgevoerd en de lijst dus opschuift, dan werden de gegevens in de verkeerde
+  procesplanregel opgeslagen (die dus overschreven werd).
+- Bij inschakelen van ARI en bij handmatig uitvoeren van een regel meteen ook
+  ARI afhandelen in plaats van te wachten tot de volgende event of
+  minutensprong.
+
+(1.0.1/0.2.1) 8 november 2012:
+- Schermen kunnen nu elke willekeurige grootte hebben.
+
+(1.0.2/0.2.2) 30 juli 2014:
+- Functie in de editor ingebouwd waarmee je een rechthoek kan selecteren en kan
+  verplaatsen
+- Fix: In de editor worden bij het overtekenen/wissen van een hokje nu echt alle
+  rijweg-gegevens (kruising-hokjes, inactieve hokjes) gewist, ipv. alleen die
+  van een eventueel geselecteerde rijweg
+- In de editor wordt nu een kader weergegeven dat de grootte van het scherm
+  markeert.
+- Als je een scherm verkleint in de editor, dan worden de rijweg-gegevens
+  (kruising-hokjes, inactieve hokjes) nu ook netjes verwijderd.
+- Je kan met Page-Up en Page-Down nu van scherm wisselen
+- Fix: Bij het resizen moet de inhoud van de schermen op de goeie plek terecht
+  komen, wat inhoudt left:=-scrollpos en top:=-scrollpos ipv. beide := 0 zoals
+  eerst, want left en top zijn ten opzichte van het nulcoördinaat van de huidige
+  viewport van het scroll-control.
+- Fix: Bij afwijkende schermformaten moet niet alleen het formaat uit het
+  bestand worden gelezen maar ook daadwerkelijk worden ingesteld natuurlijk. De
+  editor deed dat wel, de eigenlijke simulator niet.
+
+31 juli 2014:
+- Bij het scrollen met het muiswiel of bij het gebruik van PgUp en PgDn wordt
+  nu eerst binnen de huidige pagina horizontaal gebladerd, als het een groot
+  scherm met schuifbalken is, en pas als je voorbij het einde probeert te gaan,
+  wordt naar de volgende of vorige tab geschakeld.
+
+1 augustus 2014:
+- Procesplan heeft nu een extra veld waar een treinnummer voor het combineren
+  kan worden opgegeven. Dat hoeft dus niet met ROZ meer gedaan te worden.
+  Hiermee wordt voorkomen dat bijv. een locomotief naar een spoor wordt gestuurd
+  waar de betreffende wagons nog helemaal niet staan.
+- Je kan nu de kans van sommige defecten instellen via een scenario
+
+2 augustus 2014:
+- Knop voor scenario op het startscherm geplaatst
+- Fix: Bij afbreken van inlezen wegens ongeldig bestandsformaat netjes het
+  bestand ook weer sluiten, op diverse plekken.
+
+4 augustus 2014:
+- Je kan nu ook een andere simulatie inladen of een savegame opnieuw laden
+  zonder het programma af te sluiten en opnieuw te starten
+- Bewust geen aankondigingen meer op het moment van laden van een savegame. Ik
+  geloof dat dit per toeval al zo was.
+- Scenario maakt nu niet meer de fysieke infrastructuur kapot. In plaats daarvan
+  kijkt nu de treinphysics of een trein crasht omdat er werkzaamheden aan
+  een meetpunt zijn.
+- Fix: Bij meetpunten die niet onderdeel van een rijweg zijn, geen inactieve
+  hokjes tekenen (en een subroute zoeken is dan dus ook niet nodig)
+- Fix: Wisselstanden in pCore.Startup ook gelijk verzenden, zodat de stand
+  bekend is op het moment dat een scenario wordt uitgevoerd, waardoor het
+  commando Individuele Bediening voor wissels ook echt gebruikt kan worden.
+- Een trein die zich klaarmeldt (bijv. na een defect) vertrekt nu niet voordat
+  de klaarmelding is bevestigd.
+- Nieuw venster voor het kiezen van scenario's. Bestandsformaat ook gewijzigd
+  daarvoor. Scenariobestanden hebben nu een versienummer zodat de simulatie kan
+  weten of het een scenario überhaupt kan lezen. Er kan een beschrijving worden
+  opgegeven, en er kan worden aangegeven dat een scenario voor alle simulaties
+  geschikt is.
+
+1 september 2014:
+- Fix: Bij afbreken van het spel moet de telefoon-knop uitgeschakeld worden.
+- Fix: Bij het laden van een savegame moet de monteur z'n kortsluitlans ook weer
+  aanbrengen, indien van toepassing.

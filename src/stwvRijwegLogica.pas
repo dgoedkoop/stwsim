@@ -3,10 +3,18 @@ unit stwvRijwegLogica;
 interface
 
 {$UNDEF LogOverweg}
+{$UNDEF AankSoundLoop}
 
-uses Windows, Forms, clientSendMsg, stwvGleisplan, stwvRijwegen,
+uses Windows, Forms, MMSystem, clientSendMsg, stwvGleisplan, stwvRijwegen,
 	stwvRijveiligheid, stwvCore, stwvLog, stwvHokjes, stwvMeetpunt, stwvSporen,
 	stwpTijd, stwvSternummer, stwvSeinen, stwvMisc, stwvTreinInfo;
+
+const
+	AankSoundRes = 'snd_aank';
+	{$IFDEF AankSoundLoop}
+	AankSoundLoop = true;
+	AankSoundTijd = 2.5 * 1000;
+	{$ENDIF}
 
 type
 	PTablist = ^TTablist;
@@ -23,8 +31,12 @@ type
 
 	TRijwegLogica = class
 	private
-		AankSound:	THandle;
-		ARDLock: boolean;
+		AankSound:		THandle;
+		{$IFDEF AankSoundLoop}
+		AankSoundPlays:boolean;
+		AankSoundStart:cardinal;
+		{$ENDIF}
+		ARDLock:			boolean;
 		procedure HerroepRijwegNu(ActieveRijweg: PvActieveRijwegLijst);
 		function MoetApproachLock(ActieveRijweg: PvActieveRijwegLijst): boolean;
 		procedure StelRijwegInNu(Rijweg: PvRijweg; ROZ, Auto: boolean);
@@ -69,6 +81,9 @@ type
 		procedure VoerStringUit(opdracht: string);
 		// Periodieke check
 		procedure DoeActieveRijwegen;
+		{$IFDEF AankSoundLoop}
+		procedure DoeCheckAankSound;
+		{$ENDIF}
 		// Save-load
 		procedure SaveActieveRijwegen(var f: file);
 		procedure LoadActieveRijwegen(var f: file);
@@ -518,7 +533,10 @@ end;
 
 constructor TRijwegLogica.Create;
 begin
-	AankSound := LoadSound('snd_aank');
+	AankSound := LoadSound(AankSoundRes);
+	{$IFDEF AankSoundLoop}
+	AankSoundPlays := false;
+	{$ENDIF}
 	StartupBezig := true;
 	ARDLock := false;
 end;
@@ -696,7 +714,13 @@ begin
 
 	Log.Log('Aankondiging trein '+Meetpunt^.treinnummer+' op '+
 		KlikpuntTekst(Meetpunt^.Aank_Spoor, false)+'.');
-	PlaySound(AankSound);
+	{$IFDEF AankSoundLoop}
+	PlaySound(AankSound, AankSoundLoop);
+	AankSoundStart := TimeGetTime;
+	AankSoundPlays := true;
+	{$ELSE}
+	PlaySound(AankSound, false);
+	{$ENDIF}
 end;
 
 function TRijwegLogica.OverwegMoetDicht;
@@ -843,6 +867,8 @@ var
 	InactiefHokje:	PvInactiefHokje;
 	Subroute:		PvSubroute;
 begin
+	if not assigned(Meetpunt^.RijwegOnderdeel) then
+   	exit;
 	Subroute := ZoekSubroute(Meetpunt, strikt);
 	if assigned(Subroute) then begin
 		Subroute^.Ingebruik := true;
@@ -1226,6 +1252,16 @@ begin
 		WisselStand := WisselStand^.Volgende;
 	end;
 end;
+
+{$IFDEF AankSoundLoop}
+procedure TRijwegLogica.DoeCheckAankSound;
+begin
+	if AankSoundPlays and (TimeGetTime > AankSoundStart + AankSoundTijd) then begin
+		AankSoundPlays := false;
+		PlaySound(0, false);
+	end;
+end;
+{$ENDIF}
 
 // Deze functie doet alles met de actieve rijwegen.
 // - De meetpunten worden gemarkeerd, indien mogelijk
@@ -1847,3 +1883,4 @@ begin
 end;
 
 end.
+

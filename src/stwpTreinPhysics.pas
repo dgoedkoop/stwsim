@@ -3,11 +3,12 @@ unit stwpTreinPhysics;
 interface
 
 uses stwpCore, stwpTreinen, stwpRails, stwpSeinen, stwpRijplan, stwpTijd,
-	stwpDatatypes, stwpTelefoongesprek, stwpCommPhysics;
+	stwpDatatypes, stwpTelefoongesprek, stwpCommPhysics, stwpMeetpunt, stwvMisc;
 
 type
 	PpTreinTelefoonSoort = ^TpTreinTelefoonSoort;
-	TpTreinTelefoonSoort = (ttsInfo, ttsStilstaan, ttsStilstaanStation, ttsKannietweg);
+	TpTreinTelefoonSoort = (ttsInfo, ttsStilstaan, ttsStilstaanStation, ttsKannietweg,
+   	ttsVertrekBevestiging);
 
 	PpTreinPhysics = ^TpTreinPhysics;
 	TpTreinPhysics = class
@@ -45,7 +46,7 @@ end;
 
 function TpTreinPhysics.HalloTekst;
 begin
-	result := 'Hallo, met de machinist van trein ' +Trein^.Treinnummer+'. ';
+	result := 'Hallo, met de machinist van trein ' +StringToNato(Trein^.Treinnummer)+'. ';
 end;
 
 procedure TpTreinPhysics.DestroyUserdata;
@@ -465,6 +466,12 @@ begin
 			Trein^.Achteruit := not Trein^.Achteruit;
 			exit;
 		end;
+      // De trein crasht, want hij is op werkzaamheden gereden.
+      if assigned(Trein^.pos_rail^.meetpunt) then
+      	if PpMeetpunt(Trein^.pos_rail^.meetpunt)^.kortsluitlans then begin
+			Trein^.Modus := tmGecrasht;
+			exit;
+      end;
 
 		HerkenFlankbotsingen(Trein);
 
@@ -669,7 +676,6 @@ type
 	TProbleem = (tpOK, tpSein, tpTrein);
 var
 	vt, mt:		integer;
-	wasdefect:	boolean;
 	gesprek:		PpTelefoongesprek;
 	Vertreksein:boolean;
 	Waaromstilstaan:	TWaaromStilstaan;
@@ -697,16 +703,24 @@ begin
 		if assigned(Gesprek) then
 			// Zo ja, dan is het probleem opgelost
 			CommPhysics.ProbleemOpgelost(Gesprek)
-		else begin
-			// Zo nee, moeten we informeren dat we verder gaan.
+		else
+      	Trein^.klaarmeldingvereist := true;
+   end;
+	if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) and
+   	(Trein^.klaarmeldingvereist) then begin
+   	Gesprek := ZoekTelefoongesprek(Trein, ttsVertrekBevestiging);
+      if not assigned(Gesprek) then begin
+			// We moeten om bevestiging vragen voor we vertrekken.
 			gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
-			gesprek^.tekstX := treindefectopgelostbericht;
-			gesprek^.tekstXsoort := pmsVraagOK;
+			gesprek^.tekstX := treinklaarmeldingbericht;
+			gesprek^.tekstXsoort := pmsKlaarmelding;
+			new(PpTreinTelefoonSoort(gesprek^.userdata));
+			PpTreinTelefoonSoort(gesprek^.userdata)^ := ttsVertrekBevestiging;
+			Gesprek^.OnDestroyUserdata := DestroyUserdata;
 		end;
-		wasdefect := true;
-	end else
-		wasdefect := false;
-	if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) then begin
+   end;
+	if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) and
+   	(not Trein^.klaarmeldingvereist) then begin
 		tmpRail := Trein^.pos_rail;
 		tmpAchteruit := Trein^.achteruit;
 		tmpPos := Trein^.pos_dist;
@@ -741,7 +755,7 @@ begin
 			Gesprek := ZoekTelefoongesprek(Trein, ttsStilstaanStation);
 			if assigned(Gesprek) then
 				CommPhysics.ProbleemOpgelost(Gesprek);
-			if (not wasdefect) and Core.GaatDefect(treindefectkans) then begin
+			if Core.GaatDefect(Core.treindefectkans) then begin
 				Trein^.defect := true;
 				Trein^.defecttot := GetTijd + MkTijd(0,treindefectmintijd,0) +
 					round(random * (treindefectmaxtijd-treindefectmintijd)*MkTijd(0,1,0));
@@ -754,11 +768,14 @@ begin
 				if assigned(Trein^.StationModusPlanpunt) and
 					(Trein^.StationModusPlanpunt^.Perron <> '') and
 					(Trein^.StationModusPlanpunt^.Perron <> '0') then
-					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart+treindefectberichten[round(random*treindefectberichtaantal-1)+1]
+					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart +
+               	treindefectberichten[round(random*treindefectberichtaantal-1)+1]
+               	+ ' ' + tekstberichtover
 				else
 					// Als we niet bij een perron staan is 'hij doet het niet'
 					// het enige zinvolle excuus.
-					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart+treindefectberichten[1];
+					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart +
+               	treindefectberichten[1] + ' ' + tekstberichtover;
 			end else begin
 				// We kunnen echt echt vertrekken
 				Trein^.modus := tmRijden;
@@ -781,11 +798,11 @@ begin
 				Gesprek^.OnDestroyUserdata := DestroyUserdata;
 				case Waaromstilstaan of
 					stSein: begin
-						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar sein '+GevSein^.naam+' toont nog steeds stop.';
+						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar sein '+StringToNato(GevSein^.naam)+' toont nog steeds stop. ' + tekstberichtover;
 						Gesprek^.tekstXsoort := pmsStoptonend;
 					end;
 					stTrein: begin
-						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar er staat nog een trein voor ons.';
+						Gesprek^.tekstX := HalloTekst(Trein) + 'We kunnen vertrekken maar er staat nog een trein voor ons. ' + tekstberichtover;
 						Gesprek^.tekstXsoort := pmsVraagOK;
 					end;
 				end;
@@ -1025,31 +1042,31 @@ begin
 				Gesprek^.OphangenErg := Waaromstilstaan in [stSein, stDoorrood];
 				case Waaromstilstaan of
 				stSein: begin
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta al even voor rood sein '+GevSein^.naam+'. Vergeet u mij niet?';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta al even voor stoptonend sein '+StringToNato(GevSein^.naam)+'. Vergeet u mij niet? ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsStoptonend;
 				end;
 				stTrein: begin
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Er staat al even een trein voor mij. Vergeet u die niet?';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Er staat al even een trein voor mij. Vergeet u die niet? ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stStroom: begin
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta hier met een elektrische trein zonder stroom!';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta hier met een elektrische trein zonder stroom! ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stDoorrood: begin
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik ben door rood sein '+Trein^.doorroodgereden_sein^.naam+' gereden!';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik ben door rood sein '+StringToNato(Trein^.doorroodgereden_sein^.naam)+' gereden! ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsSTSpassage;
 				end;
 				stWissel: begin
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta hier bij wissel '+GevWissel^.w_naam+' dat niet in een veilige stand ligt.';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik sta hier bij wissel '+StringToNato(GevWissel^.w_naam)+' dat niet in een veilige stand ligt. ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				stStuurstand: begin
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand.';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik kan niet rijden want aan de voorkant van de trein is geen stuurstand. ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end
 				else
-					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik bel u op omdat ik stil sta maar weet niet waarom!?';
+					Gesprek^.tekstX := HalloTekst(Trein) + 'Ik bel u op omdat ik stil sta maar weet niet waarom!? ' + tekstberichtover;
 					Gesprek^.tekstXsoort := pmsVraagOK;
 				end;
 				new(PpTreinTelefoonSoort(Gesprek^.userdata));

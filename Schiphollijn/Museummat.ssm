@@ -1,0 +1,9 @@
+#Naam	Lengte	Gewicht	Vermog.	Trekkr.	Remkr.	Maxsn.	cw	elektr.	bedien.	stuurst.
+NS1100		83	2030	155	100		0.7	j	j	j
+NS1200		108	2220	195	150		0.7	j	j	j
+NS1300		111	3159	241	150		0.7	j	j	j
+Mat24A		61	528		100		0.7	j	j	n
+Mat24B		40	0	0	50		0.7	n	n	n
+Mat24C		40	0	0	50		0.7	n	n	j
+Mat54IV			1360				0.7	j	j	j
+Mat54II			680				0.7	j	j	j

@@ -38,6 +38,7 @@ type
 		RestNummer:			string;	// Een achtergebleven, afgekoppeld treindeel
 											// krijgt dit nummer bij vertrek van het andere
 											// treindeel.
+      CombineerNummer:	string;
 		// Voor de volgorde
 		VolgordeOK:			TVolgordeOK;
 		RestNummerGedaan:	boolean;
@@ -94,14 +95,15 @@ type
 		procedure UpdateVolgordes;
 		procedure MarkeerOudeKlaar;
 		procedure SavePlanpunt(var f: file; ProcesPlanPunt: PvProcesPlanPunt; SaveVertraging: boolean);
-		procedure LoadPlanpunt(var f: file; ProcesPlanPunt: PvProcesPlanPunt; LoadVertraging: boolean);
+		procedure LoadPlanpunt(var f: file; SgVersion: integer; ProcesPlanPunt: PvProcesPlanPunt; LoadVertraging: boolean);
 		// Extern
 		procedure LaadProcesplan(filename: string);
 		procedure Sorteer;
-		procedure LoadBinair(var f: file);
+		procedure LoadBinair(var f: file; SgVersion: integer);
 		procedure SaveBinair(var f: file);
 		// Gebeurtenissen
 		function IsTreinAanwezig(ProcesPlanPunt: PvProcesPlanPunt; strikt: boolean): boolean;
+      function ControleerCombineerTrein(ProcesPlanPunt: PvProcesPlanPunt): boolean;
 		function ProbeerPlanpuntUitTeVoeren(ProcesPlanPunt: PvProcesPlanPunt; CheckVolgorde: boolean): TInstelResultaat;
 		function ControleerTijdvenster(ProcesPlanPunt: PvProcesPlanPunt): boolean;
 		function NeemInBehandeling(ProcesPlanPunt: PvProcesPlanPunt): boolean;
@@ -251,7 +253,8 @@ var
 	RijwegL2:	PvRijwegLijst;
 	Doe, OK:		boolean;
 begin
-	// Gegevens nieuwe punt instellen
+	// Gegevens nieuwe procesplanpunt instellen (dat is het deel dat al is
+   // afgehandeld).
 	new(NieuwPunt);
 	NieuwPunt^.Treinnr := ProcesPlanPunt^.Treinnr;
 	NieuwPunt^.ActiviteitSoort := ProcesPlanPunt^.ActiviteitSoort;
@@ -265,6 +268,7 @@ begin
 	NieuwPunt^.NieuwNummerGedaan := false;
 	NieuwPunt^.RestNummer := '';
 	NieuwPunt^.RestNummerGedaan := false;
+   NieuwPunt^.CombineerNummer := '';
 	NieuwPunt^.AnalyseGedaan := false;
 	NieuwPunt^.InBehandeling := false;
 	NieuwPunt^.Bewerkt := false;
@@ -551,10 +555,24 @@ begin
 		result := ProcesPlanPunt^.Getriggerd in [trGetriggerd, trAanwezig, trAndereInDeWeg];
 end;
 
+function TProcesPlan.ControleerCombineerTrein;
+begin
+   if ProcesPlanPunt^.CombineerNummer <> '' then
+   	if assigned(ProcesPlanPunt^.TNVNaar) then
+      	result := ProcesPlanPunt^.TNVNaar.treinnummer =
+	         ProcesPlanPunt^.CombineerNummer
+      else
+      	// Laten we alles fail-safe doen.
+      	result := false
+   else
+   	result := true;
+end;
+
 function TProcesPlan.ProbeerPlanpuntUitTeVoeren;
 var
 	PrlRijweg: PvPrlRijweg;
 	PPP: PvProcesPlanPunt;
+   ROZ: Boolean;
 begin
 	if ProcesPlanPunt^.InBehandeling then
 		result := irInBehandeling
@@ -564,18 +582,24 @@ begin
 	// Strikte check of de trein aanwezig is
 	if not IsTreinAanwezig(ProcesPlanPunt, true) then exit;
 
+   // Als we gaan combineren, maar de trein waarmee gecombineerd moet worden is
+   // er nog niet, dan moeten we nog even niks doen.
+   if not ControleerCombineerTrein(ProcesPlanPunt) then
+      exit;
+
 	// Controleer ook de volgorde.
 	if CheckVolgorde and (ProcesPlanPunt^.VolgordeOK <> voOK) then exit;
 
+   // Hulpvariabele voor rijden op zicht goed instellen.
+   ROZ := ProcesPlanPunt^.ROZ or (ProcesPlanPunt^.CombineerNummer <> '');
+
 	// Okee, alle checks zijn positief verlopen. We proberen de rijweg in te stellen.
-	// Er zijn twee strategieen. Ofwel we mogen een deelrijweg instellen, ofwel
-	// we moeten alles in een keer doen. Dat zijn heel verschillende dingen.
 	PrlRijweg := ZoekPrlRijweg(Core, ProcesPlanPunt^.van, ProcesPlanPunt^.naar, ProcesPlanPunt^.Dwang);
 	if not assigned(PrlRijweg) then
 		exit;
 	if Lock then exit;
 	Lock := true;
-	if RijwegLogica.StelPrlRijwegIn(PrlRijweg, ProcesPlanPunt^.ROZ, ProcesPlanPunt^.Dwang) then begin
+	if RijwegLogica.StelPrlRijwegIn(PrlRijweg, ROZ, ProcesPlanPunt^.Dwang) then begin
 		if not ProcesPlanPunt^.VertragingTNVPosHandm then begin
 			if ProcesPlanPunt^.ActiviteitSoort in AsVertragingBijEersteSein then
 				ProcesPlanPunt^.VertragingTNVPos := RijwegLogica.Prl_EersteTNVStap;
@@ -644,7 +668,7 @@ begin
 		(GetTijd > ProcesPlanPunt^.Insteltijd+MkTijd(0,DoorkomstRijwegMaxWacht, 0));
 	VertrekVerlopen := (ProcesPlanPunt^.ActiviteitSoort = asVertrek) and
 		(GetTijd > ProcesPlanPunt^.Insteltijd+MkTijd(0,VertrekRijwegMaxWacht, 59));
-	Aanwezig := IsTreinAanwezig(ProcesPlanPunt, false);
+	Aanwezig := IsTreinAanwezig(ProcesPlanPunt, false) and ControleerCombineerTrein(ProcesPlanPunt);
 	if Aanwezig and TeVroeg then begin
 		ProcesPlanPunt^.ARI_toegestaan := false;
 		Log.Log(Locatienaam + ' ' + ProcesPlanPunt^.Treinnr+' '+ActiviteitSoortStr(ProcesPlanPunt^.ActiviteitSoort)+' uitgezet voor ARI; aankondiging te vroeg.');
@@ -667,6 +691,7 @@ begin
 		else begin
 			TijdvensterOK := ControleerTijdvenster(ProcesPlanPunt);
 			if IsTreinAanwezig(ProcesPlanPunt, false) and
+            ControleerCombineerTrein(ProcesPlanPunt) and
 				TijdvensterOK and
 				(ProcesPlanPunt^.VolgordeOK <> voZelfdeSpoor) and
 				((GetTijd >= ProcesPlanPunt^.Insteltijd) or
@@ -869,6 +894,7 @@ begin
 							PPP^.NieuwNummerGedaan := false;
 							PPP^.RestNummer := '';
 							PPP^.RestNummerGedaan := false;
+                     PPP^.CombineerNummer := '';
 							PPP^.GemetenVertraging := 0;
 							PPP^.GemetenVertragingSoort := vsSchatting;
 							PPP^.GemetenVertragingPlaats := '';
@@ -922,7 +948,8 @@ begin
 					5:	PPP^.naar := waarde;
 					6: if waarde <> '-' then PPP^.NieuwNummer := waarde;
 					7: if waarde <> '-' then PPP^.RestNummer := waarde;
-					8: for i := 1 to length(waarde) do begin
+					8: if waarde <> '-' then PPP^.CombineerNummer := waarde;
+					9: for i := 1 to length(waarde) do begin
 							if waarde[i] = 'Z' then
 								PPP^.ROZ := true;
 							if waarde[i] = 'H' then
@@ -991,6 +1018,10 @@ begin
 	boolread(f, ProcesPlanPunt^.NieuwNummerGedaan);
 	stringread(f, ProcesPlanPunt^.RestNummer);
 	boolread(f, ProcesPlanPunt^.RestNummerGedaan);
+   if SgVersion >= 13 then
+	   stringread(f, ProcesPlanPunt^.CombineerNummer)
+   else
+   	ProcesPlanPunt^.CombineerNummer := '';
 	boolread(f, ProcesPlanPunt^.H);
 	byteread(f, x); ProcesPlanPunt^.Getriggerd := ByteNaarGetriggerd(x);
 	if LoadVertraging then begin
@@ -1035,7 +1066,7 @@ begin
 			new(PPP);
 			ProcesPlanPuntenKlaar := PPP
 		end;
-		LoadPlanpunt(f, PPP, true);
+		LoadPlanpunt(f, SgVersion, PPP, true);
 	end;
 	KlaarAantal := count;
 	PPP := nil;
@@ -1048,7 +1079,7 @@ begin
 			new(PPP);
 			ProcesPlanPuntenPending := PPP
 		end;
-		LoadPlanpunt(f, PPP, false);
+		LoadPlanpunt(f, SgVersion, PPP, false);
 	end;
 	UpdateVolgordes;
 	Gewijzigd := true;
@@ -1100,6 +1131,7 @@ begin
 	boolwrite(f, ProcesPlanPunt^.NieuwNummerGedaan);
 	stringwrite(f, ProcesPlanPunt^.RestNummer);
 	boolwrite(f, ProcesPlanPunt^.RestNummerGedaan);
+   stringwrite(f, ProcesPlanPunt^.CombineerNummer);
 	boolwrite(f, ProcesPlanPunt^.H);
 	bytewrite(f, GetriggerdNaarByte(ProcesPlanPunt^.Getriggerd));
 	if SaveVertraging then begin

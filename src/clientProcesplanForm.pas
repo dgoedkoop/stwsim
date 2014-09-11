@@ -54,7 +54,8 @@ type
 		function CreateFrame(Filename: string): PFrameList;
 		procedure RecalcSizes;
 		procedure SaveStatus(var f: file);
-		procedure LoadStatus(var f: file);
+		procedure LoadStatus(var f: file; SgVersion: integer);
+      procedure ProcesplannenReset;
 	end;
 
 var
@@ -287,14 +288,14 @@ begin
 	for i := 1 to count do begin
 		stringread(f, Filename);
 		PPFrame := CreateFrame(Filename);
-		PPFrame^.PPFrame.ProcesPlan.LoadBinair(f);
+		PPFrame^.PPFrame.ProcesPlan.LoadBinair(f, SgVersion);
 		AddFrame(PPFrame, lrLinks);
 	end;
 	intread(f, count);
 	for i := 1 to count do begin
 		stringread(f, Filename);
 		PPFrame := CreateFrame(Filename);
-		PPFrame^.PPFrame.ProcesPlan.LoadBinair(f);
+		PPFrame^.PPFrame.ProcesPlan.LoadBinair(f, SgVersion);
 		AddFrame(PPFrame, lrRechts);
 	end;
 end;
@@ -356,6 +357,11 @@ begin
 end;
 
 procedure TstwscProcesplanForm.FormDestroy(Sender: TObject);
+begin
+   ProcesplannenReset;
+end;
+
+procedure TstwscProcesplanForm.ProcesplannenReset;
 var
 	Frame: PFrameList;
 	tmp: pointer;
@@ -376,6 +382,11 @@ begin
 		Dispose(Frame);
 		Frame := tmp;
 	end;
+	PPFramesLinks := nil;
+	PPFramesRechts := nil;
+	FramesLinks := 0;
+	FramesRechts := 0;
+	VorigeTijd := -1;
 end;
 
 procedure TstwscProcesplanForm.FormClose(Sender: TObject;

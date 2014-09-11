@@ -14,6 +14,7 @@ object stwsceInfoForm: TstwsceInfoForm
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -52,12 +53,12 @@ object stwsceInfoForm: TstwsceInfoForm
       ParentFont = False
       Transparent = True
     end
-    object Label2: TLabel
+    object VerLabel: TLabel
       Left = 32
       Top = 56
-      Width = 115
+      Width = 18
       Height = 16
-      Caption = '© Daan Goedkoop'
+      Caption = 'x.x'
       Color = clBlack
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clYellow
@@ -71,7 +72,7 @@ object stwsceInfoForm: TstwsceInfoForm
     object Label3: TLabel
       Left = 168
       Top = 80
-      Width = 88
+      Width = 87
       Height = 16
       Caption = 'BETA-VERSIE'
       Color = clBlack
@@ -97,26 +98,21 @@ object stwsceInfoForm: TstwsceInfoForm
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       Lines.Strings = (
-        'StwSim Editor'
-        'Copyright © 2007-2011, Daan Goedkoop. '
-        'Alle rechten voorbehouden.'
+        'StwSim © 2007-2014, Daan Goedkoop. '
         ''
-        'StwSim Editor mag gratis gebruikt worden voor '
-        'privé-doeleinden. Het gebruik voor commerciële of '
-        'educatieve doeleinden, alsmede het wijzigen van '
-        'het programma is niet toegestaan.'
+        'StwSim mag gratis gebruikt worden voor  '
+        'privé-doeleinden. Voor gebruik voor educatieve '
+        'doeleinden is voorafgaande toestemming vereist. '
+        'Het gebruik voor commerciële doeleinden, alsmede '
+        'het wijzigen van het programma is niet toegestaan.'
         ''
-        'De correctheid van StwSim Editor kan niet worden  '
-        'gegarandeerd. Gebruik van StwSim Editor voor '
-        'veiligheidskritische toepassingen is daarom niet '
+        'De correctheid van StwSim kan niet worden '
+        'gegarandeerd. Gebruik van StwSim in'
+        'veiligheidsrelevante situaties is daarom niet'
         'toegestaan.'
         ''
-        'StwSim wordt geleverd zonder enige garantie, in '
-        'welke vorm dan ook. Het gebruik ervan geschiedt '
-        'op eigen risico. De auteur accepteert geen enkele '
-        'aansprakelijkheid voor welke schade dan ook die '
-        'direct of indirect door StwSim zou kunnen zijn '
-        'veroorzaakt.')
+        'Voor het overige is garantie eveneens uitgesloten. '
+        'Het gebruik van StwSim geschiedt op eigen risico.')
       ParentFont = False
       ReadOnly = True
       ScrollBars = ssVertical

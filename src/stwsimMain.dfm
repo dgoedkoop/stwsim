@@ -1,8 +1,8 @@
 object stwsimMainForm: TstwsimMainForm
   Left = 216
-  Top = 167
+  Top = 127
   Width = 729
-  Height = 547
+  Height = 536
   Caption = 'StwSim'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,9 +14,11 @@ object stwsimMainForm: TstwsimMainForm
   OldCreateOrder = False
   Position = poDefault
   WindowState = wsMaximized
+  OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnDeactivate = FormDeactivate
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize
   OnShow = FormShow
@@ -25,13 +27,13 @@ object stwsimMainForm: TstwsimMainForm
   object BedienPanel: TPanel
     Left = 0
     Top = 0
-    Width = 721
+    Width = 713
     Height = 81
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object Splitter1: TSplitter
-      Left = 210
+      Left = 202
       Top = 0
       Width = 3
       Height = 77
@@ -41,7 +43,7 @@ object stwsimMainForm: TstwsimMainForm
     object msgMemo: TMemo
       Left = 0
       Top = 0
-      Width = 210
+      Width = 202
       Height = 77
       Align = alClient
       ParentColor = True
@@ -50,7 +52,7 @@ object stwsimMainForm: TstwsimMainForm
       TabOrder = 0
     end
     object statPanel: TPanel
-      Left = 213
+      Left = 205
       Top = 0
       Width = 508
       Height = 77
@@ -144,7 +146,7 @@ object stwsimMainForm: TstwsimMainForm
     object hsepPanel: TPanel
       Left = 0
       Top = 77
-      Width = 721
+      Width = 713
       Height = 4
       Align = alBottom
       BevelOuter = bvNone
@@ -154,7 +156,7 @@ object stwsimMainForm: TstwsimMainForm
   object SchermenTab: TTabControl
     Left = 0
     Top = 81
-    Width = 721
+    Width = 713
     Height = 25
     Align = alTop
     Style = tsButtons
@@ -273,8 +275,8 @@ object stwsimMainForm: TstwsimMainForm
     Visible = False
   end
   object SimOpenPanel: TPanel
-    Left = 520
-    Top = 120
+    Left = 0
+    Top = 280
     Width = 161
     Height = 88
     BevelOuter = bvNone
@@ -303,10 +305,10 @@ object stwsimMainForm: TstwsimMainForm
     end
   end
   object SimStartPanel: TPanel
-    Left = 384
-    Top = 216
-    Width = 233
-    Height = 240
+    Left = 224
+    Top = 280
+    Width = 453
+    Height = 164
     BevelOuter = bvNone
     BorderStyle = bsSingle
     Color = clBlack
@@ -337,7 +339,7 @@ object stwsimMainForm: TstwsimMainForm
       Width = 213
       Height = 68
       Action = SGOpenen
-      Caption = 'Opgeslagen spel laden'
+      Caption = 'Opgeslagen stand laden'
       TabOrder = 1
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
@@ -351,8 +353,8 @@ object stwsimMainForm: TstwsimMainForm
       Layout = blGlyphTop
     end
     object BitBtn3: TBitBtn
-      Left = 8
-      Top = 160
+      Left = 228
+      Top = 84
       Width = 213
       Height = 68
       Action = EerstDienstBewerkenAction
@@ -369,23 +371,88 @@ object stwsimMainForm: TstwsimMainForm
         0022222222222222202222222222222222222222222222222222}
       Layout = blGlyphTop
     end
+    object BitBtn4: TBitBtn
+      Left = 228
+      Top = 8
+      Width = 213
+      Height = 68
+      Action = ScenOpen
+      Caption = 'Scenario kiezen'
+      TabOrder = 3
+      Glyph.Data = {
+        36050000424D3605000000000000360400002800000010000000100000000100
+        08000000000000010000130B0000130B00000001000000010000000000000000
+        330000006600000099000000CC000000FF000033000000333300003366000033
+        99000033CC000033FF00006600000066330000666600006699000066CC000066
+        FF00009900000099330000996600009999000099CC000099FF0000CC000000CC
+        330000CC660000CC990000CCCC0000CCFF0000FF000000FF330000FF660000FF
+        990000FFCC0000FFFF00330000003300330033006600330099003300CC003300
+        FF00333300003333330033336600333399003333CC003333FF00336600003366
+        330033666600336699003366CC003366FF003399000033993300339966003399
+        99003399CC003399FF0033CC000033CC330033CC660033CC990033CCCC0033CC
+        FF0033FF000033FF330033FF660033FF990033FFCC0033FFFF00660000006600
+        330066006600660099006600CC006600FF006633000066333300663366006633
+        99006633CC006633FF00666600006666330066666600666699006666CC006666
+        FF00669900006699330066996600669999006699CC006699FF0066CC000066CC
+        330066CC660066CC990066CCCC0066CCFF0066FF000066FF330066FF660066FF
+        990066FFCC0066FFFF00990000009900330099006600990099009900CC009900
+        FF00993300009933330099336600993399009933CC009933FF00996600009966
+        330099666600996699009966CC009966FF009999000099993300999966009999
+        99009999CC009999FF0099CC000099CC330099CC660099CC990099CCCC0099CC
+        FF0099FF000099FF330099FF660099FF990099FFCC0099FFFF00CC000000CC00
+        3300CC006600CC009900CC00CC00CC00FF00CC330000CC333300CC336600CC33
+        9900CC33CC00CC33FF00CC660000CC663300CC666600CC669900CC66CC00CC66
+        FF00CC990000CC993300CC996600CC999900CC99CC00CC99FF00CCCC0000CCCC
+        3300CCCC6600CCCC9900CCCCCC00CCCCFF00CCFF0000CCFF3300CCFF6600CCFF
+        9900CCFFCC00CCFFFF00FF000000FF003300FF006600FF009900FF00CC00FF00
+        FF00FF330000FF333300FF336600FF339900FF33CC00FF33FF00FF660000FF66
+        3300FF666600FF669900FF66CC00FF66FF00FF990000FF993300FF996600FF99
+        9900FF99CC00FF99FF00FFCC0000FFCC3300FFCC6600FFCC9900FFCCCC00FFCC
+        FF00FFFF0000FFFF3300FFFF6600FFFF9900FFFFCC00FFFFFF00000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000B9B9B9B9B9B9
+        B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9AC8181ACB9B9B9B9B9B9B9B9B9
+        B9B9B981D7D78181B9B9B9B9B9B98181ACB981ACD7AC8181B9B9B9B9B9560000
+        008181812B2BACD781B9B9B92B000000000081D7D7D7D7D781B9B9560056ACAC
+        AC002BD7D7D7562BAC81AC00000000002B8100810081ACACD756810000000000
+        002B0081D7D7D7D7D756560081812B2B00000081D7AC818181562B2BAC810081
+        AC2B00818181B9B9B9B92B000000000081560056B9B9B9B9B9B9000000000000
+        000000B9B9B9B9B9B9B956568156562B00002BB9B9B9B9B9B9B9B9B9B9B9B9B9
+        812B81B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9B9}
+      Layout = blGlyphTop
+    end
   end
   object MainMenu: TMainMenu
-    Left = 56
-    Top = 320
+    Left = 424
+    Top = 176
     object Bestand2: TMenuItem
       Caption = '&Bestand'
+      object Simulatieladen1: TMenuItem
+        Action = SimOpenen
+      end
       object Scenarioopenen1: TMenuItem
         Action = ScenOpen
       end
-      object Starten1: TMenuItem
-        Action = PauzeAction
+      object Afsluiten1: TMenuItem
+        Action = Afsluiten
+      end
+    end
+    object Simulatie1: TMenuItem
+      Caption = '&Simulatie'
+      object Opgeslagenspelladen1: TMenuItem
+        Action = SGOpenen
       end
       object Spelopslaanals1: TMenuItem
         Action = SGSave
       end
-      object Afsluiten1: TMenuItem
-        Action = Afsluiten
+      object Spelafbreken1: TMenuItem
+        Action = AbortGame
+      end
+      object Starten1: TMenuItem
+        Action = PauzeAction
       end
     end
     object Bestand1: TMenuItem
@@ -441,18 +508,18 @@ object stwsimMainForm: TstwsimMainForm
   object TijdTimer: TTimer
     Interval = 100
     OnTimer = TijdTimerTimer
-    Left = 88
-    Top = 320
+    Left = 456
+    Top = 176
   end
   object BlinkTimer: TTimer
     Interval = 300
     OnTimer = BlinkTimerTimer
-    Left = 120
-    Top = 320
+    Left = 488
+    Top = 176
   end
   object SpoorPopup: TPopupMenu
-    Left = 152
-    Top = 320
+    Left = 520
+    Top = 176
     object Treinstatus1: TMenuItem
       Action = TreinStatus
     end
@@ -476,8 +543,8 @@ object stwsimMainForm: TstwsimMainForm
     end
   end
   object Actions: TActionList
-    Left = 24
-    Top = 320
+    Left = 392
+    Top = 176
     object TreinStatus: TAction
       Category = 'Popup'
       Caption = 'Treinstatus'
@@ -485,7 +552,7 @@ object stwsimMainForm: TstwsimMainForm
     end
     object SimOpenen: TAction
       Category = 'Hoofdmenu'
-      Caption = 'Simulatie laden'
+      Caption = 'Simulatie &openen...'
       ShortCut = 16463
       OnExecute = SimOpenenExecute
     end
@@ -631,12 +698,13 @@ object stwsimMainForm: TstwsimMainForm
     end
     object SGOpenen: TAction
       Category = 'Hoofdmenu'
-      Caption = 'Opgeslagen spel laden'
+      Caption = 'Opgeslagen stand openen...'
+      Enabled = False
       OnExecute = SGOpenenExecute
     end
     object SGSave: TAction
       Category = 'Hoofdmenu'
-      Caption = 'Spel opslaan a&ls...'
+      Caption = 'Huidige stand opslaan a&ls...'
       Enabled = False
       ShortCut = 16467
       OnExecute = SGSaveExecute
@@ -656,50 +724,68 @@ object stwsimMainForm: TstwsimMainForm
       Enabled = False
       OnExecute = ScenOpenExecute
     end
+    object VorigePaginaAction: TAction
+      Category = 'Misc'
+      Caption = 'VorigePaginaAction'
+      ShortCut = 33
+      OnExecute = VorigePaginaActionExecute
+    end
+    object VolgendePaginaAction: TAction
+      Category = 'Misc'
+      Caption = 'VolgendePaginaAction'
+      ShortCut = 34
+      OnExecute = VolgendePaginaActionExecute
+    end
+    object AbortGame: TAction
+      Category = 'Hoofdmenu'
+      Caption = 'Simulatie afbreken'
+      Enabled = False
+      OnExecute = AbortGameExecute
+    end
   end
   object OpenDialog: TOpenDialog
     DefaultExt = 'sts'
     Filter = 'StwSim Client Files|*.sts'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Title = 'Simulatie openen'
-    Left = 184
-    Top = 320
+    Left = 552
+    Top = 176
   end
   object DienstSaveDialog: TSaveDialog
     DefaultExt = 'ssd'
     Filter = 'StwSim Server Dienstregeling|*.ssd'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Title = 'Dienstregeling opslaan'
-    Left = 216
-    Top = 352
+    Left = 584
+    Top = 208
   end
   object GameOpenDialog: TOpenDialog
     DefaultExt = 'sso'
     Filter = 'StwSim Opgeslagen Spel|*.sso'
     Title = 'Opgeslagen spel openen'
-    Left = 280
-    Top = 320
+    Left = 648
+    Top = 176
   end
   object DienstOpenDialog: TOpenDialog
     DefaultExt = 'ssd'
     Filter = 'StwSim Server Dienstregeling|*.ssd'
     Title = 'Dienstregeling openen'
-    Left = 216
-    Top = 320
+    Left = 584
+    Top = 176
   end
   object GameSaveDialog: TSaveDialog
     DefaultExt = 'sso'
     Filter = 'StwSim Opgeslagen Spel|*.sso'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Title = 'Spel opslaan'
-    Left = 248
-    Top = 352
+    Left = 616
+    Top = 208
   end
   object ScenOpenDialog: TOpenDialog
     DefaultExt = 'sso'
     Filter = 'StwSim Scenario|*.ssc'
     Title = 'Scenario openen'
-    Left = 248
-    Top = 320
+    Left = 616
+    Top = 176
   end
 end

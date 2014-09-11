@@ -39,8 +39,8 @@ MaxStackSize=1048576
 ImageBase=4194304
 ExeDescription=
 [Directories]
-OutputDir=C:\Documents and Settings\Daan Goedkoop\Mijn documenten\Programmeren\stwsim
-UnitOutputDir=C:\Documents and Settings\Daan Goedkoop\Mijn documenten\Programmeren\stwsim\dcu
+OutputDir=C:\Users\Daan\Documents\Programmeren\stwsim
+UnitOutputDir=C:\Users\Daan\Documents\Programmeren\stwsim\dcu
 PackageDLLOutputDir=
 PackageDCPOutputDir=
 SearchPath=
@@ -53,11 +53,11 @@ RunParams=/l
 HostApplication=
 [Version Info]
 IncludeVerInfo=1
-AutoIncBuild=1
-MajorVer=0
-MinorVer=2
+AutoIncBuild=0
+MajorVer=1
+MinorVer=1
 Release=0
-Build=39
+Build=47
 Debug=0
 PreRelease=0
 Special=0
@@ -68,20 +68,22 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=Daan Goedkoop
 FileDescription=StwSim
-FileVersion=0.2.0.39
+FileVersion=1.1.0.47
 InternalName=StwSim
-LegalCopyright=© 2007-2011 Daan Goedkoop
+LegalCopyright=© 2007-2012 Daan Goedkoop
 LegalTrademarks=
 OriginalFilename=stwsim.exe
 ProductName=StwSim
-ProductVersion=0.1.0.0
+ProductVersion=1.1
 Comments=
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [HistoryLists\hlUnitOutputDirectory]
-Count=1
-Item0=C:\Documents and Settings\Daan Goedkoop\Mijn documenten\Programmeren\stwsim\dcu
+Count=2
+Item0=C:\Users\Daan\Documents\Programmeren\stwsim\dcu
+Item1=C:\Documents and Settings\Daan Goedkoop\Mijn documenten\Programmeren\stwsim\dcu
 [HistoryLists\hlOutputDirectorry]
-Count=1
-Item0=C:\Documents and Settings\Daan Goedkoop\Mijn documenten\Programmeren\stwsim
+Count=2
+Item0=C:\Users\Daan\Documents\Programmeren\stwsim
+Item1=C:\Documents and Settings\Daan Goedkoop\Mijn documenten\Programmeren\stwsim

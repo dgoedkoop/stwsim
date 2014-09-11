@@ -56,6 +56,7 @@ type
 															// waar we bij stilstaan.
 
 		kannietwegvoor:	integer;
+      klaarmeldingvereist: boolean;
 
 		defect				: boolean;
 		defecttot			: integer;
@@ -148,10 +149,10 @@ procedure SaveWagons(var f: file; Wagons: PpWagonConn);
 function LoadWagons(var f: file; pMaterieel: PpMaterieelFile): PpWagonConn;
 
 procedure SaveTrein(var f: file; Trein: PpTrein);
-procedure LoadTrein(var f: file; pMaterieel: PpMaterieelFile; pAlleRails: PpRailLijst; Trein: PpTrein);
+procedure LoadTrein(var f: file; SgVersion: integer; pMaterieel: PpMaterieelFile; pAlleRails: PpRailLijst; Trein: PpTrein);
 
 procedure SaveTreinen(var f: file; Treinen: PpTrein);
-function LoadTreinen(var f: file; pMaterieel: PpMaterieelFile; pAlleRails: PpRailLijst): PpTrein;
+function LoadTreinen(var f: file; SgVersion: integer; pMaterieel: PpMaterieelFile; pAlleRails: PpRailLijst): PpTrein;
 
 function TreinnummerGt(moetgroter, moetkleiner: string): boolean;
 
@@ -265,6 +266,7 @@ begin
 		SaveRijpunt(f, swStatus, Trein^.StationModusPlanpunt);
 
 	intwrite (f, Trein^.kannietwegvoor);
+   boolwrite(f, Trein^.klaarmeldingvereist);
 	boolwrite(f, Trein^.defect);
 	intwrite (f, Trein^.defecttot);
 	boolwrite(f, Trein^.doorroodgereden);
@@ -307,6 +309,8 @@ begin
 		Trein^.StationModusPlanpunt := nil;
 
 	intread (f, Trein^.kannietwegvoor);
+   if SgVersion >= 15 then
+   	boolread(f, Trein^.klaarmeldingvereist);
 	boolread(f, Trein^.defect);
 	intread (f, Trein^.defecttot);
 	boolread(f, Trein^.doorroodgereden);
@@ -371,7 +375,7 @@ begin
 			Trein^.Volgende^.Vorige := Trein;
 			Trein := Trein^.Volgende;
 		end;
-		LoadTrein(f, pMaterieel, pAlleRails, Trein);
+		LoadTrein(f, SgVersion, pMaterieel, pAlleRails, Trein);
 	end;
 end;
 
@@ -396,6 +400,7 @@ begin
 	S_Adviessnelheid := -1;
 	ROZ := false;
 	kannietwegvoor := -1;
+   klaarmeldingvereist := false;
 	berichtwachttijd := -1;
 	doorroodgereden := false;
 	doorroodopdracht := false;

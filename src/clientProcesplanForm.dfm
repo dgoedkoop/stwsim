@@ -21,17 +21,17 @@ object stwscProcesplanForm: TstwscProcesplanForm
   object LiPanel: TPanel
     Left = 0
     Top = 25
-    Width = 225
-    Height = 290
+    Width = 217
+    Height = 285
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
   end
   object RePanel: TPanel
-    Left = 225
+    Left = 217
     Top = 25
     Width = 255
-    Height = 290
+    Height = 285
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
@@ -40,7 +40,7 @@ object stwscProcesplanForm: TstwscProcesplanForm
   object LiBtnPanel: TPanel
     Left = 0
     Top = 0
-    Width = 480
+    Width = 472
     Height = 25
     Align = alTop
     BevelOuter = bvNone

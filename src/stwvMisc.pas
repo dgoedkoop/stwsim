@@ -29,9 +29,60 @@ procedure byteread(var f: file; var x: byte);
 function Pad(s: string; lengte: integer; waarmee: char; voorofachter: TVoorOfAchter): string;
 
 function LoadSound(naam: string): THandle;
-procedure PlaySound(hRes: THandle);
+procedure PlaySound(hRes: THandle; loop: boolean);
+
+function StringToNato(s: string): string;
 
 implementation
+
+function StringToNato;
+var
+	i: integer;
+begin
+	result := '';
+   for i := 1 to length(s) do begin
+   	if result <> '' then
+      	result := result + ' ';
+      case upcase(s[i]) of
+      '0': result := result + 'nul';
+      '1': result := result + 'één';
+      '2': result := result + 'twee';
+      '3': result := result + 'drie';
+      '4': result := result + 'vier';
+      '5': result := result + 'vijf';
+      '6': result := result + 'zes';
+      '7': result := result + 'zeven';
+      '8': result := result + 'acht';
+      '9': result := result + 'negen';
+      'A': result := result + 'Alfa';
+      'B': result := result + 'Bravo';
+      'C': result := result + 'Charlie';
+      'D': result := result + 'Delta';
+      'E': result := result + 'Echo';
+      'F': result := result + 'Foxtrot';
+      'G': result := result + 'Golf';
+      'H': result := result + 'Hotel';
+      'I': result := result + 'India';
+      'J': result := result + 'Juliett';
+      'K': result := result + 'Kilo';
+      'L': result := result + 'Lima';
+      'M': result := result + 'Mike';
+      'N': result := result + 'November';
+      'O': result := result + 'Oscar';
+      'P': result := result + 'Papa';
+      'Q': result := result + 'Quebec';
+      'R': result := result + 'Romeo';
+      'S': result := result + 'Sierra';
+      'T': result := result + 'Tango';
+      'U': result := result + 'Uniform';
+      'V': result := result + 'Victor';
+      'W': result := result + 'Whisky';
+      'X': result := result + 'X-ray';
+      'Y': result := result + 'Yankee';
+      'Z': result := result + 'Zulu';
+      end;
+   end;
+end;
 
 function LoadSound;
 var
@@ -50,9 +101,14 @@ var
 begin
 	if hRes <> 0 then begin
 		Song:=LockResource(hRes);
-		if Assigned(Song) then SndPlaySound(Song, snd_ASync or snd_Memory);
-			UnlockResource(hRes);
-	end;
+		if Assigned(Song) then
+			if loop then
+				SndPlaySound(Song, snd_ASync or snd_Memory or snd_Loop)
+			else
+				SndPlaySound(Song, snd_ASync or snd_Memory);
+		UnlockResource(hRes);
+	end else
+		SndPlaySound(nil, snd_ASync);
 end;
 
 function Pad;

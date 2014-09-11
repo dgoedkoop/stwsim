@@ -151,7 +151,8 @@ begin
 		Gesprek^.Status := tgsWachtOpAntwoord;
 	end;
 	tgsG5: begin
-		if Gesprek^.tekstXsoort <> pmsVraagOK then
+		if (Gesprek^.tekstXsoort <> pmsVraagOK) and
+      	(Gesprek^.tekstXsoort <> pmsKlaarmelding) then
 			SendMsg(Gesprek, Gesprek^.Owner, pmsInfo, Gesprek^.tekstOK);
 		HangOp(Gesprek, Gesprek^.Owner);
 		if Gesprek^.WachtOpdracht then begin

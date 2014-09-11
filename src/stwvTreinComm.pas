@@ -4,7 +4,7 @@ interface
 
 type
 	TvMessageSoort = (vmsTreinStoptonend, vmsTreinSTSpassage, vmsTreinOpdracht,
-		vmsVraagOK, vmsMonteurOpdracht, vmsInfo);
+		vmsVraagOK, vmsMonteurOpdracht, vmsKlaarmelding, vmsInfo);
 
 	TvMessageWie = record
 		wat: string;

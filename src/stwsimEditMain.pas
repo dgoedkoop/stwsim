@@ -54,44 +54,12 @@ type
 	 nsBut: TButton;
     reTab: TTabSheet;
     knoppenPanel: TPanel;
-	 SpeedButton12: TSpeedButton;
 	 SpeedButton11: TSpeedButton;
-	 SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-	 SpeedButton5: TSpeedButton;
-	 SpeedButton6: TSpeedButton;
-	 SpeedButton10: TSpeedButton;
-    SpeedButton9: TSpeedButton;
-    SpeedButton8: TSpeedButton;
-    SpeedButton7: TSpeedButton;
-    SpeedButton16: TSpeedButton;
-	 SpeedButton15: TSpeedButton;
-	 SpeedButton17: TSpeedButton;
-    Label1: TLabel;
 	 Label2: TLabel;
     Label5: TLabel;
 	 Label6: TLabel;
     Label11: TLabel;
-	 SpeedButton18: TSpeedButton;
 	 Label12: TLabel;
-	 Label13: TLabel;
-	 Label14: TLabel;
-    SpeedButton19: TSpeedButton;
-    SpeedButton20: TSpeedButton;
-	 SpeedButton21: TSpeedButton;
-	 SpeedButton22: TSpeedButton;
-	 Label15: TLabel;
-    Label16: TLabel;
-    Label17: TLabel;
-    mElBox: TComboBox;
-    elCheck: TCheckBox;
-	 wElBox: TComboBox;
-	 sElBox: TComboBox;
-	 txTxt: TEdit;
-    lenEdit: TSpinEdit;
-    mTnBox: TComboBox;
 	 infoBox: TGroupBox;
     infoMemo: TMemo;
     OpslaanAls: TAction;
@@ -108,34 +76,17 @@ type
 	 rtBut: TButton;
 	 rdBut: TButton;
     drawNiks: TSpeedButton;
-	 SpeedButton26: TSpeedButton;
-    SpeedButton27: TSpeedButton;
-	 SpeedButton28: TSpeedButton;
-    SpeedButton29: TSpeedButton;
     Label22: TLabel;
     Label23: TLabel;
 	 Label24: TLabel;
-    SpeedButton31: TSpeedButton;
-    SpeedButton34: TSpeedButton;
-	 SpeedButton36: TSpeedButton;
     Label25: TLabel;
-    SpeedButton38: TSpeedButton;
-    SpeedButton39: TSpeedButton;
-    Label26: TLabel;
-    eElBox: TComboBox;
     Panel1: TPanel;
-	 eDownBut: TRadioButton;
-	 eUpBut: TRadioButton;
-    SpeedButton40: TSpeedButton;
-    SpeedButton41: TSpeedButton;
     textBox: TGroupBox;
     txNormal: TRadioButton;
     txSpoornummer: TRadioButton;
     txSeinWisselNr: TRadioButton;
     txKleur: TComboBox;
 	 Label7: TLabel;
-    SpeedButton13: TSpeedButton;
-    SpeedButton14: TSpeedButton;
 	 tsLast: TCheckBox;
     rijwegeditbox: TGroupBox;
 	 Label18: TLabel;
@@ -203,8 +154,6 @@ type
     ovmaList: TListBox;
     Label33: TLabel;
     Label34: TLabel;
-    SpeedButton42: TSpeedButton;
-    SpeedButton43: TSpeedButton;
     GroupBox1: TGroupBox;
     detailsOff: TRadioButton;
     detailsOn: TRadioButton;
@@ -255,7 +204,6 @@ type
     Label9: TLabel;
     Label10: TLabel;
     Label37: TLabel;
-    rechtschuincheck: TCheckBox;
     Panel2: TPanel;
     onafhRechtBox: TRadioButton;
     onafhAftBox: TRadioButton;
@@ -267,8 +215,67 @@ type
     verzoekBox: TRadioButton;
     DetailsWeergeven: TAction;
     Detailsweergeven1: TMenuItem;
-    SpeedButton30: TSpeedButton;
+    Label38: TLabel;
+    xedit: TEdit;
+    yedit: TEdit;
+    Label39: TLabel;
+    rsBut: TButton;
+    SpeedButton33: TSpeedButton;
     SpeedButton32: TSpeedButton;
+    SpeedButton30: TSpeedButton;
+    SpeedButton14: TSpeedButton;
+    SpeedButton34: TSpeedButton;
+    SpeedButton31: TSpeedButton;
+    SpeedButton12: TSpeedButton;
+    SpeedButton40: TSpeedButton;
+    SpeedButton41: TSpeedButton;
+    SpeedButton6: TSpeedButton;
+    SpeedButton5: TSpeedButton;
+    SpeedButton4: TSpeedButton;
+    SpeedButton3: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    SpeedButton13: TSpeedButton;
+    SpeedButton1: TSpeedButton;
+    SpeedButton36: TSpeedButton;
+    SpeedButton22: TSpeedButton;
+    SpeedButton21: TSpeedButton;
+    SpeedButton20: TSpeedButton;
+    SpeedButton19: TSpeedButton;
+    SpeedButton26: TSpeedButton;
+    SpeedButton27: TSpeedButton;
+    SpeedButton28: TSpeedButton;
+    SpeedButton29: TSpeedButton;
+    SpeedButton10: TSpeedButton;
+    SpeedButton9: TSpeedButton;
+    SpeedButton8: TSpeedButton;
+    SpeedButton7: TSpeedButton;
+    SpeedButton38: TSpeedButton;
+    SpeedButton39: TSpeedButton;
+    SpeedButton15: TSpeedButton;
+    SpeedButton16: TSpeedButton;
+    SpeedButton43: TSpeedButton;
+    SpeedButton42: TSpeedButton;
+    SpeedButton17: TSpeedButton;
+    SpeedButton18: TSpeedButton;
+    Panel5: TPanel;
+    Label1: TLabel;
+    mElBox: TComboBox;
+    elCheck: TCheckBox;
+    Label15: TLabel;
+    wElBox: TComboBox;
+    eElBox: TComboBox;
+    Label26: TLabel;
+    Label16: TLabel;
+    sElBox: TComboBox;
+    Label17: TLabel;
+    txTxt: TEdit;
+    Label14: TLabel;
+    mTnBox: TComboBox;
+    Label13: TLabel;
+    lenEdit: TSpinEdit;
+    eUpBut: TRadioButton;
+    eDownBut: TRadioButton;
+    rechtschuincheck: TCheckBox;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -282,6 +289,7 @@ type
 	 procedure nsButClick(Sender: TObject);
 	 procedure GleisplanMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 	 procedure GleisplanMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure GleisplanMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 	 procedure GleisplanClick(Sender: TObject);
 	 procedure SpeedButton11Click(Sender: TObject);
 	 procedure SpeedButton12Click(Sender: TObject);
@@ -384,6 +392,8 @@ type
     procedure DetailsWeergevenExecute(Sender: TObject);
     procedure SpeedButton30Click(Sender: TObject);
     procedure SpeedButton32Click(Sender: TObject);
+    procedure rsButClick(Sender: TObject);
+    procedure SpeedButton33Click(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab: 	PTabList;
@@ -398,6 +408,9 @@ type
 		p_giy:			integer;
 		gselx,
 		gsely: 			integer;
+      sel_Mode:		integer;
+      sel_mvstx: 		integer;
+      sel_mvsty:		integer;
 		selMeetpunt:	PvMeetpunt;
 		selTnMeetpunt:	PvMeetpunt;
 		selErlaubnis:	PvErlaubnis;
@@ -417,7 +430,7 @@ type
 		procedure GeefRijwegWeer(Rijweg: PvRijweg; paint: boolean);
 		procedure SwapSubroutes(eersteIdx, tweedeIdx: integer);
 		// waar: -1=eind, 0=begin, 1=na het eerste scherm, ...
-		procedure AddScherm(ID: integer; titel: string; waar: integer; details: boolean);
+		procedure AddScherm(ID: integer; titel: string; waar: integer; details: boolean; xsize, ysize: integer);
 		function GetScherm(ID: Integer): PTabList;
 		function SchermTitel(ID: integer): string;
 		function SchermNieuwID: integer;
@@ -434,10 +447,11 @@ implementation
 uses stwsimClientEditInfo;
 
 {$R *.DFM}
+{$R xpthemes.res}
 
 const
-	MagicCode = 'STWSIM.1';
-	MagicCode_old = 'StwSim Client Beta 8';
+	MagicCode = 'STWSIM.2';
+	MagicCode_old = 'STWSIM.1';
 
 procedure TstwseMain.UpdateSubrouteUpDownCtls;
 begin
@@ -557,6 +571,7 @@ var
 	sel: 			string;
 	wsk, wsl:	string;
 	evwDesc:		string;
+   s: 			string;
 	i,j: 			integer;
 	Hokje:			TvHokje;
 	InactiefHokje:	PvInactiefHokje;
@@ -779,6 +794,11 @@ begin
 
 		detailsOn.Checked := visibleTab^.Details;
 		detailsOff.Checked := not visibleTab^.Details;
+      nsEdit.Text := visibleTab^.Titel;
+      str(visibleTab^.Gleisplan.MaxX + 1, s);
+      xedit.Text := s;
+      str(visibleTab^.Gleisplan.MaxY + 1, s);
+      yedit.Text := s;
 
 		UpdateChg.Schermaantal := false;
 	end;
@@ -1003,7 +1023,7 @@ begin
    Modified := true;
 end;
 
-procedure TstwseMain.AddScherm;
+procedure TstwseMain.AddScherm(ID: integer; titel: string; waar: integer; details: boolean; xsize, ysize: integer);
 var
 	Tab, l: PTabList;
 	i: integer;
@@ -1023,11 +1043,12 @@ begin
 	Tab^.Gleisplan.Parent := Tab^.Scrollbox;
 	Tab^.Gleisplan.OnMouseDown := GleisplanMouseDown;
 	Tab^.Gleisplan.OnMouseMove := GleisplanMouseMove;
+	Tab^.Gleisplan.OnMouseUp := GleisplanMouseUp;
 	Tab^.Gleisplan.OnClick := GleisplanClick;
 	Tab^.Gleisplan.Top := 0;
 	Tab^.Gleisplan.Left := 0;
-	Tab^.Gleisplan.MaxX := 125;
-	Tab^.Gleisplan.MaxY := 36;
+	Tab^.Gleisplan.MaxX := xsize - 1;
+	Tab^.Gleisplan.MaxY := ysize - 1;
 	Tab^.Gleisplan.Core := @Core;
 	Tab^.Gleisplan.ShowSeinen := true;
 	Tab^.Gleisplan.ShowSeinWisselNummers := true;
@@ -1292,12 +1313,20 @@ begin
 end;
 
 procedure TstwseMain.tsButClick(Sender: TObject);
+var
+	xsize, ysize, xcode, ycode: integer;
 begin
 	if nsEdit.Text <> '' then begin
+   	val(xedit.text, xsize, xcode);
+   	val(yedit.text, ysize, ycode);
+      if (xcode <> 0) or (ycode <> 0) or (xsize <= 0) or (ysize <= 0) then begin
+			Application.MessageBox('Ongeldig formaat ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+			exit
+      end;
 		if tsLast.checked then
-			AddScherm(SchermNieuwID, nsEdit.Text, -1, detailsOn.Checked)
+			AddScherm(SchermNieuwID, nsEdit.Text, -1, detailsOn.Checked, xsize, ysize)
 		else
-			AddScherm(SchermNieuwID, nsEdit.Text, SchermenTab.TabIndex, detailsOn.Checked);
+			AddScherm(SchermNieuwID, nsEdit.Text, SchermenTab.TabIndex, detailsOn.Checked, xsize, ysize);
 		UpdateChg.Schermaantal := true;
 		UpdateChg.Schermen := true;
 		UpdateControls;
@@ -1317,13 +1346,35 @@ begin
 end;
 
 procedure TstwseMain.nsButClick(Sender: TObject);
+var
+	xsize, ysize, xcode, ycode: integer;
+   x, y: integer;
 begin
 	if nsEdit.Text = '' then begin
 		Application.MessageBox('Er is geen titel ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
 		exit;
 	end;
+   val(xedit.text, xsize, xcode);
+   val(yedit.text, ysize, ycode);
+   if (xcode <> 0) or (ycode <> 0) or (xsize <= 0) or (ysize <= 0) then begin
+		Application.MessageBox('Ongeldig formaat ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
+		exit
+   end;
+   // Eerst moeten we rijweg-gegevens verwijderen als dat nodig is.
+	if xsize-1 < VisibleTab^.Gleisplan.MaxX then
+   	for x := xsize to VisibleTab^.Gleisplan.MaxX do
+      	for y := 0 to VisibleTab^.Gleisplan.MaxY do
+	         VerwijderHokjeRijwegdata(RijwegLogica, VisibleTab, x, y);
+   if ysize-1 < VisibleTab^.Gleisplan.MaxY then
+   	for x := 0 to VisibleTab^.Gleisplan.MaxX do
+      	for y := ysize to VisibleTab^.Gleisplan.MaxY do
+	         VerwijderHokjeRijwegdata(RijwegLogica, VisibleTab, x, y);
+	// Grootte aanpassen.
 	VisibleTab^.Titel := nsEdit.Text;
-	nsEdit.Text := '';
+   VisibleTab^.Gleisplan.MaxX := xsize - 1;
+   VisibleTab^.Gleisplan.MaxY := ysize - 1;
+   VisibleTab^.Details := detailsOn.Checked;
+
 	UpdateChg.Schermaantal := true;
 	UpdateControls;
 end;
@@ -1335,6 +1386,26 @@ var
 begin
 	Gleisplan := @Sender;
 	Gleisplan^.WatHier(x,y, gselx, gsely, hokje);
+
+   // Selecteer-dingen
+   if p_mode = 80 then begin
+      if Gleisplan^.SelectionMode = 1 then begin
+			if Gleisplan^.InSelRect(gselx, gsely) then begin
+            sel_Mode := 3;
+            sel_mvstx := gselx;
+            sel_mvsty := gsely;
+         end else begin
+   	      Gleisplan^.SelectionMode := 0;
+            sel_Mode := 1;
+         end;
+      end;
+   	if Gleisplan^.SelectionMode = 0 then begin
+      	// Starten met selecteren
+         Gleisplan^.SetSelCoord(gselx, gsely);
+         Gleisplan^.SelectionMode := 1;
+         sel_Mode := 1;
+      end;
+   end;
 end;
 
 procedure TstwseMain.GleisplanMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -1344,6 +1415,7 @@ var
 	selx,sely: integer;
 begin
 	Gleisplan := @Sender;
+   if not Gleisplan^.ValidMouseCoords(x, y) then exit;
 	Gleisplan^.WatHier(x,y, selx, sely, hokje);
 	infoMemo.Lines.Clear;
 	infoMemo.Lines.Add('Hokje ['+inttostr(selx)+','+inttostr(sely)+']');
@@ -1395,6 +1467,108 @@ begin
 		infoMemo.Lines.Add('van het treinnumer van');
 		infoMemo.Lines.Add('meetpunt '+Hokje.DynData.Meetpunt^.meetpuntID);
 	end;
+
+   // Selecteer-dingen
+   if p_mode = 80 then begin
+   	if sel_mode = 1 then
+      	sel_mode := 2;
+   	if sel_Mode = 2 then
+      	Gleisplan^.SetSelCoord(selx, sely);
+      if sel_mode = 3 then
+      	sel_mode := 4;
+      if sel_mode = 4 then
+      	Gleisplan^.SetDestCoordRel(selx-sel_mvstx, sely-sel_mvsty);
+   end;
+end;
+
+procedure TstwseMain.GleisplanMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+	Gleisplan: ^TvGleisplan;
+(*	Hokje: TvHokje;
+	selx,sely: integer; *)
+   ix, iy: integer;
+   x1, y1, x2, y2: integer;
+   fx, tx, fy, ty, sx, sy: integer;
+   offsx, offsy: integer;
+begin
+	Gleisplan := @Sender;
+   (*
+	Gleisplan^.WatHier(x,y, selx, sely, hokje);
+   offsx := selx-sel_mvstx;
+   offsy := sely-sel_mvsty;
+   *)
+
+   // Selecteer-dingen
+   if p_mode = 80 then begin
+   	// Als er in feite alleen geklikt is, zonder de muis te bewegen, dan
+      // wordt de selectie opgeheven. Maakt niet uit of er in de selectie
+      // geklikt is (mode=3) of erbuiten (mode=1).
+   	if (sel_Mode = 1) or (sel_Mode = 3) then begin
+      	Gleisplan^.SelectionMode := 0;
+         sel_Mode := 0;
+      end;
+      // Als er iets geselecteerd is, dan stoppen we met het verder selecteren
+      // zodat de selectie blijft staan.
+   	if sel_Mode = 2 then
+      	sel_Mode := 0;
+      // Als de selectie verplaatst wordt, dan moet de verplaatsing uitgevoerd
+      // worden.
+      if (sel_Mode = 4) and Gleisplan^.GetLastDestCoordRel(offsx, offsy) then begin
+         if ((offsx <> 0) or (offsy <> 0)) and
+         	Gleisplan^.GetSelectionCoordinates(x1, y1, x2, y2) then begin
+				if offsy <= 0 then begin
+            	// We verschuiven naar boven, dus verplaatsen we van boven naar onder
+               fy := y1;
+               ty := y2;
+               sy := 1;
+            end else begin
+            	// En anders andersom.
+            	fy := y2;
+               ty := y1;
+               sy := -1;
+            end;
+				if offsx <= 0 then begin
+            	// We verschuiven naar links, dus verplaatsen we van links naar rechts
+               fx := x1;
+               tx := x2;
+               sx := 1;
+            end else begin
+            	// En anders andersom.
+            	fx := x2;
+               tx := x1;
+               sx := -1;
+            end;
+            ix := fx;
+            while ix <> tx+sx do begin
+            	iy := fy;
+               while iy <> ty+sy do begin
+               	// PutHokje roept Empty() op, dus dat hoeft hier niet. Maar
+                  // we moeten de bijbehorende rijwegdata nog wel zelf wissen.
+                  if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, ix+offsx, iy+offsy) then
+							UpdateChg.Rijweg := true;
+                  // Hokje verplaatsen
+                  Gleisplan^.PutHokje(ix+offsx, iy+offsy,
+                  	Gleisplan^.GetHokjeDuplicate(ix, iy));
+                  // Oude hokje leegmaken
+						Gleisplan^.Empty(ix, iy);
+                  // Rijwegdata verplaatsen
+                  if KopieerHokjeRijwegdata(RijwegLogica, visibleTab, ix, iy,
+                  	visibleTab, ix+offsx, iy+offsy) then
+							UpdateChg.Rijweg := true;
+                  if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, ix, iy) then
+							UpdateChg.Rijweg := true;
+
+               	iy := iy + sy;
+               end;
+            	ix := ix + sx;
+            end;
+	      	Gleisplan^.SelMoveDest;
+         end;
+      	sel_Mode := 0;
+         Gleisplan^.Repaint;
+			UpdateControls;
+      end;
+   end;
 end;
 
 procedure TstwseMain.GleisplanClick(Sender: TObject);
@@ -1504,16 +1678,10 @@ begin
 			end;
 		end;
 		// Nog eventjes eventuele troep weghalen.
-		Rijweg := Core.vAlleRijwegen;
-		while assigned(rijweg) do begin
-			if (RijwegVerwijderInactiefHokje(RijwegLogica, visibleTab, gselx, gsely)
-			or RijwegVerwijderKruisingHokje(Rijweg, visibleTab^.ID, gselx, gsely))
-			and (Rijweg = selRijweg) then begin
-				UpdateChg.Rijweg := true;
-				UpdateControls;
-			end;
-			Rijweg := Rijweg^.Volgende;
-		end;
+      if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, gselx, gsely) then begin
+			UpdateChg.Rijweg := true;
+			UpdateControls;
+      end;
 	end;
 	if (p_mode >= 50) and (p_mode <= 69) then begin
 		if not assigned(selRijweg) then exit;
@@ -1758,7 +1926,7 @@ begin
 			end;
 		end;
 	end;
-	if (p_mode > 70) then begin
+	if (p_mode > 70) and (p_mode < 79) then begin
 		if not assigned(selPrlRijweg) then exit;
 		case p_mode of
 			71: begin
@@ -1795,6 +1963,9 @@ begin
 			end;
 		end;
 	end;
+   (*
+   if (p_mode = 80) then   << selecteren, afgehandeld in de onmouse-events >>
+   *)
 end;
 
 procedure TstwseMain.mElBoxChange(Sender: TObject);
@@ -2057,6 +2228,7 @@ var
 	schermID: integer;
 	details: boolean;
 	modus: integer;
+   xsize, ysize: integer;
 begin
 	if OpenDialog.Execute then begin
 		filename := OpenDialog.Filename;
@@ -2073,14 +2245,21 @@ begin
 
 		LoadInfra(f, Infrastructuur);
 
-		LoadThings(@Core, f, modus);
+		LoadThings(@Core, f);
 
 		repeat
 			intread(f, schermID);
 			if schermID > 0 then begin
 				stringread(f, schermnaam);
 				boolread(f, details);
-				AddScherm(schermID, Schermnaam, -1, details);
+            if modus < 1 then begin
+            	intread(f, xsize);
+               intread(f, ysize);
+            end else begin
+            	xsize := 126;
+               ysize := 37;
+            end;
+				AddScherm(schermID, Schermnaam, -1, details, xsize, ysize);
 				GetScherm(schermID).Gleisplan.LoadPlan(f);
 			end;
 		until schermID = 0;
@@ -2692,12 +2871,14 @@ end;
 
 procedure TstwseMain.detailsOnClick(Sender: TObject);
 begin
-	VisibleTab^.Details := detailsOn.Checked;
+	if assigned(VisibleTab) then
+		VisibleTab^.Details := detailsOn.Checked;
 end;
 
 procedure TstwseMain.detailsOffClick(Sender: TObject);
 begin
-	VisibleTab^.Details := detailsOn.Checked;
+	if assigned(VisibleTab) then
+		VisibleTab^.Details := detailsOn.Checked;
 end;
 
 procedure TstwseMain.tnvvanwisClick(Sender: TObject);
@@ -2842,6 +3023,8 @@ begin
 		intwrite(f, schermID);
 		stringwrite(f, schermnaam);
 		boolwrite(f, details);
+      intwrite(f, Tab^.Gleisplan.MaxX + 1);
+      intwrite(f, Tab^.Gleisplan.MaxY + 1);
 		Tab^.Gleisplan.SavePlan(f);
 		Tab := Tab.Volgende;
 	end;
@@ -3025,6 +3208,20 @@ begin
 	p_mode := 4;
 	p_gix := 6;
 	p_giy := 4;
+end;
+
+procedure TstwseMain.rsButClick(Sender: TObject);
+begin
+	nsEdit.Text := '';
+   xedit.Text := '126';
+   yedit.Text := '37';
+   detailsOn.Checked := true;
+end;
+
+procedure TstwseMain.SpeedButton33Click(Sender: TObject);
+begin
+	p_mode := 80;
+   Sel_Mode := 0;
 end;
 
 end.
