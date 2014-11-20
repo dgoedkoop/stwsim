@@ -555,8 +555,8 @@ begin
 						if (grx = 8) or (grx = 9) or (grx = 11) then grx := 3;
 						if (grx = 13) or (grx = 14) then grx := 0;
 					end else if PvHokjeSpoor(Hokje.grdata)^.RechtsonderKruisRijweg = 2 {/}then begin
-						if (grx = 7) or (grx = 9) or (grx = 13) then grx := 6;
-						if (grx = 8) or (grx = 10) or (grx = 14) then grx := 5;
+						if (grx = 7) or (grx = 9) or (grx = 14) then grx := 6;
+						if (grx = 8) or (grx = 10) or (grx = 13) then grx := 5;
 						if (grx = 11) or (grx = 12) then grx := 0;
 					end;
 				end else

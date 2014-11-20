@@ -788,7 +788,13 @@
   opgegeven, en er kan worden aangegeven dat een scenario voor alle simulaties
   geschikt is.
 
-1 september 2014:
+(1.1) 1 september 2014:
 - Fix: Bij afbreken van het spel moet de telefoon-knop uitgeschakeld worden.
 - Fix: Bij het laden van een savegame moet de monteur z'n kortsluitlans ook weer
   aanbrengen, indien van toepassing.
+
+(1.1.1/0.2.4) 20 november 2014:
+- Fix: In seinen kan/moet nu de rijrichting worden opgeslagen die van toepassing
+  is op de aankondiging. Bestandsformaat aangepast naar versie ".3".
+- Fix: De twee meest rechtse kruisingselementen in de editor (grx=13,14) werken
+  nu ook goed in de functie 'kruisingen uitleggen'.

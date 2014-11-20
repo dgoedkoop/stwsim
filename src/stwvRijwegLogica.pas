@@ -733,6 +733,7 @@ begin
 	result := false;
 	// Eerst de simpele strategie: is er een trein op de overweg, dan is dat
 	// duidelijk genoeg.
+   // Tegelijk kunnen we ook alvast kijken wat voor soort overweg het is.
 	MeetpuntL := Overweg^.Meetpunten;
 	while assigned(MeetpuntL) do begin
 		if MeetpuntL^.Meetpunt^.Bezet then begin
@@ -745,8 +746,8 @@ begin
 	AankMeetpuntL := Overweg^.AankMeetpunten;
 	while assigned(AankMeetpuntL) do begin
 		if AankMeetpuntL^.Meetpunt^.bezet then
-			// Een trein staat binnen de aankondiging, maar we weten niet wat die
-			// gaat doen. Voor de zekerheid de overweg maar sluiten.
+			// Een trein staat binnen de aankondiging, maar staat niet op een
+         // rijweg.
 			if not assigned(AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then begin
 				result := true;
 				exit;
@@ -812,25 +813,42 @@ begin
 	// Nu kijken we naar de aankondiging.
 	AankMeetpuntL := Overweg^.AankMeetpunten;
 	while assigned(AankMeetpuntL) do begin
-		if AankMeetpuntL^.Meetpunt^.bezet and
-		assigned(AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then
-			// We hebben een trein gevonden die een rijweg heeft. Nu gaan we kijken
-			// of dat de gezochte rijweg is en of deze rijweg wel over de overweg
-			// gaat. Is dat allemaal zo, dan is dat duidelijk genoeg.
-			if	(ActieveRijweg = AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then begin
-				result := true;
-				exit;
-			end else begin
-				// De rijweg van de trein is niet de gezochte rijweg. Maar nu kan de
-				// rijweg van de trein nog net voor de overweg ophouden. Daarom
-				// moeten we kijken of de gezochte rijweg misschien de vervolgrijweg
-				// van de gevonden trein is.
-				TreinActRijweg := AankMeetpuntL^.Meetpunt^.RijwegOnderdeel;
-				if (TreinActRijweg^.Rijweg^.Naar = ActieveRijweg^.Rijweg^.Sein^.Van) then begin
+		if AankMeetpuntL^.Meetpunt^.bezet then
+			if assigned(AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then
+				// We hebben een trein gevonden die een rijweg heeft. Nu gaan we
+            // kijken of dat de gezochte rijweg is en of deze rijweg wel over
+            // de overweg gaat. Is dat allemaal zo, dan is dat duidelijk genoeg.
+				if	(ActieveRijweg = AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then begin
 					result := true;
 					exit;
-				end;
-			end;
+				end else begin
+					// De rijweg van de trein is niet de gezochte rijweg. Maar nu
+               // kan de rijweg van de trein nog net voor de overweg ophouden.
+               // Daarom moeten we kijken of de gezochte rijweg misschien de
+               // vervolgrijweg van de gevonden trein is.
+					TreinActRijweg := AankMeetpuntL^.Meetpunt^.RijwegOnderdeel;
+					if (TreinActRijweg^.Rijweg^.Naar = ActieveRijweg^.Rijweg^.Sein^.Van) then begin
+						result := true;
+						exit;
+					end;
+				end
+         else begin
+         	// De trein heeft geen rijweg. Dan moeten we kijken of hij zich in
+            // de approach-locking-secties van de betreffende rijweg bevindt.
+            // Dan is het namelijk (in principe) een trein die van de vrije
+            // baan komt.
+            // (Eigenlijk doet deze code normaal nooit wat, want overwegen
+            // sluiten sowieso als een trein van de vrije baan komt, zelfs al
+            // staat het sein nog op rood.)
+            MeetpuntL := ActieveRijweg^.Rijweg^.Sein^.HerroepMeetpunten;
+            while assigned(MeetpuntL) do begin
+            	if MeetpuntL^.Meetpunt = AankMeetpuntL^.Meetpunt then begin
+               	result := true;
+                  exit;
+               end;
+            	MeetpuntL := MeetpuntL^.Volgende;
+            end;
+         end;
 		AankMeetpuntL := AankMeetpuntL^.Volgende;
 	end;
 end;

@@ -20,7 +20,7 @@ object stwseMain: TstwseMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 248
+    Top = 221
     Width = 1003
     Height = 3
     Cursor = crVSplit
@@ -30,16 +30,16 @@ object stwseMain: TstwseMain
     Left = 0
     Top = 0
     Width = 1003
-    Height = 248
+    Height = 221
     Align = alClient
     TabOrder = 0
     OnChange = SchermenTabChange
   end
   object bottomPanel: TPanel
     Left = 0
-    Top = 251
+    Top = 224
     Width = 1003
-    Height = 237
+    Height = 264
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
@@ -47,8 +47,8 @@ object stwseMain: TstwseMain
       Left = 0
       Top = 0
       Width = 834
-      Height = 237
-      ActivePage = gplTab
+      Height = 264
+      ActivePage = rijwegTab
       Align = alClient
       Constraints.MinHeight = 193
       TabOrder = 0
@@ -79,7 +79,7 @@ object stwseMain: TstwseMain
           Left = 0
           Top = 0
           Width = 265
-          Height = 209
+          Height = 233
           Caption = 'Treindetectiepunten'
           TabOrder = 0
           object mdBut: TButton
@@ -112,7 +112,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 121
-            Height = 185
+            Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 3
@@ -122,7 +122,7 @@ object stwseMain: TstwseMain
           Left = 272
           Top = 0
           Width = 265
-          Height = 209
+          Height = 233
           Caption = 'Rijrichtingsvelden'
           TabOrder = 1
           object edBut: TButton
@@ -155,7 +155,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 121
-            Height = 185
+            Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 3
@@ -165,7 +165,7 @@ object stwseMain: TstwseMain
           Left = 544
           Top = 0
           Width = 273
-          Height = 209
+          Height = 233
           Caption = 'Bediende seinen'
           TabOrder = 2
           object sEdit: TEdit
@@ -198,7 +198,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 121
-            Height = 185
+            Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 3
@@ -212,7 +212,7 @@ object stwseMain: TstwseMain
           Left = 0
           Top = 0
           Width = 425
-          Height = 209
+          Height = 233
           Caption = 'Wissels'
           TabOrder = 0
           object Label3: TLabel
@@ -302,7 +302,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 185
-            Height = 185
+            Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 6
@@ -312,7 +312,7 @@ object stwseMain: TstwseMain
           Left = 432
           Top = 0
           Width = 361
-          Height = 209
+          Height = 233
           Caption = 'Eis- en verzoekwissels'
           TabOrder = 1
           object Label9: TLabel
@@ -372,7 +372,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 121
-            Height = 185
+            Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             MultiSelect = True
@@ -465,7 +465,7 @@ object stwseMain: TstwseMain
           Left = 272
           Top = 0
           Width = 265
-          Height = 209
+          Height = 233
           Caption = 'Treindetectiepunten van geselecteerde overweg:'
           TabOrder = 0
           object Label33: TLabel
@@ -504,7 +504,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 120
             Width = 121
-            Height = 81
+            Height = 105
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 2
@@ -540,7 +540,7 @@ object stwseMain: TstwseMain
             Left = 136
             Top = 120
             Width = 121
-            Height = 81
+            Height = 105
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 6
@@ -550,14 +550,14 @@ object stwseMain: TstwseMain
           Left = 0
           Top = 0
           Width = 265
-          Height = 209
+          Height = 233
           Caption = 'Overwegen:'
           TabOrder = 1
           object ovList: TListBox
             Left = 8
             Top = 16
             Width = 121
-            Height = 185
+            Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 0
@@ -634,6 +634,7 @@ object stwseMain: TstwseMain
           Caption = 'Scherm wissen'
           Enabled = False
           TabOrder = 2
+          OnClick = dsButClick
         end
         object nsBut: TButton
           Left = 224
@@ -641,6 +642,7 @@ object stwseMain: TstwseMain
           Width = 81
           Height = 25
           Caption = 'Bijwerken'
+          Enabled = False
           TabOrder = 3
           OnClick = nsButClick
         end
@@ -727,7 +729,7 @@ object stwseMain: TstwseMain
           ParentFont = False
           TabOrder = 0
           object SpeedButton11: TSpeedButton
-            Left = 416
+            Left = 248
             Top = 8
             Width = 23
             Height = 22
@@ -767,41 +769,41 @@ object stwseMain: TstwseMain
           end
           object Label2: TLabel
             Left = 8
-            Top = 84
+            Top = 108
             Width = 34
             Height = 13
             Caption = 'Wissel:'
           end
           object Label5: TLabel
             Left = 8
-            Top = 132
+            Top = 156
             Width = 24
             Height = 13
             Caption = 'Sein:'
           end
           object Label6: TLabel
             Left = 8
-            Top = 156
+            Top = 180
             Width = 30
             Height = 13
             Caption = 'Tekst:'
           end
           object Label11: TLabel
             Left = 8
-            Top = 36
+            Top = 60
             Width = 26
             Height = 13
             Caption = 'Rails:'
           end
           object Label12: TLabel
             Left = 8
-            Top = 180
+            Top = 204
             Width = 64
             Height = 13
             Caption = 'Treinnummer:'
           end
           object drawNiks: TSpeedButton
-            Left = 392
+            Left = 224
             Top = 8
             Width = 23
             Height = 22
@@ -816,20 +818,20 @@ object stwseMain: TstwseMain
           end
           object Label22: TLabel
             Left = 8
-            Top = 60
+            Top = 84
             Width = 71
             Height = 13
             Caption = 'Kruisende rails:'
           end
           object Label23: TLabel
             Left = 8
-            Top = 12
+            Top = 36
             Width = 49
             Height = 13
             Caption = 'Decoratie:'
           end
           object Label24: TLabel
-            Left = 312
+            Left = 8
             Top = 12
             Width = 65
             Height = 13
@@ -837,13 +839,13 @@ object stwseMain: TstwseMain
           end
           object Label25: TLabel
             Left = 8
-            Top = 108
+            Top = 132
             Width = 74
             Height = 13
             Caption = 'Rijrichtingsveld:'
           end
           object SpeedButton33: TSpeedButton
-            Left = 440
+            Left = 272
             Top = 8
             Width = 23
             Height = 22
@@ -865,7 +867,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton32: TSpeedButton
             Left = 104
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Stootblok'
@@ -892,7 +894,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton30: TSpeedButton
             Left = 128
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Stootblok'
@@ -919,7 +921,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton14: TSpeedButton
             Left = 152
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Kader voor brug/tunnel'
@@ -972,7 +974,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton34: TSpeedButton
             Left = 176
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Kader voor brug/tunnel'
@@ -999,7 +1001,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton31: TSpeedButton
             Left = 200
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Kader voor brug/tunnel'
@@ -1026,7 +1028,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton12: TSpeedButton
             Left = 224
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Perron'
@@ -1059,7 +1061,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton40: TSpeedButton
             Left = 248
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Perron'
@@ -1092,7 +1094,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton6: TSpeedButton
             Left = 272
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1125,7 +1127,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton5: TSpeedButton
             Left = 248
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1158,7 +1160,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton4: TSpeedButton
             Left = 224
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1191,7 +1193,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton3: TSpeedButton
             Left = 200
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1224,7 +1226,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton2: TSpeedButton
             Left = 176
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1257,7 +1259,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton13: TSpeedButton
             Left = 152
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1310,7 +1312,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton1: TSpeedButton
             Left = 128
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor'
@@ -1343,7 +1345,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton36: TSpeedButton
             Left = 104
-            Top = 32
+            Top = 56
             Width = 23
             Height = 22
             Hint = 'Spoor (zonder detectie)'
@@ -1370,7 +1372,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton22: TSpeedButton
             Left = 104
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1397,7 +1399,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton21: TSpeedButton
             Left = 128
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1424,7 +1426,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton20: TSpeedButton
             Left = 152
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1451,7 +1453,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton19: TSpeedButton
             Left = 176
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1478,7 +1480,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton26: TSpeedButton
             Left = 200
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1511,7 +1513,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton27: TSpeedButton
             Left = 224
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1544,7 +1546,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton28: TSpeedButton
             Left = 248
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1577,7 +1579,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton29: TSpeedButton
             Left = 272
-            Top = 56
+            Top = 80
             Width = 23
             Height = 22
             Hint = 'Kruisende sporen'
@@ -1610,7 +1612,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton10: TSpeedButton
             Left = 272
-            Top = 80
+            Top = 104
             Width = 23
             Height = 22
             Hint = 'Wissel'
@@ -1643,7 +1645,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton9: TSpeedButton
             Left = 248
-            Top = 80
+            Top = 104
             Width = 23
             Height = 22
             Hint = 'Wissel'
@@ -1676,7 +1678,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton8: TSpeedButton
             Left = 224
-            Top = 80
+            Top = 104
             Width = 23
             Height = 22
             Hint = 'Wissel'
@@ -1709,7 +1711,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton7: TSpeedButton
             Left = 200
-            Top = 80
+            Top = 104
             Width = 23
             Height = 22
             Hint = 'Wissel'
@@ -1742,7 +1744,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton38: TSpeedButton
             Left = 248
-            Top = 104
+            Top = 128
             Width = 23
             Height = 22
             Hint = 'Rijrichtingsveld'
@@ -1796,7 +1798,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton39: TSpeedButton
             Left = 272
-            Top = 104
+            Top = 128
             Width = 23
             Height = 22
             Hint = 'Rijrichtingsveld'
@@ -1850,7 +1852,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton15: TSpeedButton
             Left = 272
-            Top = 128
+            Top = 152
             Width = 23
             Height = 22
             Hint = 'Sein'
@@ -1897,7 +1899,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton16: TSpeedButton
             Left = 248
-            Top = 128
+            Top = 152
             Width = 23
             Height = 22
             Hint = 'Sein'
@@ -1944,7 +1946,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton43: TSpeedButton
             Left = 200
-            Top = 128
+            Top = 152
             Width = 23
             Height = 22
             Hint = 'Sein'
@@ -1998,7 +2000,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton42: TSpeedButton
             Left = 224
-            Top = 128
+            Top = 152
             Width = 23
             Height = 22
             Hint = 'Sein'
@@ -2052,7 +2054,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton17: TSpeedButton
             Left = 272
-            Top = 152
+            Top = 176
             Width = 23
             Height = 22
             Hint = 'Tekst'
@@ -2085,7 +2087,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton18: TSpeedButton
             Left = 272
-            Top = 176
+            Top = 200
             Width = 23
             Height = 22
             Hint = 'Tekst'
@@ -2118,7 +2120,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton41: TSpeedButton
             Left = 272
-            Top = 8
+            Top = 32
             Width = 23
             Height = 22
             Hint = 'Perron'
@@ -2151,7 +2153,7 @@ object stwseMain: TstwseMain
           end
           object Panel5: TPanel
             Left = 304
-            Top = 32
+            Top = 56
             Width = 361
             Height = 169
             BevelOuter = bvNone
@@ -2222,7 +2224,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 0
+              ItemHeight = 13
               ParentFont = False
               TabOrder = 0
               OnChange = mElBoxChange
@@ -2248,7 +2250,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 0
+              ItemHeight = 13
               ParentFont = False
               TabOrder = 2
               OnChange = wElBoxChange
@@ -2264,7 +2266,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 0
+              ItemHeight = 13
               ParentFont = False
               TabOrder = 3
               OnChange = eElBoxChange
@@ -2280,7 +2282,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 0
+              ItemHeight = 13
               ParentFont = False
               TabOrder = 4
               OnChange = sElBoxChange
@@ -2309,7 +2311,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 0
+              ItemHeight = 13
               ParentFont = False
               TabOrder = 6
               OnChange = mTnBoxChange
@@ -2368,7 +2370,7 @@ object stwseMain: TstwseMain
           end
           object textBox: TGroupBox
             Left = 680
-            Top = 64
+            Top = 88
             Width = 145
             Height = 137
             Caption = 'Opties voor tekst:'
@@ -2456,7 +2458,7 @@ object stwseMain: TstwseMain
           Left = 0
           Top = 0
           Width = 193
-          Height = 209
+          Height = 236
           Anchors = [akLeft, akTop, akBottom]
           Caption = 'Rijwegen'
           TabOrder = 0
@@ -2464,7 +2466,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 177
-            Height = 153
+            Height = 180
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 0
@@ -2472,7 +2474,7 @@ object stwseMain: TstwseMain
           end
           object rtBut: TButton
             Left = 8
-            Top = 176
+            Top = 203
             Width = 75
             Height = 25
             Anchors = [akLeft, akBottom]
@@ -2483,7 +2485,7 @@ object stwseMain: TstwseMain
           end
           object rdBut: TButton
             Left = 88
-            Top = 176
+            Top = 203
             Width = 75
             Height = 25
             Anchors = [akLeft, akBottom]
@@ -2496,13 +2498,13 @@ object stwseMain: TstwseMain
           Left = 200
           Top = 0
           Width = 617
-          Height = 209
+          Height = 236
           Anchors = [akLeft, akTop, akBottom]
           Caption = 'Rijweg bewerken'
           TabOrder = 1
           object Label18: TLabel
             Left = 8
-            Top = 96
+            Top = 104
             Width = 158
             Height = 13
             Caption = 'Overige elementen van de rijweg:'
@@ -2522,7 +2524,7 @@ object stwseMain: TstwseMain
             Caption = 'Naar:'
           end
           object rijwegVanWijzig: TSpeedButton
-            Left = 392
+            Left = 424
             Top = 16
             Width = 57
             Height = 21
@@ -2531,7 +2533,7 @@ object stwseMain: TstwseMain
             OnClick = rijwegVanWijzigClick
           end
           object rijwegNaarWijzig: TSpeedButton
-            Left = 392
+            Left = 424
             Top = 40
             Width = 57
             Height = 21
@@ -2541,7 +2543,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton23: TSpeedButton
             Left = 8
-            Top = 160
+            Top = 184
             Width = 121
             Height = 21
             GroupIndex = 2
@@ -2550,7 +2552,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton24: TSpeedButton
             Left = 8
-            Top = 184
+            Top = 208
             Width = 121
             Height = 21
             GroupIndex = 2
@@ -2559,7 +2561,7 @@ object stwseMain: TstwseMain
           end
           object SpeedButton25: TSpeedButton
             Left = 136
-            Top = 184
+            Top = 208
             Width = 105
             Height = 21
             GroupIndex = 2
@@ -2581,8 +2583,8 @@ object stwseMain: TstwseMain
             OnClick = drawNiksClick
           end
           object seinWijzigKlik: TSpeedButton
-            Left = 392
-            Top = 136
+            Left = 424
+            Top = 160
             Width = 57
             Height = 21
             GroupIndex = 2
@@ -2591,14 +2593,14 @@ object stwseMain: TstwseMain
           end
           object Label21: TLabel
             Left = 248
-            Top = 140
+            Top = 164
             Width = 44
             Height = 13
             Caption = 'Van sein:'
           end
           object SpeedButton37: TSpeedButton
             Left = 136
-            Top = 160
+            Top = 184
             Width = 105
             Height = 21
             GroupIndex = 2
@@ -2606,8 +2608,8 @@ object stwseMain: TstwseMain
             OnClick = SpeedButton37Click
           end
           object richtingWijzigBut: TSpeedButton
-            Left = 392
-            Top = 184
+            Left = 424
+            Top = 208
             Width = 57
             Height = 21
             GroupIndex = 2
@@ -2616,14 +2618,14 @@ object stwseMain: TstwseMain
           end
           object Label27: TLabel
             Left = 248
-            Top = 188
+            Top = 212
             Width = 42
             Height = 13
             Caption = 'Richting:'
           end
           object richtingWisBut: TSpeedButton
-            Left = 456
-            Top = 184
+            Left = 488
+            Top = 208
             Width = 57
             Height = 21
             Caption = 'Wissen'
@@ -2631,14 +2633,14 @@ object stwseMain: TstwseMain
           end
           object Label32: TLabel
             Left = 248
-            Top = 92
+            Top = 116
             Width = 47
             Height = 13
             Caption = 'TNV-Van:'
           end
           object tnvvanwijzig: TSpeedButton
-            Left = 392
-            Top = 88
+            Left = 424
+            Top = 112
             Width = 57
             Height = 21
             GroupIndex = 2
@@ -2646,8 +2648,8 @@ object stwseMain: TstwseMain
             OnClick = tnvvanwijzigClick
           end
           object tnvvanwis: TSpeedButton
-            Left = 456
-            Top = 88
+            Left = 488
+            Top = 112
             Width = 57
             Height = 21
             Caption = 'Wissen'
@@ -2655,14 +2657,14 @@ object stwseMain: TstwseMain
           end
           object Label35: TLabel
             Left = 248
-            Top = 116
+            Top = 140
             Width = 51
             Height = 13
             Caption = 'TNV-Naar:'
           end
           object tnvnaarwijzig: TSpeedButton
-            Left = 392
-            Top = 112
+            Left = 424
+            Top = 136
             Width = 57
             Height = 21
             GroupIndex = 2
@@ -2670,16 +2672,16 @@ object stwseMain: TstwseMain
             OnClick = tnvnaarwijzigClick
           end
           object tnvnaarwis: TSpeedButton
-            Left = 456
-            Top = 112
+            Left = 488
+            Top = 136
             Width = 57
             Height = 21
             Caption = 'Wissen'
             OnClick = tnvnaarwisClick
           end
           object naarSeinWijzigBut: TSpeedButton
-            Left = 392
-            Top = 160
+            Left = 424
+            Top = 184
             Width = 57
             Height = 21
             GroupIndex = 2
@@ -2688,21 +2690,21 @@ object stwseMain: TstwseMain
           end
           object Label36: TLabel
             Left = 248
-            Top = 164
+            Top = 188
             Width = 48
             Height = 13
             Caption = 'Naar sein:'
           end
           object naarseinWisBut: TSpeedButton
-            Left = 456
-            Top = 160
+            Left = 488
+            Top = 184
             Width = 57
             Height = 21
             Caption = 'Wissen'
             OnClick = naarseinWisButClick
           end
           object triggerDelBut: TSpeedButton
-            Left = 456
+            Left = 488
             Top = 64
             Width = 57
             Height = 21
@@ -2710,7 +2712,7 @@ object stwseMain: TstwseMain
             OnClick = triggerDelButClick
           end
           object triggerChgBut: TSpeedButton
-            Left = 392
+            Left = 424
             Top = 64
             Width = 57
             Height = 21
@@ -2732,8 +2734,32 @@ object stwseMain: TstwseMain
             Height = 13
             Caption = 'Subroutes:'
           end
+          object triggerRichtingWisBut: TSpeedButton
+            Left = 488
+            Top = 88
+            Width = 57
+            Height = 21
+            Caption = 'Wissen'
+            OnClick = triggerRichtingWisButClick
+          end
+          object triggerRichtingEditBut: TSpeedButton
+            Left = 424
+            Top = 88
+            Width = 57
+            Height = 21
+            GroupIndex = 2
+            Caption = 'Wijzigen'
+            OnClick = triggerRichtingEditButClick
+          end
+          object Label40: TLabel
+            Left = 248
+            Top = 92
+            Width = 74
+            Height = 13
+            Caption = 'Richting trigger:'
+          end
           object rijwegVanEdit: TEdit
-            Left = 304
+            Left = 336
             Top = 16
             Width = 81
             Height = 21
@@ -2743,7 +2769,7 @@ object stwseMain: TstwseMain
             TabOrder = 0
           end
           object rijwegNaarEdit: TEdit
-            Left = 304
+            Left = 336
             Top = 40
             Width = 81
             Height = 21
@@ -2753,8 +2779,8 @@ object stwseMain: TstwseMain
             TabOrder = 1
           end
           object seinEdit: TEdit
-            Left = 304
-            Top = 136
+            Left = 336
+            Top = 160
             Width = 81
             Height = 21
             TabStop = False
@@ -2764,17 +2790,17 @@ object stwseMain: TstwseMain
           end
           object rijwegBestaatUit: TListBox
             Left = 8
-            Top = 112
+            Top = 120
             Width = 233
-            Height = 41
+            Height = 57
             TabStop = False
             ItemHeight = 13
             ParentColor = True
             TabOrder = 3
           end
           object richtingEdit: TEdit
-            Left = 304
-            Top = 184
+            Left = 336
+            Top = 208
             Width = 81
             Height = 21
             TabStop = False
@@ -2783,8 +2809,8 @@ object stwseMain: TstwseMain
             TabOrder = 4
           end
           object rijwegtnvvanedit: TEdit
-            Left = 304
-            Top = 88
+            Left = 336
+            Top = 112
             Width = 81
             Height = 21
             TabStop = False
@@ -2793,8 +2819,8 @@ object stwseMain: TstwseMain
             TabOrder = 5
           end
           object rijwegtnvnaaredit: TEdit
-            Left = 304
-            Top = 112
+            Left = 336
+            Top = 136
             Width = 81
             Height = 21
             TabStop = False
@@ -2803,8 +2829,8 @@ object stwseMain: TstwseMain
             TabOrder = 6
           end
           object naarSeinEdit: TEdit
-            Left = 304
-            Top = 160
+            Left = 336
+            Top = 184
             Width = 81
             Height = 21
             TabStop = False
@@ -2813,7 +2839,7 @@ object stwseMain: TstwseMain
             TabOrder = 7
           end
           object triggerEdit: TEdit
-            Left = 304
+            Left = 336
             Top = 64
             Width = 81
             Height = 21
@@ -2823,7 +2849,7 @@ object stwseMain: TstwseMain
             TabOrder = 8
           end
           object onbevCheck: TCheckBox
-            Left = 456
+            Left = 488
             Top = 40
             Width = 113
             Height = 17
@@ -2835,7 +2861,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 32
             Width = 201
-            Height = 57
+            Height = 65
             ItemHeight = 13
             TabOrder = 10
             OnClick = RijwegSubroutesClick
@@ -2859,7 +2885,7 @@ object stwseMain: TstwseMain
           end
           object SubrouteDown: TBitBtn
             Left = 216
-            Top = 64
+            Top = 72
             Width = 23
             Height = 23
             TabOrder = 12
@@ -2874,6 +2900,16 @@ object stwseMain: TstwseMain
               DDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0DDDDDDDDDD0FBBF0D
               DDDDDDDDD0FFFF0DDDDDDDDDD000000DDDDDDDDDDDDDDDDDDDDD}
           end
+          object triggerRichtingEdit: TEdit
+            Left = 336
+            Top = 88
+            Width = 81
+            Height = 21
+            TabStop = False
+            Color = clBtnFace
+            ReadOnly = True
+            TabOrder = 13
+          end
         end
       end
       object PrlRijwegTab: TTabSheet
@@ -2883,7 +2919,7 @@ object stwseMain: TstwseMain
           Left = 0
           Top = 0
           Width = 193
-          Height = 209
+          Height = 236
           Anchors = [akLeft, akTop, akBottom]
           Caption = 'Rijwegen voor Procesleiding'
           TabOrder = 0
@@ -2891,7 +2927,7 @@ object stwseMain: TstwseMain
             Left = 8
             Top = 16
             Width = 177
-            Height = 121
+            Height = 148
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 0
@@ -2899,7 +2935,7 @@ object stwseMain: TstwseMain
           end
           object prlrtBut: TButton
             Left = 8
-            Top = 144
+            Top = 171
             Width = 75
             Height = 25
             Anchors = [akLeft, akBottom]
@@ -2910,7 +2946,7 @@ object stwseMain: TstwseMain
           end
           object prlrdBut: TButton
             Left = 88
-            Top = 144
+            Top = 171
             Width = 75
             Height = 25
             Anchors = [akLeft, akBottom]
@@ -2920,9 +2956,10 @@ object stwseMain: TstwseMain
           end
           object rtpCopyBut: TButton
             Left = 8
-            Top = 176
+            Top = 200
             Width = 153
             Height = 25
+            Anchors = [akLeft, akBottom]
             Caption = 'Gewone rijwegen kopiëren'
             TabOrder = 3
             OnClick = rtpCopyButClick
@@ -2932,7 +2969,7 @@ object stwseMain: TstwseMain
           Left = 200
           Top = 0
           Width = 481
-          Height = 209
+          Height = 233
           Caption = 'Rijweg voor Procesleiding bewerken'
           TabOrder = 1
           object Label29: TLabel
@@ -3011,7 +3048,7 @@ object stwseMain: TstwseMain
       Left = 834
       Top = 0
       Width = 169
-      Height = 237
+      Height = 264
       Align = alRight
       Caption = 'Informatie'
       TabOrder = 1
@@ -3019,7 +3056,7 @@ object stwseMain: TstwseMain
         Left = 8
         Top = 16
         Width = 153
-        Height = 209
+        Height = 241
         ReadOnly = True
         TabOrder = 0
       end

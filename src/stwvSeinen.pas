@@ -15,7 +15,10 @@ type
 														// direct te kunnen herroepen? (dus
 														// zonder approach locking
 		Van				: string;
-		VanTNVMeetpunt, TriggerMeetpunt:		PvMeetpunt;
+		VanTNVMeetpunt : PvMeetpunt;
+      TriggerMeetpunt: PvMeetpunt;
+		Aank_Erlaubnis : PvErlaubnis;
+		Aank_Erlaubnisstand:	byte;
 		// Berekende gegevens
 		RijwegenNaarSeinBestaan:	boolean;
 		// Dynamische gegevens

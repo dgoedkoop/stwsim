@@ -284,8 +284,9 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 {$R xpthemes.res}
 
 const
-	MagicCode = 'STWSIM.2';
-	MagicCode_old = 'STWSIM.1';
+	MagicCode_3 = 'STWSIM.3';
+	MagicCode_2 = 'STWSIM.2';
+	MagicCode_1 = 'STWSIM.1';
 	WachtCursor = crHourGlass;
 
 procedure TstwsimMainForm.DoeStapje;
@@ -414,8 +415,9 @@ begin
 	end;
 	stringread(f, magic);
 	modus := -1;
-	if magic = magicCode then modus := 0;
-	if magic = magicCode_old then modus := 1;
+	if magic = magicCode_3 then modus := 3;
+	if magic = magicCode_2 then modus := 2;
+	if magic = magicCode_1 then modus := 1;
 	if modus = -1 then begin
 		Application.MessageBox('Dit is geen geldig bestand.', 'Fout', MB_ICONERROR);
       closefile(f);
@@ -436,14 +438,14 @@ begin
 	Caption := naam + ' ' + pCore.simversie;
 	Application.Title := naam;
 
-	LoadThings(vCore, f);
+	LoadThings(vCore, f, modus);
 
 	repeat
 		intread(f, schermID);
 		if schermID > 0 then begin
 			stringread(f, schermnaam);
 			boolread(f, schermdetails);
-         if modus < 1 then begin
+         if modus >= 2 then begin
            	intread(f, xsize);
             intread(f, ysize);
          end else begin
@@ -459,7 +461,7 @@ begin
 
 	CloseFile(f);
 
-	BerekenAankondigingen(vCore);
+	BerekenAankondigingen(vCore, modus);
 	BerekenRijwegenNaarSeinen(vCore);
 
 	SetCursor(Screen.Cursors[tmpCursor]);
@@ -1980,7 +1982,9 @@ begin
 
    ClearWisselMeetpuntStatus(vCore);
    DestroyActieveRijwegen(vCore);
-
+   ClearBinnenkomendeGesprekken(vCore);
+	Rinkelen := false;
+   
 	Tab := RijwegLogica.Tabs;
 	while assigned(Tab) do begin
 		Tab^.Gleisplan.ClearInactieveEnKruisingHokjes;

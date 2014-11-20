@@ -276,6 +276,10 @@ type
     eUpBut: TRadioButton;
     eDownBut: TRadioButton;
     rechtschuincheck: TCheckBox;
+    triggerRichtingWisBut: TSpeedButton;
+    triggerRichtingEditBut: TSpeedButton;
+    triggerRichtingEdit: TEdit;
+    Label40: TLabel;
 	 procedure mtButClick(Sender: TObject);
 	 procedure mdButClick(Sender: TObject);
 	 procedure FormCreate(Sender: TObject);
@@ -394,6 +398,9 @@ type
     procedure SpeedButton32Click(Sender: TObject);
     procedure rsButClick(Sender: TObject);
     procedure SpeedButton33Click(Sender: TObject);
+    procedure dsButClick(Sender: TObject);
+    procedure triggerRichtingEditButClick(Sender: TObject);
+    procedure triggerRichtingWisButClick(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab: 	PTabList;
@@ -450,8 +457,9 @@ uses stwsimClientEditInfo;
 {$R xpthemes.res}
 
 const
-	MagicCode = 'STWSIM.2';
-	MagicCode_old = 'STWSIM.1';
+	MagicCode_3 = 'STWSIM.3';
+	MagicCode_2 = 'STWSIM.2';
+	MagicCode_1 = 'STWSIM.1';
 
 procedure TstwseMain.UpdateSubrouteUpDownCtls;
 begin
@@ -800,6 +808,9 @@ begin
       str(visibleTab^.Gleisplan.MaxY + 1, s);
       yedit.Text := s;
 
+      nsBut.Enabled := assigned(VisibleTab);
+      dsBut.Enabled := assigned(VisibleTab);
+
 		UpdateChg.Schermaantal := false;
 	end;
 	if UpdateChg.Overwegen then begin
@@ -951,6 +962,13 @@ begin
 					richtingEdit.Text := Rijweg^.Erlaubnis^.erlaubnisID+' - Down';
 			end else
 				richtingEdit.Text := '';
+			if assigned(Rijweg^.Sein) and assigned(Rijweg^.Sein^.Aank_Erlaubnis) then begin
+				if Rijweg^.Sein^.Aank_Erlaubnisstand = 1 then
+					triggerRichtingEdit.Text := Rijweg^.Sein^.Aank_Erlaubnis^.erlaubnisID+' - Up'
+				else if Rijweg^.Sein^.Aank_Erlaubnisstand = 2 then
+					triggerRichtingEdit.Text := Rijweg^.Sein^.Aank_Erlaubnis^.erlaubnisID+' - Down';
+			end else
+				triggerRichtingEdit.Text := '';
 		end;
 		UpdateChg.Rijweg := false;
 	end;
@@ -1807,25 +1825,27 @@ begin
 			57: begin	// Instellen van kruisinghokjes
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 1 then begin
-					if assigned(PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.RijwegOnderdeel) and
-						(PvHokjeSpoor(Hokje.grdata)^.grx >= 6) and
-						(PvHokjeSpoor(Hokje.grdata)^.grx <= 13) and
-						(PvHokjeSpoor(Hokje.grdata)^.gry <= 1) then begin
-						case PvHokjeSpoor(Hokje.grdata)^.RechtsonderKruisRijweg of
-						0:
-							RijwegVoegKruisingHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeSpoor(Hokje.grdata)^.Meetpunt, true);
-						1:
-							RijwegVoegKruisingHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeSpoor(Hokje.grdata)^.Meetpunt, false);
-						2:
-							RijwegVerwijderKruisingHokje(selRijweg, visibleTab^.ID, gselx, gsely);
-						end;
-						UpdateChg.Rijweg := true;
-						UpdateChg.Rijwegen := true;
-						UpdateControls;
-					end else
+					if assigned(PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.RijwegOnderdeel) then
+               	if (PvHokjeSpoor(Hokje.grdata)^.grx >= 6) and
+						   (PvHokjeSpoor(Hokje.grdata)^.grx <= 14) and
+						   (PvHokjeSpoor(Hokje.grdata)^.gry <= 1) then begin
+							case PvHokjeSpoor(Hokje.grdata)^.RechtsonderKruisRijweg of
+							0:
+								RijwegVoegKruisingHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeSpoor(Hokje.grdata)^.Meetpunt, true);
+							1:
+								RijwegVoegKruisingHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeSpoor(Hokje.grdata)^.Meetpunt, false);
+							2:
+								RijwegVerwijderKruisingHokje(selRijweg, visibleTab^.ID, gselx, gsely);
+							end;
+							UpdateChg.Rijweg := true;
+							UpdateChg.Rijwegen := true;
+							UpdateControls;
+						end else
+							Application.Messagebox('Hier is geen kruising.','Fout',MB_ICONERROR)
+					else
 						Application.Messagebox('Deze bloksectie hoort niet bij de rijweg.','Fout',MB_ICONERROR);
 				end else begin
-					Application.Messagebox('Dit kan niet.','Fout',MB_ICONERROR);
+					Application.Messagebox('Hier is geen kruising.','Fout',MB_ICONERROR);
 				end;
 			end;
 			58: begin	// Toevoegen / verwijderen van approach locking secties
@@ -1923,6 +1943,24 @@ begin
 						Application.Messagebox('Dit spoor heeft geen detectiepunt.','Fout',MB_ICONERROR);
 				end else
 					Application.Messagebox('Dit kan niet.','Fout',MB_ICONERROR);
+			end;
+			64: begin	// Instellen van de ARI trigger-richting
+				Hokje := Gleisplan^.GetHokje(gselx, gsely);
+				if Hokje.Soort = 6 then
+					if assigned(PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis) then begin
+               	if assigned(selRijweg^.Sein) then begin
+                  	selRijweg^.Sein^.Aank_Erlaubnis := PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis;
+							selRijweg^.Sein^.Aank_Erlaubnisstand := PvHokjeErlaubnis(Hokje.grdata)^.ActiefStand;
+							UpdateChg.Rijweg := true;
+							UpdateControls;
+						end else
+							Application.Messagebox('De rijweg heeft nog geen sein.','Fout',MB_ICONERROR);
+					end else
+						Application.Messagebox('Dit is geen goed rijwegveld.','Fout',MB_ICONERROR)
+				else
+					Application.Messagebox('Dit is helemaal geen rijwegveld!','Fout',MB_ICONERROR);
+				rijwegNiks.Down := true;
+				p_mode := -1;
 			end;
 		end;
 	end;
@@ -2236,8 +2274,9 @@ begin
 		reset(f, 1);
 		stringread(f, magic);
 		modus := -1;
-		if magic = magicCode then modus := 0;
-		if magic = magicCode_old then modus := 1;
+		if magic = magicCode_3 then modus := 3;
+		if magic = magicCode_2 then modus := 2;
+		if magic = magicCode_1 then modus := 1;
 		if modus = -1 then begin
 			Application.MessageBox('Dit is geen geldig bestand.', 'Fout', MB_ICONERROR);
 			exit;
@@ -2245,14 +2284,14 @@ begin
 
 		LoadInfra(f, Infrastructuur);
 
-		LoadThings(@Core, f);
+		LoadThings(@Core, f, modus);
 
 		repeat
 			intread(f, schermID);
 			if schermID > 0 then begin
 				stringread(f, schermnaam);
 				boolread(f, details);
-            if modus < 1 then begin
+            if modus >= 2 then begin
             	intread(f, xsize);
                intread(f, ysize);
             end else begin
@@ -3008,7 +3047,7 @@ begin
 	assignfile(f, filename);
 	rewrite(f,1);
 
-	magic := MagicCode;
+	magic := MagicCode_3;
 	stringwrite(f, magic);
 
 	SaveInfra(f, Infrastructuur);
@@ -3222,6 +3261,55 @@ procedure TstwseMain.SpeedButton33Click(Sender: TObject);
 begin
 	p_mode := 80;
    Sel_Mode := 0;
+end;
+
+procedure TstwseMain.dsButClick(Sender: TObject);
+var
+	x, y: integer;
+   Tab: PTabList;
+begin
+	if assigned(VisibleTab) then begin
+   	// Scherm leegmaken
+   	for x := 0 to VisibleTab^.Gleisplan.MaxX do
+      	for y := 0 to VisibleTab^.Gleisplan.MaxY do begin
+         	VisibleTab^.Gleisplan.Empty(x, y);
+            VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, x, y)
+         end;
+		// En scherm uit de lijst halen
+      if VisibleTab = FirstTab then begin
+      	FirstTab := VisibleTab^.Volgende;
+         RijwegLogica.Tabs := FirstTab;
+      end else begin
+         Tab := FirstTab;
+         while Tab.Volgende <> VisibleTab do
+         	Tab := Tab^.Volgende;
+         Tab^.Volgende := VisibleTab^.Volgende;
+      end;
+      VisibleTab^.Gleisplan.Destroy;
+      VisibleTab^.Scrollbox.Destroy;
+		dispose(VisibleTab);
+      VisibleTab := nil;
+      if SchermenTab.TabIndex >= SchermenTab.Tabs.Count - 1 then
+      	SchermenTab.TabIndex := SchermenTab.Tabs.Count - 2;
+		UpdateChg.Schermaantal := true;
+		UpdateChg.Schermen := true;
+		UpdateControls;
+   end;
+end;
+
+procedure TstwseMain.triggerRichtingEditButClick(Sender: TObject);
+begin
+	p_mode := 64;
+end;
+
+procedure TstwseMain.triggerRichtingWisButClick(Sender: TObject);
+begin
+	if assigned(selRijweg) and assigned(selRijweg^.Sein) then begin
+		selRijweg^.Sein^.Aank_Erlaubnis := nil;
+		selRijweg^.sein^.Aank_Erlaubnisstand := 0;
+		UpdateChg.Rijweg := true;
+		UpdateControls;
+	end;
 end;
 
 end.

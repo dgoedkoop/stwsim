@@ -39,6 +39,7 @@ function ControleerDubbelSubroute(core: PvCore; Meetpunt: PvMeetpunt; Wisselstan
 
 procedure AddBinnenkomendGesprek(core: PvCore; metwie: TvMessageWie);
 procedure DeleteBinnenkomendGesprek(core: PvCore; metwie: TvMessageWie);
+procedure ClearBinnenkomendeGesprekken(core: PvCore);
 
 function ZoekMeetpunt(core: PvCore; naam: string): PvMeetpunt;
 procedure AddMeetpunt(core: PvCore; naam: string);
@@ -74,7 +75,7 @@ procedure DestroyActieveRijwegen(core: PvCore);
 
 procedure SaveKruisingHokje(var f: file; KruisingHokje: PvKruisingHokje);
 procedure SaveSein(var f: file; Sein: PvSein);
-procedure LoadSein(var f: file; core: PvCore; Sein: PvSein);
+procedure LoadSein(var f: file; core: PvCore; Sein: PvSein; version: byte);
 procedure SaveRijweg(var f: file; Rijweg: PvRijweg);
 procedure LoadRijweg(var f: file; core: PvCore; Rijweg: PvRijweg);
 procedure SavePrlRijweg(var f: file; PrlRijweg: PvPrlRijweg);
@@ -86,10 +87,10 @@ procedure SaveWisselMeetpuntStatus(var f: file; Core: PvCore);
 procedure LoadWisselMeetpuntStatus(var f: file; SgVersion: integer; Core: PvCore);
 procedure ClearWisselMeetpuntStatus(Core: PvCore);
 
-procedure LoadThings(Core: PvCore; var f: file);
+procedure LoadThings(Core: PvCore; var f: file; version: byte);
 procedure SaveThings(Core: PvCore; var f: file);
 
-procedure BerekenAankondigingen(Core: PvCore);
+procedure BerekenAankondigingen(Core: PvCore; version: byte);
 procedure BerekenOnbekendAanwezig(Groep: PvWisselGroep);
 procedure BerekenRijwegenNaarSeinen(Core: PvCore);
 
@@ -216,6 +217,17 @@ begin
 			bkg := bkg^.Volgende;
 		end;
 	end;
+end;
+
+procedure ClearBinnenkomendeGesprekken;
+var
+	Gesprek: PvBinnenkomendGesprek;
+begin
+	while assigned(Core.vAlleBinnenkomendeGesprekken) do begin
+   	Gesprek := Core.vAlleBinnenkomendeGesprekken;
+      Core.vAlleBinnenkomendeGesprekken := Gesprek^.Volgende;
+      dispose(Gesprek);
+   end;
 end;
 
 function ZoekMeetpunt;
@@ -390,6 +402,8 @@ begin
 	s^.HerroepMeetpunten := nil;
 	s^.RijwegOnderdeel := nil;
 	s^.DoelVanRijweg := nil;
+   s^.Aank_Erlaubnis := nil;
+   s^.Aank_Erlaubnisstand := 0;
 	s^.registered := false;
 	s^.herroepen := false;
 	s^.Volgende := nil;
@@ -732,6 +746,11 @@ begin
 		stringwrite(f, Sein^.VanTNVMeetpunt^.meetpuntID)
 	else
 		stringwrite(f, '');
+   if assigned(Sein^.Aank_Erlaubnis) then
+   	stringwrite(f, Sein^.Aank_Erlaubnis^.erlaubnisID)
+   else
+   	stringwrite(f, '');
+   bytewrite(f, Sein^.Aank_Erlaubnisstand);
 	wat := 'h';
 	HerroepMeetpunt := Sein^.HerroepMeetpunten;
 	while assigned(HerroepMeetpunt) do begin
@@ -747,7 +766,7 @@ procedure LoadSein;
 var
 	wat: char;
 	meetpuntnaam: string;
-	vanmp, triggermp: string;
+	vanmp, triggermp, richting: string;
 begin
 	stringread(f, Sein^.Naam);
 	stringread(f, Sein^.Van);
@@ -755,6 +774,11 @@ begin
 	stringread(f, vanmp);
 	Sein^.TriggerMeetpunt := ZoekMeetpunt(Core, triggermp);
 	Sein^.VanTNVMeetpunt := ZoekMeetpunt(Core, vanmp);
+   if version >= 3 then begin
+   	stringread(f, richting);
+   	Sein^.Aank_Erlaubnis := ZoekErlaubnis(Core, richting);
+      byteread(f, Sein^.Aank_Erlaubnisstand);
+   end;
 	repeat
 		blockread(f, wat, sizeof(wat));
 		case wat of
@@ -1100,7 +1124,7 @@ begin
 			'e': AddErlaubnis(core, s);
 			's': begin
 				Sein := NieuwSein(core);
-				LoadSein(f, Core, Sein);
+				LoadSein(f, Core, Sein, version);
 			end;
 			'w': begin
 				stringread(f, wm);
@@ -1473,34 +1497,54 @@ begin
 				// En de gegevens van dit punt ophalen.
 				Aank_Erlaubnis := Aank_Meetpunt^.Aank_Erlaubnis;
 				Aank_Erlaubnisstand := Aank_Meetpunt^.Aank_Erlaubnisstand;
+
 				// Nu gaan we alle rijwegen bijlangs die omgekeerd aan dit sein zijn
 				// en van die rijwegen bekijken we de rijrichting.
 				Aank_Error := false;
-				Rijweg := Core^.vAlleRijwegen;
-				while assigned(Rijweg) do begin
-					if (Rijweg^.NaarTNVMeetpunt = Sein^.VanTNVMeetpunt) and assigned(Rijweg^.Erlaubnis) then begin
-						if not assigned(Aank_Erlaubnis) then begin
-							Aank_Erlaubnis := Rijweg^.Erlaubnis;
-							Aank_Erlaubnisstand := OmgekeerdeErlaubnisstand(Rijweg^.Erlaubnisstand);
-						end else begin
-							if Aank_Erlaubnis = Rijweg^.Erlaubnis then begin
-								if Aank_Erlaubnisstand <> OmgekeerdeErlaubnisstand(Rijweg^.Erlaubnisstand) then begin
-									// Twee kanten tegelijk. Dat is OK.
-									Aank_Erlaubnis := nil;
-									Aank_Erlaubnisstand := 0;
-									break;
-								end;
-							end else begin
-								// Fout. We breken af.
-								Aank_Erlaubnis := nil;
+				if assigned(Sein^.Aank_Erlaubnis) then begin
+					if not assigned(Aank_Erlaubnis) then begin
+               	Aank_Erlaubnis := Sein^.Aank_Erlaubnis;
+                  Aank_Erlaubnisstand := Sein^.Aank_Erlaubnisstand;
+					end else begin
+						if Aank_Erlaubnis = Sein^.Aank_Erlaubnis then begin
+							if Aank_Erlaubnisstand <> Sein^.Aank_Erlaubnisstand then begin
+								// Twee kanten tegelijk. Dat is OK.
 								Aank_Erlaubnisstand := 0;
-								Aank_Error := true;
-								break;
 							end;
+						end else begin
+							// Fout. We breken af.
+							Aank_Erlaubnis := nil;
+							Aank_Erlaubnisstand := 0;
+							Aank_Error := true;
 						end;
 					end;
-					Rijweg := Rijweg^.Volgende;
-				end;
+				end else if version <= 2 then begin
+					Rijweg := Core^.vAlleRijwegen;
+					while assigned(Rijweg) do begin
+						if (Rijweg^.NaarTNVMeetpunt = Sein^.VanTNVMeetpunt) and assigned(Rijweg^.Erlaubnis) then begin
+							if not assigned(Aank_Erlaubnis) then begin
+								Aank_Erlaubnis := Rijweg^.Erlaubnis;
+								Aank_Erlaubnisstand := OmgekeerdeErlaubnisstand(Rijweg^.Erlaubnisstand);
+							end else begin
+								if Aank_Erlaubnis = Rijweg^.Erlaubnis then begin
+									if Aank_Erlaubnisstand <> OmgekeerdeErlaubnisstand(Rijweg^.Erlaubnisstand) then begin
+										// Twee kanten tegelijk. Dat is OK.
+										Aank_Erlaubnis := nil;
+										Aank_Erlaubnisstand := 0;
+										break;
+									end;
+								end else begin
+									// Fout. We breken af.
+									Aank_Erlaubnis := nil;
+									Aank_Erlaubnisstand := 0;
+									Aank_Error := true;
+									break;
+								end;
+							end;
+						end;
+						Rijweg := Rijweg^.Volgende;
+					end;
+            end;
 
 				if not Aank_Error then begin
 					Aank_Meetpunt^.Aankondiging := true;
