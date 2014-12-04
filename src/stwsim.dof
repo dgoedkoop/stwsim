@@ -57,7 +57,7 @@ AutoIncBuild=0
 MajorVer=1
 MinorVer=1
 Release=1
-Build=48
+Build=49
 Debug=0
 PreRelease=0
 Special=0
@@ -68,7 +68,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=Daan Goedkoop
 FileDescription=StwSim
-FileVersion=1.1.1.48
+FileVersion=1.1.1.49
 InternalName=StwSim
 LegalCopyright=© 2007-2012 Daan Goedkoop
 LegalTrademarks=

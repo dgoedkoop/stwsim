@@ -1509,6 +1509,7 @@ begin
 						if Aank_Erlaubnis = Sein^.Aank_Erlaubnis then begin
 							if Aank_Erlaubnisstand <> Sein^.Aank_Erlaubnisstand then begin
 								// Twee kanten tegelijk. Dat is OK.
+								Aank_Erlaubnis := nil;
 								Aank_Erlaubnisstand := 0;
 							end;
 						end else begin
