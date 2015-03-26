@@ -1075,6 +1075,11 @@ begin
 			Wissel^.RijwegOnderdeel := nil;
 		Wissel := VolgendeWissel(Wissel);
 	end;
+	Tab := Tabs;
+	while assigned(Tab) do begin
+		Tab^.Gleisplan.MeetpuntResetInactief(Meetpunt);
+      Tab := Tab^.Volgende
+   end;
 
 	// Kijken of dit meetpunt misschien alsnog geclaimd moet worden voor een
 	// voorliggende rijweg naar bezet spoor
@@ -1251,6 +1256,7 @@ begin
 			Tab := Tabs;
 			while assigned(Tab) do begin
 				Tab^.Gleisplan.MeetpuntResetKruis(MeetpuntLijst^.Meetpunt);
+           	Tab^.Gleisplan.MeetpuntResetInactief(MeetpuntLijst^.Meetpunt);
 				Tab^.Gleisplan.PaintMeetpunt(MeetpuntLijst^.Meetpunt);
 				Tab := Tab^.Volgende;
 			end;

@@ -74,18 +74,19 @@ begin
 	ScenList.Items.Clear;
 	ScenList.Items.Add('Standaard');
 	if FindFirst(Core.Filedir+'\*.ssc', $2F, Rec) < 0 then exit;
-	repeat
-   	assignfile(f, Rec.Name);
-		{$I-}reset(f);{$I+}
-		if ioresult = 0 then begin
-	      if CheckScenario(f) then begin
-				Naam := ExtractFileName(Rec.Name);
-				Naam := copy(Naam, 1, length(Naam)-length(ExtractFileExt(Naam)));
-				ScenList.Items.Add(Naam);
-	      end;
-	      closefile(f);
-   	end;
-	until FindNext(Rec) <> 0;
+   if Rec.Name <> '' then
+		repeat
+	   	assignfile(f, Rec.Name);
+			{$I-}reset(f);{$I+}
+			if ioresult = 0 then begin
+		      if CheckScenario(f) then begin
+					Naam := ExtractFileName(Rec.Name);
+					Naam := copy(Naam, 1, length(Naam)-length(ExtractFileExt(Naam)));
+					ScenList.Items.Add(Naam);
+		      end;
+		      closefile(f);
+	   	end;
+		until FindNext(Rec) <> 0;
    ScenList.ItemIndex := 0;
    ScenListClick(Sender);
 end;

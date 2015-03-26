@@ -803,3 +803,13 @@
 (1.1.1) 4 december 2014:
 - Fix: Correcte berekening van aankondigingen op de nieuwe wijze zodat er geen
   onnodige / onterechte aankondigingen worden gemeld.
+
+26 maart 2015:
+- Fix: Inactieve hokjes netjes opruimen als een meetpunt gedeclaimed wordt
+  (nl. bij vrijmelding of bij herroepen rijweg), zodat een kruising goed wordt
+  weergegeven als er eerst een rijweg in de ene richting en dan een rijweg in
+  de kruisende richting wordt ingesteld.
+- Fix: Geen I/O-foutmelding 6 meer als de scenariokeuze wordt geopend terwijl
+  er geen scenario's zijn. In plaats daarvan gewoon alleen het standaardscenario
+  weergeven, zonder foutmelding.
+  
