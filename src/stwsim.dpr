@@ -59,7 +59,8 @@ uses
   stwpTreinInfo in 'stwpTreinInfo.pas',
   stwvTreinInfo in 'stwvTreinInfo.pas',
   KkVersion in 'KkVersion.pas',
-  stwsimClientScenario in 'stwsimClientScenario.pas' {stwscScenarioForm};
+  stwsimClientScenario in 'stwsimClientScenario.pas' {stwscScenarioForm},
+  DpiUtils in 'DpiUtils.pas';
 
 {$R *.RES}
 

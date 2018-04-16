@@ -813,3 +813,6 @@
   er geen scenario's zijn. In plaats daarvan gewoon alleen het standaardscenario
   weergeven, zonder foutmelding.
   
+(1.1.2) 16 april 2018:
+- Aanpassing om een scherpe weergave op beeldschermen met een hoge
+  pixeldichtheid te verzekeren

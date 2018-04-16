@@ -45,6 +45,7 @@ type
       function GetSelMode: integer;
 		procedure CopyPlaatje(nx,ny,vx,vy: integer);
       procedure PaintSelection;
+      function Schaal: integer;
 	protected
 		procedure Paint; override;
 	public
@@ -119,6 +120,11 @@ begin
 	result := (eerste <> tweede) and assigned(eerste) and assigned(tweede);
 end;
 
+function TvGleisplan.Schaal;
+begin
+   result := round(Self.Font.PixelsPerInch / 96);
+end;
+
 destructor TvGleisplan.Destroy;
 var
 	x,y: integer;
@@ -180,7 +186,7 @@ begin
 	// Instellen
 	imaxx := nmaxx;
 	hokjes := NewHokjes;
-	Constraints.MinWidth := (imaxx+1)*8;
+	Constraints.MinWidth := (imaxx+1)*8*Schaal();
 	Constraints.MaxWidth := Constraints.MinWidth;
 	Repaint;
 end;
@@ -221,7 +227,7 @@ begin
 	// Instellen
 	imaxy := nmaxy;
 	hokjes := NewHokjes;
-	Constraints.MinHeight := (imaxy+1)*16;
+	Constraints.MinHeight := (imaxy+1)*16*Schaal();
 	Constraints.MaxHeight := Constraints.MinHeight;
 	Repaint;
 end;
@@ -351,10 +357,10 @@ procedure TvGleisplan.CopyPlaatje;
 var
 	nrect, vrect: TRect;
 begin
-	nrect.Left := nx*8;
-	nrect.Right := nx*8+8;
-	nrect.Top := ny*16;
-	nrect.Bottom := ny*16+16;
+	nrect.Left := nx*8*Schaal();
+	nrect.Right := (nx+1)*8*Schaal();
+	nrect.Top := ny*16*Schaal();
+	nrect.Bottom := (ny+1)*16*Schaal();
 	vrect.Left := vx*9;
 	vrect.Right := vx*9+8;
 	vrect.Top := vy*17;
@@ -422,39 +428,39 @@ begin
       Canvas.Pen.Color := clGreen;
       Canvas.Pen.Style := psSolid;
    	if (x = selx1) and (y >= sely1) and (y <= sely2) then begin
-			Canvas.MoveTo(x*8, y*16);
-         Canvas.LineTo(x*8, y*16+16);
+			Canvas.MoveTo(x*8*Schaal(), y*16*Schaal());
+         Canvas.LineTo(x*8*Schaal(), (y+1)*16*Schaal());
       end;
    	if (x = selx2) and (y >= sely1) and (y <= sely2) then begin
-			Canvas.MoveTo(x*8+7, y*16);
-         Canvas.LineTo(x*8+7, y*16+16);
+			Canvas.MoveTo((x+1)*8*Schaal()-1, y*16*Schaal());
+         Canvas.LineTo((x+1)*8*Schaal()-1, (y+1)*16*Schaal());
       end;
    	if (y = sely1) and (x >= selx1) and (x <= selx2) then begin
 			Canvas.MoveTo(x*8, y*16);
          Canvas.LineTo(x*8+8, y*16);
       end;
    	if (y = sely2) and (x >= selx1) and (x <= selx2) then begin
-			Canvas.MoveTo(x*8, y*16+15);
-         Canvas.LineTo(x*8+8, y*16+15);
+			Canvas.MoveTo(x*8*Schaal(), (y+1)*16*Schaal()-1);
+         Canvas.LineTo((x+1)*8*Schaal(), (y+1)*16*Schaal()-1);
       end;
    	// Destination frame
       if desty1 > -1 then begin
 	      Canvas.Pen.Color := clBlue;
 	   	if (x = destx1) and (y >= desty1) and (y <= desty2) then begin
-				Canvas.MoveTo(x*8, y*16);
-	         Canvas.LineTo(x*8, y*16+16);
+				Canvas.MoveTo(x*8*Schaal(), y*16*Schaal());
+	         Canvas.LineTo(x*8*Schaal(), (y+1)*16*Schaal());
 	      end;
 	   	if (x = destx2) and (y >= desty1) and (y <= desty2) then begin
-				Canvas.MoveTo(x*8+7, y*16);
-	         Canvas.LineTo(x*8+7, y*16+16);
+				Canvas.MoveTo((x+1)*8*Schaal()-1, y*16*Schaal());
+	         Canvas.LineTo((x+1)*8*Schaal()-1, (y+1)*16*Schaal());
 	      end;
 	   	if (y = desty1) and (x >= destx1) and (x <= destx2) then begin
-				Canvas.MoveTo(x*8, y*16);
-	         Canvas.LineTo(x*8+8, y*16);
+				Canvas.MoveTo(x*8*Schaal(), y*16*Schaal());
+	         Canvas.LineTo((x+1)*8*Schaal(), y*16*Schaal());
 	      end;
 	   	if (y = desty2) and (x >= destx1) and (x <= destx2) then begin
-				Canvas.MoveTo(x*8, y*16+15);
-	         Canvas.LineTo(x*8+8, y*16+15);
+				Canvas.MoveTo(x*8*Schaal(), (y+1)*16*Schaal()-1);
+	         Canvas.LineTo((x+1)*8*Schaal(), (y+1)*16*Schaal()-1);
 	      end;
       end;
       Canvas.Pen.Style := psClear;
@@ -463,20 +469,20 @@ begin
       Canvas.Pen.Color := clWhite;
       Canvas.Pen.Style := psDot;
    	if (x = 0) then begin
-			Canvas.MoveTo(x*8, y*16);
-         Canvas.LineTo(x*8, y*16+16);
+			Canvas.MoveTo(x*8*Schaal(), y*16*Schaal());
+         Canvas.LineTo(x*8*Schaal(), (y+1)*16*Schaal());
       end;
    	if (x = imaxx) then begin
-			Canvas.MoveTo(x*8+7, y*16);
-         Canvas.LineTo(x*8+7, y*16+16);
+			Canvas.MoveTo((x+1)*8*Schaal()-1, y*16*Schaal());
+         Canvas.LineTo((x+1)*8*Schaal()-1, (y+1)*16*Schaal());
       end;
    	if (y = 0) then begin
-			Canvas.MoveTo(x*8, y*16);
-         Canvas.LineTo(x*8+8, y*16);
+			Canvas.MoveTo(x*8*Schaal(), y*16*Schaal());
+         Canvas.LineTo((x+1)*8*Schaal(), y*16*Schaal());
       end;
    	if (y = imaxy) then begin
-			Canvas.MoveTo(x*8, y*16+15);
-         Canvas.LineTo(x*8+8, y*16+15);
+			Canvas.MoveTo(x*8*Schaal(), (y+1)*16*Schaal()-1);
+         Canvas.LineTo((x+1)*8*Schaal(), (y+1)*16*Schaal()-1);
       end;
    end;
 end;
@@ -515,16 +521,16 @@ begin
 					Teken := 'X';
 	   		Canvas.Pen.Style := psClear;
 				Canvas.Font.Name := 'Fixedsys';
-				Canvas.Font.Size := 9;
+				Canvas.Font.Size := 9*Schaal();
 				Canvas.Font.Color := DOSTransArr[15];
 				Canvas.Brush.Style := bsSolid;
 				Canvas.Brush.Color := clSilver;
-				Canvas.Textout(x*8, y*16, Teken);
+				Canvas.Textout(x*8*Schaal(), y*16*Schaal(), Teken);
             Canvas.Pen.Style := psSolid;
             Canvas.Pen.Color := clBlack;
 				Canvas.Brush.Style := bsSolid;
 				Canvas.Brush.Color := clBlack;
-				Canvas.Rectangle(x*8, y*16+15, x*8+8, y*16+16);
+				Canvas.Rectangle(x*8*Schaal(), (y+1)*16*Schaal()-1, (x+1)*8*Schaal(), (y+1)*16*Schaal());
             PaintHokjeBrdr(x, y);
 				exit;
 			end;
@@ -536,7 +542,7 @@ begin
       Canvas.Pen.Color := clBlack;
 		Canvas.Brush.Style := bsSolid;
 		Canvas.Brush.Color := clBlack;
-		Canvas.Rectangle(x*8, y*16, x*8+8, y*16+16);
+		Canvas.Rectangle(x*8*Schaal(), y*16*Schaal(), (x+1)*8*Schaal(), (y+1)*16*Schaal());
 	end else if Hokje.Soort = 1 then begin
 		grx := PvHokjeSpoor(Hokje.grdata)^.GrX;
 		gry := PvHokjeSpoor(Hokje.grdata)^.GrY;
@@ -684,16 +690,16 @@ begin
 		if (not PvHokjeLetter(Hokje.grdata)^.SeinWisselNr) or isswnr then begin
       	Canvas.Pen.Style := psClear;
 			Canvas.Font.Name := 'Fixedsys';
-			Canvas.Font.Size := 9;
+			Canvas.Font.Size := 9*Schaal();
 			Canvas.Font.Color := DOSTransArr[PvHokjeLetter(Hokje.grdata)^.Kleur];
 			Canvas.Brush.Style := bsSolid;
 			Canvas.Brush.Color := clBlack;
-			Canvas.Textout(x*8, y*16, PvHokjeLetter(Hokje.grdata)^.Letter);
+			Canvas.Textout(x*8*Schaal(), y*16*Schaal(), PvHokjeLetter(Hokje.grdata)^.Letter);
          Canvas.Pen.Style := psSolid;
          Canvas.Pen.Color := clBlack;
 			Canvas.Brush.Style := bsSolid;
 			Canvas.Brush.Color := clBlack;
-			Canvas.Rectangle(x*8, y*16+15, x*8+8, y*16+16);
+			Canvas.Rectangle(x*8*Schaal(), (y+1)*16*Schaal()-1, (x+1)*8*Schaal(), (y+1)*16*Schaal());
 		end else begin
 			grx := 0;
 			gry := 4;
@@ -734,14 +740,14 @@ var
 	bx, by, ex, ey: integer;
 	x,y: integer;
 begin
-	width := (imaxx+1)*8;
-	height := (imaxy+1)*16;
+	width := (imaxx+1)*8*Schaal();
+	height := (imaxy+1)*16*Schaal();
 
-	bx := Canvas.ClipRect.Left div 8;
-	by := Canvas.ClipRect.Top div 16;
+	bx := Canvas.ClipRect.Left div (8*Schaal());
+	by := Canvas.ClipRect.Top div (16*Schaal());
 
-	ex := Canvas.ClipRect.Right div 8;
-	ey := Canvas.ClipRect.Bottom div 16;
+	ex := Canvas.ClipRect.Right div (8*Schaal());
+	ey := Canvas.ClipRect.Bottom div (16*Schaal());
 
 	for x := bx to ex do
 		for y := by to ey do
@@ -1008,8 +1014,8 @@ end;
 
 procedure TvGleisplan.WatHier;
 begin
-	x := mx div 8;
-	y := my div 16;
+	x := mx div (8 * Schaal());
+	y := my div (16 * Schaal());
 	Hokje := Hokjes^[y*(imaxx+1)+x];
 end;
 

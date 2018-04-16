@@ -281,7 +281,7 @@ uses stwsimClientInfo, stwsimClientConnect, clientProcesplanForm,
 {$R *.DFM}
 
 {$R clientRes.res}
-{$R xpthemes.res}
+{$R manifest.res}
 
 const
 	MagicCode_3 = 'STWSIM.3';

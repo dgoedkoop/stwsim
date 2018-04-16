@@ -18,6 +18,7 @@ src/WSockBuf.pas
 src/WSocket.pas
 src/Thumbs.db
 src/*_?_?.odt
+src/*.RES
 naam.odt
 log.txt
 Zuidbroek/*test*
@@ -27,6 +28,7 @@ Zuidbroek/Zuidbroek2_7.sts
 Zuidbroek/Zuidbroek\ -*
 Schiphollijn/Schiphollijn?*.sts
 Schiphollijn/2012_0.1.ssd
+Schiphollijn/2015*.ssd
 Schiphollijn/Sporenschema.psp
 Iyu/Iyenvar_7.sts
 GnLw/
