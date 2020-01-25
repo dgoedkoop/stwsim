@@ -27,9 +27,6 @@ type
 		Tijd_u, Tijd_m, Tijd_s: integer;
 	end;
 
-// moet weg!!!
-procedure RijwegVoegInactiefHokjeToe(Rijweg: PvRijweg; schermID: integer; x,y: integer; meetpunt: PvMeetpunt);
-
 procedure vCore_Create(core: PvCore);
 
 function AddSubroute(core: PvCore; Meetpunt: PvMeetpunt; Wisselstanden: PvWisselStand;
@@ -98,26 +95,6 @@ procedure BerekenRijwegenNaarSeinen(Core: PvCore);
 procedure DestroyVCore(var Core: PvCore);
 
 implementation
-
-procedure RijwegVoegInactiefHokjeToe;
-var
-	nInactiefHokje: PvInactiefHokje;
-begin
-	nInactiefHokje := Rijweg.InactieveHokjes;
-	while assigned(nInactiefHokje) do begin
-		if (nInactiefHokje^.schermID = schermID) and
-			(nInactiefHokje^.x = x) and
-			(nInactiefHokje^.y = y) then
-			exit;
-		nInactiefHokje := nInactiefHokje^.Volgende;
-	end;
-	new(nInactiefHokje);
-	nInactiefHokje^.schermID := schermID;
-	nInactiefHokje^.x := x;
-	nInactiefHokje^.y := y;
-	nInactiefHokje^.volgende := Rijweg.InactieveHokjes;
-	Rijweg.InactieveHokjes := nInactiefHokje;
-end;
 
 procedure vCore_Create;
 begin
