@@ -48,7 +48,7 @@ begin
 	tekstOK := tekst_ok;
 	OphangenErg := false;
 	Userdata := nil;
-   OnDestroyUserdata := nil;
+	OnDestroyUserdata := nil;
 	Self.Owner := Owner;
 	WachtOpdracht := false;
 	WachtMetBellen := RandomWachtTijd(mintijd_wachtmetbellen, maxtijd_wachtmetbellen);

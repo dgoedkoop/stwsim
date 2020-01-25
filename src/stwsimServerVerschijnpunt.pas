@@ -3,44 +3,44 @@ unit stwsimServerVerschijnpunt;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, stwpCore, stwpVerschijnLijst, stwpTijd, stwpTreinen;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, stwpCore, stwpVerschijnLijst, stwpTijd, stwpTreinen;
 
 type
-  TstwssVerschijnpuntForm = class(TForm)
-    minedit: TEdit;
-    Label4: TLabel;
-    uuredit: TEdit;
-    Label3: TLabel;
-    Label1: TLabel;
-    treinnredit: TEdit;
-    Label2: TLabel;
-    plaatsCombo: TComboBox;
-    Label5: TLabel;
-    vdwTreinnrEdit: TEdit;
-    Label6: TLabel;
-    Label7: TLabel;
-    Label8: TLabel;
-	 vdwWachtEdit: TEdit;
-    Label9: TLabel;
-    Label10: TLabel;
-    okbut: TButton;
-    matList: TListBox;
-    matCombo: TComboBox;
-    andersomCheck: TCheckBox;
-	 matToevBut: TButton;
-	 matDelBut: TButton;
-	 Label11: TLabel;
-    hbut: TButton;
-    lbut: TButton;
-    procedure treinnreditChange(Sender: TObject);
-    procedure uureditChange(Sender: TObject);
-    procedure plaatsComboChange(Sender: TObject);
-    procedure matToevButClick(Sender: TObject);
-    procedure matDelButClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure hbutClick(Sender: TObject);
-    procedure lbutClick(Sender: TObject);
+	TstwssVerschijnpuntForm = class(TForm)
+		minedit: TEdit;
+		Label4: TLabel;
+		uuredit: TEdit;
+		Label3: TLabel;
+		Label1: TLabel;
+		treinnredit: TEdit;
+		Label2: TLabel;
+		plaatsCombo: TComboBox;
+		Label5: TLabel;
+		vdwTreinnrEdit: TEdit;
+		Label6: TLabel;
+		Label7: TLabel;
+		Label8: TLabel;
+		vdwWachtEdit: TEdit;
+		Label9: TLabel;
+		Label10: TLabel;
+		okbut: TButton;
+		matList: TListBox;
+		matCombo: TComboBox;
+		andersomCheck: TCheckBox;
+		matToevBut: TButton;
+		matDelBut: TButton;
+		Label11: TLabel;
+		hbut: TButton;
+		lbut: TButton;
+		procedure treinnreditChange(Sender: TObject);
+		procedure uureditChange(Sender: TObject);
+		procedure plaatsComboChange(Sender: TObject);
+		procedure matToevButClick(Sender: TObject);
+		procedure matDelButClick(Sender: TObject);
+		procedure FormShow(Sender: TObject);
+		procedure hbutClick(Sender: TObject);
+		procedure lbutClick(Sender: TObject);
 	private
 		{ Private declarations }
 		VerschijnItem: PpVerschijnItem;

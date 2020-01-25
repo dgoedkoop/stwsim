@@ -3,38 +3,38 @@ unit clientPlanregelEdit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, stwvCore, stwvRijwegen;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, stwvCore, stwvRijwegen;
 
 type
-  TstwscPlanregelEditForm = class(TForm)
-    treinnrEdit: TEdit;
-    Label1: TLabel;
-    Label2: TLabel;
-	 rozCheck: TCheckBox;
-    vanEdit: TEdit;
-    Label4: TLabel;
-    naarEdit: TEdit;
-    Label5: TLabel;
-    Label3: TLabel;
-    dwangBox: TComboBox;
-    actBox: TComboBox;
-    instelUurEdit: TEdit;
-	 Label6: TLabel;
-    instelMinEdit: TEdit;
-    Label7: TLabel;
-    nieuwNrEdit: TEdit;
-    Label8: TLabel;
-    Label9: TLabel;
-    RestNrEdit: TEdit;
-    Button1: TButton;
-    CancelBut: TButton;
-    HCheck: TCheckBox;
-    Label10: TLabel;
-    CombineerNrEdit: TEdit;
-    procedure vanEditChange(Sender: TObject);
-    procedure naarEditChange(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+	TstwscPlanregelEditForm = class(TForm)
+		treinnrEdit: TEdit;
+		Label1: TLabel;
+		Label2: TLabel;
+		rozCheck: TCheckBox;
+		vanEdit: TEdit;
+		Label4: TLabel;
+		naarEdit: TEdit;
+		Label5: TLabel;
+		Label3: TLabel;
+		dwangBox: TComboBox;
+		actBox: TComboBox;
+		instelUurEdit: TEdit;
+		Label6: TLabel;
+		instelMinEdit: TEdit;
+		Label7: TLabel;
+		nieuwNrEdit: TEdit;
+		Label8: TLabel;
+		Label9: TLabel;
+		RestNrEdit: TEdit;
+		Button1: TButton;
+		CancelBut: TButton;
+		HCheck: TCheckBox;
+		Label10: TLabel;
+		CombineerNrEdit: TEdit;
+		procedure vanEditChange(Sender: TObject);
+		procedure naarEditChange(Sender: TObject);
+		procedure FormShow(Sender: TObject);
 	private
 	public
 		Core: PvCore;
@@ -42,7 +42,7 @@ type
 	end;
 
 var
-  stwscPlanregelEditForm: TstwscPlanregelEditForm;
+	stwscPlanregelEditForm: TstwscPlanregelEditForm;
 
 implementation
 
@@ -88,7 +88,7 @@ end;
 
 procedure TstwscPlanregelEditForm.naarEditChange(Sender: TObject);
 begin
-UpdateDwangen;
+	UpdateDwangen;
 end;
 
 procedure TstwscPlanregelEditForm.FormShow(Sender: TObject);

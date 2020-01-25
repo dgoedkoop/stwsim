@@ -3,49 +3,49 @@ unit stwsimClientNieuwPlanpunt;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls;
 
 type
-  TstwscNieuwPlanpuntForm = class(TForm)
-    Label1: TLabel;
-    Label2: TLabel;
-    Label4: TLabel;
-    Label5: TLabel;
-    Label9: TLabel;
-    Label10: TLabel;
-    Label12: TLabel;
-    Label13: TLabel;
-    Label14: TLabel;
-    Label15: TLabel;
-    stationEdit: TEdit;
-    perronEdit: TEdit;
-    aanUurEdit: TEdit;
-    aanMinEdit: TEdit;
-    vertrMinEdit: TEdit;
-    vertrUurEdit: TEdit;
-    StopCheck: TCheckBox;
-    kerenCheck: TCheckBox;
-    nieuwnrEdit: TEdit;
-    loskAantalEdit: TEdit;
-    loskTreinnrEdit: TEdit;
-    loskKerenCheck: TCheckBox;
-    koppelCheck: TCheckBox;
-    okBut: TButton;
-    cancelBut: TButton;
-    aankCheck: TCheckBox;
-    vertrCheck: TCheckBox;
-    invStationEdit: TEdit;
-    Label3: TLabel;
-    procedure FormShow(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
+	TstwscNieuwPlanpuntForm = class(TForm)
+		Label1: TLabel;
+		Label2: TLabel;
+		Label4: TLabel;
+		Label5: TLabel;
+		Label9: TLabel;
+		Label10: TLabel;
+		Label12: TLabel;
+		Label13: TLabel;
+		Label14: TLabel;
+		Label15: TLabel;
+		stationEdit: TEdit;
+		perronEdit: TEdit;
+		aanUurEdit: TEdit;
+		aanMinEdit: TEdit;
+		vertrMinEdit: TEdit;
+		vertrUurEdit: TEdit;
+		StopCheck: TCheckBox;
+		kerenCheck: TCheckBox;
+		nieuwnrEdit: TEdit;
+		loskAantalEdit: TEdit;
+		loskTreinnrEdit: TEdit;
+		loskKerenCheck: TCheckBox;
+		koppelCheck: TCheckBox;
+		okBut: TButton;
+		cancelBut: TButton;
+		aankCheck: TCheckBox;
+		vertrCheck: TCheckBox;
+		invStationEdit: TEdit;
+		Label3: TLabel;
+		procedure FormShow(Sender: TObject);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+	end;
 
 var
-  stwscNieuwPlanpuntForm: TstwscNieuwPlanpuntForm;
+	stwscNieuwPlanpuntForm: TstwscNieuwPlanpuntForm;
 
 implementation
 

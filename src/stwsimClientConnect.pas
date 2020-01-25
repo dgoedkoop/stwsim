@@ -3,26 +3,26 @@ unit stwsimClientConnect;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls;
 
 type
-  TstwscConnectForm = class(TForm)
-    okBut: TButton;
-    cancelBut: TButton;
-    Label1: TLabel;
-    Label2: TLabel;
-    serverEdit: TEdit;
-    userEdit: TEdit;
-    procedure FormShow(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
+	TstwscConnectForm = class(TForm)
+		okBut: TButton;
+		cancelBut: TButton;
+		Label1: TLabel;
+		Label2: TLabel;
+		serverEdit: TEdit;
+		userEdit: TEdit;
+		procedure FormShow(Sender: TObject);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+	end;
 
 var
-  stwscConnectForm: TstwscConnectForm;
+	stwscConnectForm: TstwscConnectForm;
 
 implementation
 

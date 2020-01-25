@@ -3,47 +3,47 @@ unit clientProcesPlanFrame;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, stwvProcesPlan, stwvCore, stwvMisc, stwpTijd,
-  stwvTreinInfo, stwvRijwegen, ActnList, Menus;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, ExtCtrls, stwvProcesPlan, stwvCore, stwvMisc, stwpTijd,
+stwvTreinInfo, stwvRijwegen, ActnList, Menus;
 
 type
-  TstwscProcesPlanFrame = class(TFrame)
-	 RegelList: TListBox;
-	 btnPanel: TPanel;
-	 ExecBut: TButton;
-	 EditBut: TButton;
-	 DelBut: TButton;
-	 ARICheck: TCheckBox;
-    TitelPanel: TPanel;
-    titelLabel: TLabel;
-    HistList: TListBox;
-    PopupMenu: TPopupMenu;
-    ActionList: TActionList;
-    VoernuuitAct: TAction;
-    BewerkAct: TAction;
-    DelAct: TAction;
-    VVAct: TAction;
-    Voernuuit1: TMenuItem;
-	 Verwerkvertraging1: TMenuItem;
-	 Bewerk1: TMenuItem;
-    Verwijder1: TMenuItem;
-    GeenARIAct: TAction;
-    UitschakelenvoorARI1: TMenuItem;
-    procedure RegelListDblClick(Sender: TObject);
-    procedure VoernuuitActExecute(Sender: TObject);
-    procedure BewerkActExecute(Sender: TObject);
-    procedure DelActExecute(Sender: TObject);
-    procedure VVActExecute(Sender: TObject);
-    procedure RegelListMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure RegelListDrawItem(Control: TWinControl; Index: Integer;
-      Rect: TRect; State: TOwnerDrawState);
-    procedure HistListDrawItem(Control: TWinControl; Index: Integer;
-      Rect: TRect; State: TOwnerDrawState);
-    procedure GeenARIActExecute(Sender: TObject);
-    procedure RegelListClick(Sender: TObject);
-    procedure ARICheckClick(Sender: TObject);
+	TstwscProcesPlanFrame = class(TFrame)
+		RegelList: TListBox;
+		btnPanel: TPanel;
+		ExecBut: TButton;
+		EditBut: TButton;
+		DelBut: TButton;
+		ARICheck: TCheckBox;
+		TitelPanel: TPanel;
+		titelLabel: TLabel;
+		HistList: TListBox;
+		PopupMenu: TPopupMenu;
+		ActionList: TActionList;
+		VoernuuitAct: TAction;
+		BewerkAct: TAction;
+		DelAct: TAction;
+		VVAct: TAction;
+		Voernuuit1: TMenuItem;
+		Verwerkvertraging1: TMenuItem;
+		Bewerk1: TMenuItem;
+		Verwijder1: TMenuItem;
+		GeenARIAct: TAction;
+		UitschakelenvoorARI1: TMenuItem;
+		procedure RegelListDblClick(Sender: TObject);
+		procedure VoernuuitActExecute(Sender: TObject);
+		procedure BewerkActExecute(Sender: TObject);
+		procedure DelActExecute(Sender: TObject);
+		procedure VVActExecute(Sender: TObject);
+		procedure RegelListMouseDown(Sender: TObject; Button: TMouseButton;
+			Shift: TShiftState; X, Y: Integer);
+		procedure RegelListDrawItem(Control: TWinControl; Index: Integer;
+			Rect: TRect; State: TOwnerDrawState);
+		procedure HistListDrawItem(Control: TWinControl; Index: Integer;
+			Rect: TRect; State: TOwnerDrawState);
+		procedure GeenARIActExecute(Sender: TObject);
+		procedure RegelListClick(Sender: TObject);
+		procedure ARICheckClick(Sender: TObject);
 	private
 		{ Private declarations }
 		selPunt:	PvProcesPlanPunt;
@@ -87,7 +87,7 @@ procedure TstwscProcesPlanFrame.UpdateControls;
 begin
 	selPunt := FindSelected;
 	VoernuuitAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt) and
-   	Procesplan.IsTreinAanwezig(selPunt, true) and Procesplan.ControleerCombineerTrein(selPunt);
+		Procesplan.IsTreinAanwezig(selPunt, true) and Procesplan.ControleerCombineerTrein(selPunt);
 	BewerkAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
 	DelAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
 	VVAct.Enabled := assigned(selPunt) and Procesplan.MagHandmatigUitvoeren(selPunt);
@@ -164,7 +164,7 @@ begin
 	else
 		s := s + Pad('', 4, #32, vaAchter);
 	if (PPP^.NieuwNummer <> '') or (PPP^.RestNummer <> '') or
-   	(PPP^.CombineerNummer <> '') then
+		(PPP^.CombineerNummer <> '') then
 		s := s + 'm';
 	if PPP^.H then
 		s := s + 'H';
@@ -437,7 +437,7 @@ end;
 
 procedure TstwscProcesPlanFrame.RegelListClick(Sender: TObject);
 begin
-   UpdateControls;
+	UpdateControls;
 end;
 
 procedure TstwscProcesPlanFrame.ARICheckClick(Sender: TObject);

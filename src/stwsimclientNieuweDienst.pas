@@ -3,28 +3,28 @@ unit stwsimclientNieuweDienst;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls;
 
 type
-  TstwscNieuweDienstForm = class(TForm)
-    Label1: TLabel;
-    treinnrEdit: TEdit;
-    okBut: TButton;
-    cancelBut: TButton;
-    vanEdit: TEdit;
-    vanCheck: TCheckBox;
-    procedure FormShow(Sender: TObject);
-    procedure vanCheckClick(Sender: TObject);
-  private
-    { Private declarations }
-  public
-	 { Public declarations }
-		procedure UpdateDingen;
-  end;
+	TstwscNieuweDienstForm = class(TForm)
+		Label1: TLabel;
+		treinnrEdit: TEdit;
+		okBut: TButton;
+		cancelBut: TButton;
+		vanEdit: TEdit;
+		vanCheck: TCheckBox;
+		procedure FormShow(Sender: TObject);
+		procedure vanCheckClick(Sender: TObject);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+			procedure UpdateDingen;
+	end;
 
 var
-  stwscNieuweDienstForm: TstwscNieuweDienstForm;
+	stwscNieuweDienstForm: TstwscNieuweDienstForm;
 
 implementation
 

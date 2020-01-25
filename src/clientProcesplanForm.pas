@@ -3,10 +3,10 @@ unit clientProcesplanForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  clientProcesPlanFrame, stwvProcesplan, stwvRijwegLogica, stwvCore, stwvLog,
-  clientSendMsg, stwvMeetpunt, stwvMisc, stwvSeinen, stwvTreinInfo, StdCtrls,
-  stwpTijd, ExtCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	clientProcesPlanFrame, stwvProcesplan, stwvRijwegLogica, stwvCore, stwvLog,
+	clientSendMsg, stwvMeetpunt, stwvMisc, stwvSeinen, stwvTreinInfo, StdCtrls,
+	stwpTijd, ExtCtrls;
 
 type
 	TLinksRechts = (lrLinks, lrRechts);
@@ -19,16 +19,16 @@ type
 	TOnHerkenProcesplanClose = procedure of object;
 
 	TstwscProcesplanForm = class(TForm)
-	 LiPanel: TPanel;
-	 RePanel: TPanel;
-	 OpenDialog: TOpenDialog;
-    LiBtnPanel: TPanel;
-    ProcesplanToevBtn: TButton;
-	 procedure ProcesplanToevBtnClick(Sender: TObject);
-	 procedure FormCreate(Sender: TObject);
-    procedure FormResize(Sender: TObject);
-	 procedure FormDestroy(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+		LiPanel: TPanel;
+		RePanel: TPanel;
+		OpenDialog: TOpenDialog;
+		LiBtnPanel: TPanel;
+		ProcesplanToevBtn: TButton;
+		procedure ProcesplanToevBtnClick(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
+		procedure FormResize(Sender: TObject);
+		procedure FormDestroy(Sender: TObject);
+		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 	private
 		PPFramesLinks,
 		PPFramesRechts:	PFrameList;
@@ -55,11 +55,11 @@ type
 		procedure RecalcSizes;
 		procedure SaveStatus(var f: file);
 		procedure LoadStatus(var f: file; SgVersion: integer);
-      procedure ProcesplannenReset;
+		procedure ProcesplannenReset;
 	end;
 
 var
-  stwscProcesplanForm: TstwscProcesplanForm;
+	stwscProcesplanForm: TstwscProcesplanForm;
 
 implementation
 
@@ -195,7 +195,7 @@ begin
 	PPFrame^.PPFrame := TstwscProcesPlanFrame.Create(Self);
 	PPFrame^.PPFrame.Name := 'PPFrame'+IntToStr(FramesLinks+FramesRechts);
 	PPFrame^.PPFrame.Visible := true;
-	PPFrame^.PPFrame.Core  := Core;
+	PPFrame^.PPFrame.Core := Core;
 	s := copy(Filename, 1, length(Filename)-length(ExtractFileExt(Filename)));
 	PPFrame^.PPFrame.FName := Uppercase(copy(s,1,1))+LowerCase(copy(s,2,length(s)-1));
 	PPFrame^.PPFrame.titelLabel.Caption := PPFrame^.PPFrame.FName;
@@ -358,7 +358,7 @@ end;
 
 procedure TstwscProcesplanForm.FormDestroy(Sender: TObject);
 begin
-   ProcesplannenReset;
+	ProcesplannenReset;
 end;
 
 procedure TstwscProcesplanForm.ProcesplannenReset;
@@ -390,7 +390,7 @@ begin
 end;
 
 procedure TstwscProcesplanForm.FormClose(Sender: TObject;
-  var Action: TCloseAction);
+	var Action: TCloseAction);
 begin
 	OnHerkenProcesplanClose;
 end;

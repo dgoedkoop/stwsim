@@ -16,7 +16,7 @@ type
 														// zonder approach locking
 		Van				: string;
 		VanTNVMeetpunt : PvMeetpunt;
-      TriggerMeetpunt: PvMeetpunt;
+		TriggerMeetpunt: PvMeetpunt;
 		Aank_Erlaubnis : PvErlaubnis;
 		Aank_Erlaubnisstand:	byte;
 		// Berekende gegevens

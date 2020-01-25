@@ -224,10 +224,10 @@ var
 	Gesprek: PvBinnenkomendGesprek;
 begin
 	while assigned(Core.vAlleBinnenkomendeGesprekken) do begin
-   	Gesprek := Core.vAlleBinnenkomendeGesprekken;
-      Core.vAlleBinnenkomendeGesprekken := Gesprek^.Volgende;
-      dispose(Gesprek);
-   end;
+		Gesprek := Core.vAlleBinnenkomendeGesprekken;
+		Core.vAlleBinnenkomendeGesprekken := Gesprek^.Volgende;
+		dispose(Gesprek);
+	end;
 end;
 
 function ZoekMeetpunt;
@@ -394,7 +394,7 @@ var
 	s, l: PvSein;
 begin
 	new(s);
-   s^.Stand_wens := '';
+	s^.Stand_wens := '';
 	s^.Naam := '';
 	s^.Van := '';
 	s^.TriggerMeetpunt := nil;
@@ -402,8 +402,8 @@ begin
 	s^.HerroepMeetpunten := nil;
 	s^.RijwegOnderdeel := nil;
 	s^.DoelVanRijweg := nil;
-   s^.Aank_Erlaubnis := nil;
-   s^.Aank_Erlaubnisstand := 0;
+	s^.Aank_Erlaubnis := nil;
+	s^.Aank_Erlaubnisstand := 0;
 	s^.registered := false;
 	s^.herroepen := false;
 	s^.Volgende := nil;
@@ -746,11 +746,11 @@ begin
 		stringwrite(f, Sein^.VanTNVMeetpunt^.meetpuntID)
 	else
 		stringwrite(f, '');
-   if assigned(Sein^.Aank_Erlaubnis) then
-   	stringwrite(f, Sein^.Aank_Erlaubnis^.erlaubnisID)
-   else
-   	stringwrite(f, '');
-   bytewrite(f, Sein^.Aank_Erlaubnisstand);
+	if assigned(Sein^.Aank_Erlaubnis) then
+		stringwrite(f, Sein^.Aank_Erlaubnis^.erlaubnisID)
+	else
+		stringwrite(f, '');
+	bytewrite(f, Sein^.Aank_Erlaubnisstand);
 	wat := 'h';
 	HerroepMeetpunt := Sein^.HerroepMeetpunten;
 	while assigned(HerroepMeetpunt) do begin
@@ -774,11 +774,11 @@ begin
 	stringread(f, vanmp);
 	Sein^.TriggerMeetpunt := ZoekMeetpunt(Core, triggermp);
 	Sein^.VanTNVMeetpunt := ZoekMeetpunt(Core, vanmp);
-   if version >= 3 then begin
-   	stringread(f, richting);
-   	Sein^.Aank_Erlaubnis := ZoekErlaubnis(Core, richting);
-      byteread(f, Sein^.Aank_Erlaubnisstand);
-   end;
+	if version >= 3 then begin
+		stringread(f, richting);
+		Sein^.Aank_Erlaubnis := ZoekErlaubnis(Core, richting);
+		byteread(f, Sein^.Aank_Erlaubnisstand);
+	end;
 	repeat
 		blockread(f, wat, sizeof(wat));
 		case wat of
@@ -1354,7 +1354,7 @@ begin
 	while assigned(Meetpunt) do begin
 		stringwrite(f, Meetpunt^.meetpuntID);
 		boolwrite(f, Meetpunt^.bezet);
-      stringwrite(f, Meetpunt^.treinnummer);
+		stringwrite(f, Meetpunt^.treinnummer);
 		Meetpunt := Meetpunt^.Volgende;
 	end;
 end;
@@ -1394,8 +1394,8 @@ begin
 		stringread(f, MeetpuntID);
 		Meetpunt := ZoekMeetpunt(Core, MeetpuntID);
 		boolread(f, Meetpunt^.bezet);
-      if SgVersion >= 14 then
-      	stringread(f, Meetpunt^.treinnummer);
+		if SgVersion >= 14 then
+			stringread(f, Meetpunt^.treinnummer);
 	end;
 end;
 
@@ -1404,41 +1404,41 @@ var
 	Wissel: PvWissel;
 	WisselGroep: PvWisselGroep;
 	Meetpunt: PvMeetpunt;
-   Sein: PvSein;
+	Sein: PvSein;
 begin
 	Wisselgroep := Core^.vAlleWisselGroepen;
-   while assigned(Wisselgroep) do begin
-   	Wissel := Wisselgroep^.EersteWissel;
-      while assigned(Wissel) do begin
-         Wissel^.WensStand := wsEgal;
-         Wissel^.Stand := wsOnbekend;
-         Wissel^.RijwegOnderdeel := nil;
-         Wissel^.rijwegverh := false;
-         Wissel^.changed := false;
-      	Wissel := Wissel^.Volgende;
-      end;
-      Wisselgroep^.bedienverh := false;
-      Wisselgroep^.OnbekendAanwezig := false;
-      Wisselgroep := Wisselgroep^.Volgende;
-   end;
-   Meetpunt := Core^.vAlleMeetpunten;
-   while assigned(Meetpunt) do begin
-   	Meetpunt^.bezet := false;
-      Meetpunt^.treinnummer := '';
-      Meetpunt^.RijwegOnderdeel := nil;
-      Meetpunt^.changed := false;
-      Meetpunt^.OnterechtBezet := false;
-      Meetpunt^.Knipperen := false;
-      Meetpunt := Meetpunt^.volgende;
-   end;
-   Sein := Core^.vAlleSeinen;
-   while assigned(Sein) do begin
-   	Sein^.Stand_wens := '';
-      Sein^.RijwegOnderdeel := nil;
-      Sein^.DoelVanRijweg := nil;
-      Sein^.changed := false;
-      Sein := Sein^.Volgende; 
-   end;
+	while assigned(Wisselgroep) do begin
+		Wissel := Wisselgroep^.EersteWissel;
+		while assigned(Wissel) do begin
+			Wissel^.WensStand := wsEgal;
+			Wissel^.Stand := wsOnbekend;
+			Wissel^.RijwegOnderdeel := nil;
+			Wissel^.rijwegverh := false;
+			Wissel^.changed := false;
+			Wissel := Wissel^.Volgende;
+		end;
+		Wisselgroep^.bedienverh := false;
+		Wisselgroep^.OnbekendAanwezig := false;
+		Wisselgroep := Wisselgroep^.Volgende;
+	end;
+	Meetpunt := Core^.vAlleMeetpunten;
+	while assigned(Meetpunt) do begin
+		Meetpunt^.bezet := false;
+		Meetpunt^.treinnummer := '';
+		Meetpunt^.RijwegOnderdeel := nil;
+		Meetpunt^.changed := false;
+		Meetpunt^.OnterechtBezet := false;
+		Meetpunt^.Knipperen := false;
+		Meetpunt := Meetpunt^.volgende;
+	end;
+	Sein := Core^.vAlleSeinen;
+	while assigned(Sein) do begin
+		Sein^.Stand_wens := '';
+		Sein^.RijwegOnderdeel := nil;
+		Sein^.DoelVanRijweg := nil;
+		Sein^.changed := false;
+		Sein := Sein^.Volgende; 
+	end;
 end;
 
 procedure BerekenRijwegenNaarSeinen;
@@ -1503,8 +1503,8 @@ begin
 				Aank_Error := false;
 				if assigned(Sein^.Aank_Erlaubnis) then begin
 					if not assigned(Aank_Erlaubnis) then begin
-               	Aank_Erlaubnis := Sein^.Aank_Erlaubnis;
-                  Aank_Erlaubnisstand := Sein^.Aank_Erlaubnisstand;
+						Aank_Erlaubnis := Sein^.Aank_Erlaubnis;
+						Aank_Erlaubnisstand := Sein^.Aank_Erlaubnisstand;
 					end else begin
 						if Aank_Erlaubnis = Sein^.Aank_Erlaubnis then begin
 							if Aank_Erlaubnisstand <> Sein^.Aank_Erlaubnisstand then begin
@@ -1545,7 +1545,7 @@ begin
 						end;
 						Rijweg := Rijweg^.Volgende;
 					end;
-            end;
+				end;
 
 				if not Aank_Error then begin
 					Aank_Meetpunt^.Aankondiging := true;
@@ -1632,7 +1632,7 @@ begin
 			Dispose(vAlleErlaubnisse);
 			vAlleErlaubnisse := tmp;
 		end;
-      DestroyActieveRijwegen(Core);
+		DestroyActieveRijwegen(Core);
 		while assigned(vAllePrlRijwegen) do begin
 			tmp := vAllePrlRijwegen^.Volgende;
 			while assigned(vAllePrlRijwegen^.Rijwegen) do begin

@@ -8,7 +8,7 @@ uses stwpCore, stwpTreinen, stwpRails, stwpSeinen, stwpRijplan, stwpTijd,
 type
 	PpTreinTelefoonSoort = ^TpTreinTelefoonSoort;
 	TpTreinTelefoonSoort = (ttsInfo, ttsStilstaan, ttsStilstaanStation, ttsKannietweg,
-   	ttsVertrekBevestiging);
+		ttsVertrekBevestiging);
 
 	PpTreinPhysics = ^TpTreinPhysics;
 	TpTreinPhysics = class
@@ -466,12 +466,12 @@ begin
 			Trein^.Achteruit := not Trein^.Achteruit;
 			exit;
 		end;
-      // De trein crasht, want hij is op werkzaamheden gereden.
-      if assigned(Trein^.pos_rail^.meetpunt) then
-      	if PpMeetpunt(Trein^.pos_rail^.meetpunt)^.kortsluitlans then begin
+		// De trein crasht, want hij is op werkzaamheden gereden.
+		if assigned(Trein^.pos_rail^.meetpunt) then
+			if PpMeetpunt(Trein^.pos_rail^.meetpunt)^.kortsluitlans then begin
 			Trein^.Modus := tmGecrasht;
 			exit;
-      end;
+		end;
 
 		HerkenFlankbotsingen(Trein);
 
@@ -539,7 +539,7 @@ begin
 		laatsteWagon := tmpWagon;
 		tmpWagon := tmpWagon^.Volgende;
 	end;
-	// Als de voorste trein überhaupt wagons heeft. Anders hoeven
+	// Als de voorste trein ï¿½berhaupt wagons heeft. Anders hoeven
 	// we niks te doen.
 	if assigned(laatsteWagon) then begin
 		laatsteWagon^.Volgende := Trein^.EersteWagon;
@@ -561,7 +561,7 @@ begin
 		// trein komt.
 		// Het StationModusPlanpunt van de huidige trein houden we echter,
 		// omdat daar nog dingen als OMDRAAIEN in kunnen staan!
-		// Maar de vertrektijd nemen we wél van de andere trein over!
+		// Maar de vertrektijd nemen we wï¿½l van de andere trein over!
 		if assigned(GevKoppelTrein^.StationmodusPlanpunt) then
 			Trein^.StationModusPlanpunt^.Vertrek :=
 			GevKoppelTrein^.StationmodusPlanpunt^.Vertrek;
@@ -591,7 +591,7 @@ begin
 		for i := 1 to wagonshouden do begin
 			tmpWagon := tmpWagon^.Volgende;
 		end;
-		// De knip komt nu vóór tmpWagon.
+		// De knip komt nu vï¿½ï¿½r tmpWagon.
 		tmpWagon^.Vorige^.Volgende := nil;
 		tmpWagon^.Vorige := nil;
 		// TmpWagon is nu dus de eerste wagon van de nieuwe trein.
@@ -619,7 +619,7 @@ begin
 		tmpTrein^.StationModusPlanpunt^.spc_gedaan := false;
 		// Af te wachten tijd instellen
 		tmpTrein^.kannietwegvoor := Trein^.kannietwegvoor;
-		// Dynamische gegevens overkopiëren
+		// Dynamische gegevens overkopiï¿½ren
 		tmpTrein^.Update;
 		tmpTrein^.baanvaksnelheid := Trein^.baanvaksnelheid;
 		tmpTrein^.huidigemaxsnelheid := Trein^.huidigemaxsnelheid;
@@ -704,12 +704,12 @@ begin
 			// Zo ja, dan is het probleem opgelost
 			CommPhysics.ProbleemOpgelost(Gesprek)
 		else
-      	Trein^.klaarmeldingvereist := true;
-   end;
+			Trein^.klaarmeldingvereist := true;
+	end;
 	if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) and
-   	(Trein^.klaarmeldingvereist) then begin
-   	Gesprek := ZoekTelefoongesprek(Trein, ttsVertrekBevestiging);
-      if not assigned(Gesprek) then begin
+		(Trein^.klaarmeldingvereist) then begin
+		Gesprek := ZoekTelefoongesprek(Trein, ttsVertrekBevestiging);
+		if not assigned(Gesprek) then begin
 			// We moeten om bevestiging vragen voor we vertrekken.
 			gesprek := Core.NieuwTelefoongesprek(Trein, tgtBellen, true);
 			gesprek^.tekstX := treinklaarmeldingbericht;
@@ -718,9 +718,9 @@ begin
 			PpTreinTelefoonSoort(gesprek^.userdata)^ := ttsVertrekBevestiging;
 			Gesprek^.OnDestroyUserdata := DestroyUserdata;
 		end;
-   end;
+	end;
 	if (GetTijd>=vt) and (vt <> -1) and ((GetTijd>=mt) or (mt=-1)) and (not Trein^.defect) and
-   	(not Trein^.klaarmeldingvereist) then begin
+		(not Trein^.klaarmeldingvereist) then begin
 		tmpRail := Trein^.pos_rail;
 		tmpAchteruit := Trein^.achteruit;
 		tmpPos := Trein^.pos_dist;
@@ -748,7 +748,7 @@ begin
 			Waaromstilstaan := stTrein
 		end;
 		if Vertreksein then begin
-			// In principe komen we op deze plek maar één keer en wordt de modus
+			// In principe komen we op deze plek maar ï¿½ï¿½n keer en wordt de modus
 			// hier op tmRijden gezet. Tenzij er uiteraard iets mis gaat. Hoe
 			// dan ook, eerst maar eens een evt. telefoongesprek wissen over dat
 			// we nog geen vertreksein hebben.
@@ -769,13 +769,13 @@ begin
 					(Trein^.StationModusPlanpunt^.Perron <> '') and
 					(Trein^.StationModusPlanpunt^.Perron <> '0') then
 					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart +
-               	treindefectberichten[round(random*treindefectberichtaantal-1)+1]
-               	+ ' ' + tekstberichtover
+						treindefectberichten[round(random*treindefectberichtaantal-1)+1]
+						+ ' ' + tekstberichtover
 				else
 					// Als we niet bij een perron staan is 'hij doet het niet'
 					// het enige zinvolle excuus.
 					gesprek^.tekstX := HalloTekst(Trein) + treindefectberichtstart +
-               	treindefectberichten[1] + ' ' + tekstberichtover;
+						treindefectberichten[1] + ' ' + tekstberichtover;
 			end else begin
 				// We kunnen echt echt vertrekken
 				Trein^.modus := tmRijden;
@@ -896,7 +896,7 @@ var
 	GevSeinAfstand:	double;
 begin
 	// Nu moeten we nog de mogelijke modusovergangen afhandelen. Daarvan is er
-	// maar één mogelijk, en dat is wanneer we stilstaan langs een perron.
+	// maar ï¿½ï¿½n mogelijk, en dat is wanneer we stilstaan langs een perron.
 	// Hoe weten we of dat het geval is? Snelheid=0 en verder is het volgende
 	// sein een stationsbordje dat voor ons geschikt is.
 	if (Trein^.snelheid = 0) and assigned(Trein^.Planpunten) then begin

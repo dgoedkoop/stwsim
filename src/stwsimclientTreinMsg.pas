@@ -3,27 +3,27 @@ unit stwsimclientTreinMsg;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, clientSendMsg;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, clientSendMsg;
 
 type
-  TstwscTreinMsgForm = class(TForm)
-	 okBut: TButton;
-	 cancelBut: TButton;
-	 watList: TListBox;
-	 Label1: TLabel;
-	 procedure okButClick(Sender: TObject);
-	 procedure FormShow(Sender: TObject);
-    procedure watListDblClick(Sender: TObject);
-  private
-	 { Private declarations }
+	TstwscTreinMsgForm = class(TForm)
+		okBut: TButton;
+		cancelBut: TButton;
+		watList: TListBox;
+		Label1: TLabel;
+		procedure okButClick(Sender: TObject);
+		procedure FormShow(Sender: TObject);
+		procedure watListDblClick(Sender: TObject);
+	private
+		{ Private declarations }
 	public
 		SendMsg:	TvSendMsg;
 		treinnr:	string;
 	end;
 
 var
-  stwscTreinMsgForm: TstwscTreinMsgForm;
+	stwscTreinMsgForm: TstwscTreinMsgForm;
 
 implementation
 
@@ -32,12 +32,12 @@ uses stwsimClientNieuwPlanpunt, stwsimclientRA, stwsimclientNieuweDienst;
 {$R *.DFM}
 
 const
-	stsp   = 'Lastgeving STS-passage verstrekken';
-	stspa  = 'Lastgeving STS-passage intrekken';
+	stsp	 = 'Lastgeving STS-passage verstrekken';
+	stspa	 = 'Lastgeving STS-passage intrekken';
 	vnstsp = 'Rijd voorzichtig op zicht verder (na STS-passage zonder lastgeving)';
-	wtt2   = 'Wacht nog even, u kunt zometeen verder.';
-	wtt5   = 'Wacht nog even, u kunt binnen 5 minuten verder.';
-	wtt15  = 'Wacht, het kan nog wel een kwartier duren voordat u verder kunt.';
+	wtt2	 = 'Wacht nog even, u kunt zometeen verder.';
+	wtt5	 = 'Wacht nog even, u kunt binnen 5 minuten verder.';
+	wtt15	 = 'Wacht, het kan nog wel een kwartier duren voordat u verder kunt.';
 	ra		 = 'Sla het huidige dienstregelingpunt over';
 	raw	 = 'Sla dienstregelingpunt ... over';
 	nr		 = 'Nieuw dienstregelingpunt ...';

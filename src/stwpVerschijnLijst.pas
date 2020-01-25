@@ -9,15 +9,15 @@ type
 	TpVerschijnPunt = record
 		Naam:					string;
 		Rail:		 			PpRail;
-		vertragingmag:    boolean;	// Mag de trein vertraging hebben?
+		vertragingmag:		boolean;	// Mag de trein vertraging hebben?
 		afstand:				double;
 		achteruit:			boolean;
 		modus:				integer;
 		startsnelheid:		integer;
-		baanvaksnelheid:  integer;
+		baanvaksnelheid:	integer;
 		erlaubnis:			PpErlaubnis;
 		erlaubnisstand:	byte;
-      ScenarioVS:			PpVerschijnPunt;
+		ScenarioVS:			PpVerschijnPunt;
 		Volgende:			PpVerschijnPunt;
 	end;
 

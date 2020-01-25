@@ -3,24 +3,24 @@ unit stwsimClientStringInput;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls;
 
 type
-  TstwscStringInputForm = class(TForm)
-    InputLabel: TLabel;
-    InputEdit: TEdit;
-    okBut: TButton;
-    cancelBut: TButton;
-    procedure FormShow(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
+	TstwscStringInputForm = class(TForm)
+		InputLabel: TLabel;
+		InputEdit: TEdit;
+		okBut: TButton;
+		cancelBut: TButton;
+		procedure FormShow(Sender: TObject);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+	end;
 
 var
-  stwscStringInputForm: TstwscStringInputForm;
+	stwscStringInputForm: TstwscStringInputForm;
 
 implementation
 

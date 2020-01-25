@@ -89,7 +89,7 @@ begin
 		Returned^.status := rsOK
 	else
 		Returned^.Status := rsError;
-   PostMessage(Application.Handle, WM_RESULTSET, 0, 0);
+	PostMessage(Application.Handle, WM_RESULTSET, 0, 0);
 end;
 
 procedure TvSendMsg.SendRawStr;

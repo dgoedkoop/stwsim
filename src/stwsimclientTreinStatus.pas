@@ -3,15 +3,15 @@ unit stwsimclientTreinStatus;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, serverSendMsg;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	ExtCtrls, StdCtrls, serverSendMsg;
 
 type
-  TstwscTreinStatusForm = class(TForm)
-	 statusMemo: TMemo;
-	 closeBut: TButton;
-	 procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+	TstwscTreinStatusForm = class(TForm)
+		statusMemo: TMemo;
+		closeBut: TButton;
+		procedure FormCreate(Sender: TObject);
+		procedure FormShow(Sender: TObject);
 	private
 		Regels: integer;
 	public
@@ -60,7 +60,7 @@ end;
 
 procedure TstwscTreinStatusForm.FormShow(Sender: TObject);
 begin
-   ActiveControl := closeBut;
+	ActiveControl := closeBut;
 end;
 
 end.

@@ -3,26 +3,26 @@ unit stwsimclientTelefoongesprek;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, clientSendMsg, stwvTreinComm, stwpTijd;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, clientSendMsg, stwvTreinComm, stwpTijd;
 
 type
 	TGesprekStatus = (gsOvergaan, gsVerbonden, gsVerwachtAntwoord, gsOpgehangen);
 
-  TstwscTelefoonGesprekForm = class(TForm)
-	 okBut: TButton;
-	 ophangBut: TButton;
-	 watList: TListBox;
-	 Label1: TLabel;
-	 berichtMemo: TMemo;
-	 Label2: TLabel;
-	 procedure okButClick(Sender: TObject);
-	 procedure watListDblClick(Sender: TObject);
-    procedure ophangButClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormCreate(Sender: TObject);
-  private
-	 { Private declarations }
+	TstwscTelefoonGesprekForm = class(TForm)
+		okBut: TButton;
+		ophangBut: TButton;
+		watList: TListBox;
+		Label1: TLabel;
+		berichtMemo: TMemo;
+		Label2: TLabel;
+		procedure okButClick(Sender: TObject);
+		procedure watListDblClick(Sender: TObject);
+		procedure ophangButClick(Sender: TObject);
+		procedure FormClose(Sender: TObject; var Action: TCloseAction);
+		procedure FormCreate(Sender: TObject);
+	private
+		{ Private declarations }
 		procedure AddLine(msg: String);
 		procedure UpdateControls;
 	public
@@ -38,22 +38,22 @@ type
 	end;
 
 var
-  stwscTelefoonGesprekForm: TstwscTelefoonGesprekForm;
+	stwscTelefoonGesprekForm: TstwscTelefoonGesprekForm;
 
 implementation
 
 uses stwsimclientNieuweDienst, stwsimClientNieuwPlanpunt,
-  stwsimClientStringInput;
+	stwsimClientStringInput;
 
 {$R *.DFM}
 
 const
-	stsp   = 'Aanwijzing STS-passage verstrekken... Over.';
-	stspa  = 'Aanwijzing STS-passage intrekken. Over.';
+	stsp	 = 'Aanwijzing STS-passage verstrekken... Over.';
+	stspa	 = 'Aanwijzing STS-passage intrekken. Over.';
 	vnstsp = 'Rijd voorzichtig op zicht verder. Over.';
-	wtt2   = 'Wacht nog even, u kunt zometeen verder. Over.';
-	wtt5   = 'Wacht nog even, u kunt binnen 5 minuten verder. Over.';
-	wtt15  = 'Wacht, het kan nog wel een kwartier duren voordat u verder kunt. Over.';
+	wtt2	 = 'Wacht nog even, u kunt zometeen verder. Over.';
+	wtt5	 = 'Wacht nog even, u kunt binnen 5 minuten verder. Over.';
+	wtt15	 = 'Wacht, het kan nog wel een kwartier duren voordat u verder kunt. Over.';
 	ra		 = 'Sla het huidige dienstregelingpunt over. Over.';
 	raw	 = 'Sla dienstregelingpunt ... over. Over.';
 	nr		 = 'Nieuw dienstregelingpunt ... Over.';

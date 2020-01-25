@@ -3,33 +3,33 @@ unit stwsimclientTelefoon;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, clientSendMsg, stwvCore, stwvTreinComm, stwpTijd;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, clientSendMsg, stwvCore, stwvTreinComm, stwpTijd;
 
 type
-  TstwscTelefoonForm = class(TForm)
-	 gesprekkenList: TListBox;
-	 opneemBut: TButton;
-	 treinCaption: TLabel;
-	 cancelBut: TButton;
-	 belBut: TButton;
-	 weigerBut: TButton;
-	 procedure FormShow(Sender: TObject);
-	 procedure gesprekkenListClick(Sender: TObject);
-	 procedure opneemButClick(Sender: TObject);
-	 procedure gesprekkenListDblClick(Sender: TObject);
-	 procedure weigerButClick(Sender: TObject);
-    procedure belButClick(Sender: TObject);
+	TstwscTelefoonForm = class(TForm)
+		gesprekkenList: TListBox;
+		opneemBut: TButton;
+		treinCaption: TLabel;
+		cancelBut: TButton;
+		belBut: TButton;
+		weigerBut: TButton;
+		procedure FormShow(Sender: TObject);
+		procedure gesprekkenListClick(Sender: TObject);
+		procedure opneemButClick(Sender: TObject);
+		procedure gesprekkenListDblClick(Sender: TObject);
+		procedure weigerButClick(Sender: TObject);
+		procedure belButClick(Sender: TObject);
 	private
 		selGesprek: PvBinnenkomendGesprek;
 	public
 		Core:		PvCore;
 		SendMsg:	TvSendMsg;
 		procedure Reshow;
- 	end;
+	end;
 
 var
-  stwscTelefoonForm: TstwscTelefoonForm;
+	stwscTelefoonForm: TstwscTelefoonForm;
 
 implementation
 
@@ -55,7 +55,7 @@ begin
 	selGesprek := nil;
 
 	OpneemBut.Enabled := false;
-   weigerBut.Enabled := false;
+	weigerBut.Enabled := false;
 end;
 
 procedure TstwscTelefoonForm.FormShow(Sender: TObject);

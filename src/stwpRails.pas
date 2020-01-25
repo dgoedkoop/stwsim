@@ -221,11 +221,11 @@ begin
 		tmprail2 := Raillijst2;
 		while assigned(tmprail2) do begin
 			if tmprail1^.Rail = tmprail2^.Rail then
-           	result := true;
+				result := true;
 			tmprail2 := tmprail2^.volgende;
-      end;
-      tmprail1 := tmprail1^.volgende;
-   end;
+		end;
+		tmprail1 := tmprail1^.volgende;
+	end;
 end;
 
 procedure RaillijstWissen;
@@ -233,10 +233,10 @@ var
 	tmp, tmp2: PpRaillijst;
 begin
 	tmp := Raillijst;
-   while assigned(tmp) do begin
-   	tmp2 := tmp;
-      tmp := tmp^.volgende;
-      dispose(tmp2);
+	while assigned(tmp) do begin
+		tmp2 := tmp;
+		tmp := tmp^.volgende;
+		dispose(tmp2);
 	end;
 	Raillijst := nil;
 end;

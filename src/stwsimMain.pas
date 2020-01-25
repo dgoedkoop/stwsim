@@ -3,14 +3,14 @@ unit stwsimMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons, mmsystem,
-  stwvMeetpunt, clientReadMsg, clientSendMsg, stwvCore,
-  stwvGleisplan, stwvHokjes, stwvSporen, stwpTijd, stwvRijwegen, stwvSeinen,
-  stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
-  stwvProcesPlan, stwsimComm, stwpCore, serverSendMsg, serverReadMsg,
-  stwpTreinen, stwvTreinComm, stwpTreinPhysics, stwpMonteurPhysics,
-  stwpCommPhysics, stwvTreinInfo;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons, mmsystem,
+	stwvMeetpunt, clientReadMsg, clientSendMsg, stwvCore,
+	stwvGleisplan, stwvHokjes, stwvSporen, stwpTijd, stwvRijwegen, stwvSeinen,
+	stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
+	stwvProcesPlan, stwsimComm, stwpCore, serverSendMsg, serverReadMsg,
+	stwpTreinen, stwvTreinComm, stwpTreinPhysics, stwpMonteurPhysics,
+	stwpCommPhysics, stwvTreinInfo;
 
 type
 	TUpdateChg = record
@@ -22,160 +22,160 @@ type
 		Menus: boolean;
 	end;
 
-  TstwsimMainForm = class(TForm)
-    MainMenu: TMainMenu;
-    BedienPanel: TPanel;
-	 TijdTimer: TTimer;
-    BlinkTimer: TTimer;
-	 SpoorPopup: TPopupMenu;
-	 Actions: TActionList;
-	 SimOpenen: TAction;
-	 Afsluiten: TAction;
-    TreinInterpose: TAction;
-    TreinBellen: TAction;
-	 WisselSwitch: TAction;
-    WisselBedienVerh: TAction;
-	 WisselRijwegVerh: TAction;
-	 Berichtnaartreinsturen1: TMenuItem;
-    Treinnummerwijzigen1: TMenuItem;
-    N1: TMenuItem;
-	 Wisselomzetten1: TMenuItem;
-    Verhinderbedieningwissel1: TMenuItem;
-	 Verhinderrijwegoverwissel1: TMenuItem;
-	 Bestand1: TMenuItem;
-	 Help1: TMenuItem;
-	 Afsluiten1: TMenuItem;
-	 SchermenTab: TTabControl;
-	 OpenDialog: TOpenDialog;
-	 Info1: TMenuItem;
-	 msgMemo: TMemo;
-	 TreinStatus: TAction;
-	 Treinstatus1: TMenuItem;
-	 statPanel: TPanel;
-	 RijwegHo: TAction;
-    RijwegNormaal: TAction;
-	 RijwegROZ: TAction;
-	 RijwegAuto: TAction;
-	 RijwegCancel: TAction;
-	 NNormalerijweg1: TMenuItem;
-    Rijweg1: TMenuItem;
-    ROZRijwegnaarbezetspoor1: TMenuItem;
-	 ARijwegmetautomatischeseinen1: TMenuItem;
-    HRijwegherroepen1: TMenuItem;
-    TelefoonShow: TAction;
-    Broadcast: TAction;
-    Hulpmiddelen1: TMenuItem;
-    Splitter1: TSplitter;
-    tijdLabel: TLabel;
-	 voerInBut: TButton;
-    cancelBut: TButton;
-	 LaatProcesplanZien: TAction;
-	 N2: TMenuItem;
-    LaatProcesplanZien1: TMenuItem;
-    GetScore: TAction;
-	 Prestaties1: TMenuItem;
-	 fullscreenAction: TAction;
-    DienstOpen: TAction;
-    Dienstregelingopenen1: TMenuItem;
-    DienstSave: TAction;
-    DienstSaveDialog: TSaveDialog;
-    Dienstregelingopslaan1: TMenuItem;
-    PauzeAction: TAction;
-    Starten1: TMenuItem;
-	 DoorspoelAction: TAction;
-	 Bestand2: TMenuItem;
-    ToonToolsAction: TAction;
-    ToolsPanel: TPanel;
-    SpeedButton1: TSpeedButton;
-	 Label1: TLabel;
-	 SpeedTrack: TTrackBar;
-    Label2: TLabel;
-	 Label3: TLabel;
-	 Hulpmiddelentonen1: TMenuItem;
-    DienstEdit: TAction;
-	 Dienstregelingbewerken1: TMenuItem;
-	 DoorspoelBut: TButton;
-	 PauzePanel: TPanel;
-    SimOpenPanel: TPanel;
-    SimOpenBut: TBitBtn;
-    SimStartPanel: TPanel;
-	 BitBtn1: TBitBtn;
-    StartMetDienstAction: TAction;
-    BitBtn2: TBitBtn;
-    EerstDienstBewerkenAction: TAction;
-    telBtn: TSpeedButton;
-    hsepPanel: TPanel;
-    GameOpenDialog: TOpenDialog;
-    DienstOpenDialog: TOpenDialog;
-    GameSaveDialog: TSaveDialog;
-    BitBtn3: TBitBtn;
-    SGOpenen: TAction;
-	 SGSave: TAction;
-    Spelopslaanals1: TMenuItem;
-	 Wisselreparatie: TAction;
-	 invoerEdit: TEdit;
-    RijwegVoerin: TAction;
-    ScenOpen: TAction;
-    Scenarioopenen1: TMenuItem;
-    ScenOpenDialog: TOpenDialog;
-    VorigePaginaAction: TAction;
-    VolgendePaginaAction: TAction;
-    BitBtn4: TBitBtn;
-    Simulatieladen1: TMenuItem;
-    Opgeslagenspelladen1: TMenuItem;
-    AbortGame: TAction;
-    Spelafbreken1: TMenuItem;
-    Simulatie1: TMenuItem;
-	 procedure FormCreate(Sender: TObject);
-	 procedure TijdTimerTimer(Sender: TObject);
-	 procedure SimOpenenExecute(Sender: TObject);
-	 procedure Info1Click(Sender: TObject);
-	 procedure BlinkTimerTimer(Sender: TObject);
-	 procedure WisselSwitchExecute(Sender: TObject);
-	 procedure WisselBedienVerhExecute(Sender: TObject);
-	 procedure WisselRijwegVerhExecute(Sender: TObject);
-    procedure TreinInterposeExecute(Sender: TObject);
-	 procedure AfsluitenExecute(Sender: TObject);
-	 procedure TreinStatusExecute(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure RijwegHoExecute(Sender: TObject);
-	 procedure RijwegNormaalExecute(Sender: TObject);
-	 procedure RijwegROZExecute(Sender: TObject);
-	 procedure RijwegAutoExecute(Sender: TObject);
-	 procedure RijwegCancelExecute(Sender: TObject);
-	 procedure TreinBellenExecute(Sender: TObject);
-	 procedure TelefoonShowExecute(Sender: TObject);
-	 procedure SchermenTabChange(Sender: TObject);
-	 procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
-		WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-	 procedure BroadcastExecute(Sender: TObject);
-	 procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-	 procedure LaatProcesplanZienExecute(Sender: TObject);
-	 procedure FormDestroy(Sender: TObject);
-	 procedure HerkenProcesplanClose;
-	 procedure GetScoreExecute(Sender: TObject);
-	 procedure fullscreenActionExecute(Sender: TObject);
-	 procedure DienstOpenExecute(Sender: TObject);
-	 procedure DienstSaveExecute(Sender: TObject);
-	 procedure PauzeActionExecute(Sender: TObject);
-	 procedure DoorspoelActionExecute(Sender: TObject);
-	 procedure ToonToolsActionExecute(Sender: TObject);
-	 procedure DienstEditExecute(Sender: TObject);
-	 procedure FormResize(Sender: TObject);
-	 procedure StartMetDienstActionExecute(Sender: TObject);
-	 procedure EerstDienstBewerkenActionExecute(Sender: TObject);
-	 procedure SGSaveExecute(Sender: TObject);
-	 procedure SGOpenenExecute(Sender: TObject);
-    procedure invoerEditChange(Sender: TObject);
-	 procedure invoerEditEnter(Sender: TObject);
-    procedure invoerEditExit(Sender: TObject);
-    procedure RijwegVoerinExecute(Sender: TObject);
-    procedure ScenOpenExecute(Sender: TObject);
-    procedure VorigePaginaActionExecute(Sender: TObject);
-    procedure VolgendePaginaActionExecute(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
-    procedure FormDeactivate(Sender: TObject);
-    procedure AbortGameExecute(Sender: TObject);
+	TstwsimMainForm = class(TForm)
+		MainMenu: TMainMenu;
+		BedienPanel: TPanel;
+		TijdTimer: TTimer;
+		BlinkTimer: TTimer;
+		SpoorPopup: TPopupMenu;
+		Actions: TActionList;
+		SimOpenen: TAction;
+		Afsluiten: TAction;
+		TreinInterpose: TAction;
+		TreinBellen: TAction;
+		WisselSwitch: TAction;
+		WisselBedienVerh: TAction;
+		WisselRijwegVerh: TAction;
+		Berichtnaartreinsturen1: TMenuItem;
+		Treinnummerwijzigen1: TMenuItem;
+		N1: TMenuItem;
+		Wisselomzetten1: TMenuItem;
+		Verhinderbedieningwissel1: TMenuItem;
+		Verhinderrijwegoverwissel1: TMenuItem;
+		Bestand1: TMenuItem;
+		Help1: TMenuItem;
+		Afsluiten1: TMenuItem;
+		SchermenTab: TTabControl;
+		OpenDialog: TOpenDialog;
+		Info1: TMenuItem;
+		msgMemo: TMemo;
+		TreinStatus: TAction;
+		Treinstatus1: TMenuItem;
+		statPanel: TPanel;
+		RijwegHo: TAction;
+		RijwegNormaal: TAction;
+		RijwegROZ: TAction;
+		RijwegAuto: TAction;
+		RijwegCancel: TAction;
+		NNormalerijweg1: TMenuItem;
+		Rijweg1: TMenuItem;
+		ROZRijwegnaarbezetspoor1: TMenuItem;
+		ARijwegmetautomatischeseinen1: TMenuItem;
+		HRijwegherroepen1: TMenuItem;
+		TelefoonShow: TAction;
+		Broadcast: TAction;
+		Hulpmiddelen1: TMenuItem;
+		Splitter1: TSplitter;
+		tijdLabel: TLabel;
+		voerInBut: TButton;
+		cancelBut: TButton;
+		LaatProcesplanZien: TAction;
+		N2: TMenuItem;
+		LaatProcesplanZien1: TMenuItem;
+		GetScore: TAction;
+		Prestaties1: TMenuItem;
+		fullscreenAction: TAction;
+		DienstOpen: TAction;
+		Dienstregelingopenen1: TMenuItem;
+		DienstSave: TAction;
+		DienstSaveDialog: TSaveDialog;
+		Dienstregelingopslaan1: TMenuItem;
+		PauzeAction: TAction;
+		Starten1: TMenuItem;
+		DoorspoelAction: TAction;
+		Bestand2: TMenuItem;
+		ToonToolsAction: TAction;
+		ToolsPanel: TPanel;
+		SpeedButton1: TSpeedButton;
+		Label1: TLabel;
+		SpeedTrack: TTrackBar;
+		Label2: TLabel;
+		Label3: TLabel;
+		Hulpmiddelentonen1: TMenuItem;
+		DienstEdit: TAction;
+		Dienstregelingbewerken1: TMenuItem;
+		DoorspoelBut: TButton;
+		PauzePanel: TPanel;
+		SimOpenPanel: TPanel;
+		SimOpenBut: TBitBtn;
+		SimStartPanel: TPanel;
+		BitBtn1: TBitBtn;
+		StartMetDienstAction: TAction;
+		BitBtn2: TBitBtn;
+		EerstDienstBewerkenAction: TAction;
+		telBtn: TSpeedButton;
+		hsepPanel: TPanel;
+		GameOpenDialog: TOpenDialog;
+		DienstOpenDialog: TOpenDialog;
+		GameSaveDialog: TSaveDialog;
+		BitBtn3: TBitBtn;
+		SGOpenen: TAction;
+		SGSave: TAction;
+		Spelopslaanals1: TMenuItem;
+		Wisselreparatie: TAction;
+		invoerEdit: TEdit;
+		RijwegVoerin: TAction;
+		ScenOpen: TAction;
+		Scenarioopenen1: TMenuItem;
+		ScenOpenDialog: TOpenDialog;
+		VorigePaginaAction: TAction;
+		VolgendePaginaAction: TAction;
+		BitBtn4: TBitBtn;
+		Simulatieladen1: TMenuItem;
+		Opgeslagenspelladen1: TMenuItem;
+		AbortGame: TAction;
+		Spelafbreken1: TMenuItem;
+		Simulatie1: TMenuItem;
+		procedure FormCreate(Sender: TObject);
+		procedure TijdTimerTimer(Sender: TObject);
+		procedure SimOpenenExecute(Sender: TObject);
+		procedure Info1Click(Sender: TObject);
+		procedure BlinkTimerTimer(Sender: TObject);
+		procedure WisselSwitchExecute(Sender: TObject);
+		procedure WisselBedienVerhExecute(Sender: TObject);
+		procedure WisselRijwegVerhExecute(Sender: TObject);
+		procedure TreinInterposeExecute(Sender: TObject);
+		procedure AfsluitenExecute(Sender: TObject);
+		procedure TreinStatusExecute(Sender: TObject);
+		procedure FormShow(Sender: TObject);
+		procedure RijwegHoExecute(Sender: TObject);
+		procedure RijwegNormaalExecute(Sender: TObject);
+		procedure RijwegROZExecute(Sender: TObject);
+		procedure RijwegAutoExecute(Sender: TObject);
+		procedure RijwegCancelExecute(Sender: TObject);
+		procedure TreinBellenExecute(Sender: TObject);
+		procedure TelefoonShowExecute(Sender: TObject);
+		procedure SchermenTabChange(Sender: TObject);
+		procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+			WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+		procedure BroadcastExecute(Sender: TObject);
+		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+		procedure LaatProcesplanZienExecute(Sender: TObject);
+		procedure FormDestroy(Sender: TObject);
+		procedure HerkenProcesplanClose;
+		procedure GetScoreExecute(Sender: TObject);
+		procedure fullscreenActionExecute(Sender: TObject);
+		procedure DienstOpenExecute(Sender: TObject);
+		procedure DienstSaveExecute(Sender: TObject);
+		procedure PauzeActionExecute(Sender: TObject);
+		procedure DoorspoelActionExecute(Sender: TObject);
+		procedure ToonToolsActionExecute(Sender: TObject);
+		procedure DienstEditExecute(Sender: TObject);
+		procedure FormResize(Sender: TObject);
+		procedure StartMetDienstActionExecute(Sender: TObject);
+		procedure EerstDienstBewerkenActionExecute(Sender: TObject);
+		procedure SGSaveExecute(Sender: TObject);
+		procedure SGOpenenExecute(Sender: TObject);
+		procedure invoerEditChange(Sender: TObject);
+		procedure invoerEditEnter(Sender: TObject);
+		procedure invoerEditExit(Sender: TObject);
+		procedure RijwegVoerinExecute(Sender: TObject);
+		procedure ScenOpenExecute(Sender: TObject);
+		procedure VorigePaginaActionExecute(Sender: TObject);
+		procedure VolgendePaginaActionExecute(Sender: TObject);
+		procedure FormActivate(Sender: TObject);
+		procedure FormDeactivate(Sender: TObject);
+		procedure AbortGameExecute(Sender: TObject);
 	private
 		// Belangrijkste
 		pCore:		PpCore;
@@ -221,12 +221,12 @@ type
 		TimeSet: boolean;
 		TijdUitgevoerdTot: cardinal;
 	public
-   	// Basisfuncties
-      procedure CreateSimObjects;
-      procedure DestroyTabs;
-      procedure DestroySimObjects;
-      procedure InitSimState;
-      procedure ClearSimState;
+		// Basisfuncties
+		procedure CreateSimObjects;
+		procedure DestroyTabs;
+		procedure DestroySimObjects;
+		procedure InitSimState;
+		procedure ClearSimState;
 		// Beginnen
 		procedure LoadInfra(var f: file);
 		procedure LoadFile(filename: string);
@@ -343,13 +343,13 @@ begin
 	DienstOpen.Enabled := false;
 	DienstSave.Enabled := false;
 	DienstEdit.Enabled := false;
-   AbortGame.Enabled := false;
+	AbortGame.Enabled := false;
 
 	GetScore.Enabled := false;
 	ToonToolsAction.Enabled := false;
 	LaatProcesplanZien.Enabled := false;
 	PauzeAction.Enabled := false;
-   telBtn.Enabled := false;
+	telBtn.Enabled := false;
 end;
 
 procedure TstwsimMainForm.SetPanelsPos;
@@ -401,8 +401,8 @@ var
 	f: file;
 	magic, schermnaam: string;
 	naam: string;
-   xsize, ysize: integer;
-   modus: integer;
+	xsize, ysize: integer;
+	modus: integer;
 	schermID: integer;
 	schermdetails: boolean;
 begin
@@ -420,15 +420,15 @@ begin
 	if magic = magicCode_1 then modus := 1;
 	if modus = -1 then begin
 		Application.MessageBox('Dit is geen geldig bestand.', 'Fout', MB_ICONERROR);
-      closefile(f);
+		closefile(f);
 		exit;
 	end;
 
 	tmpCursor := Cursor;
 	SetCursor(Screen.Cursors[WachtCursor]);
 
-   // Allereerst de sim-specifieke objecten aanmaken
-   CreateSimObjects;
+	// Allereerst de sim-specifieke objecten aanmaken
+	CreateSimObjects;
 
   	pCore.Filedir := ExtractFileDir(ExpandFileName(Filename));
 
@@ -445,16 +445,16 @@ begin
 		if schermID > 0 then begin
 			stringread(f, schermnaam);
 			boolread(f, schermdetails);
-         if modus >= 2 then begin
-           	intread(f, xsize);
-            intread(f, ysize);
-         end else begin
-          	xsize := 126;
-            ysize := 37;
-         end;
+			if modus >= 2 then begin
+			  	intread(f, xsize);
+				intread(f, ysize);
+			end else begin
+			 	xsize := 126;
+				ysize := 37;
+			end;
 			AddScherm(schermID, Schermnaam, Schermdetails);
-         GetScherm(schermID).Gleisplan.MaxX := xsize-1;
-         GetScherm(schermID).Gleisplan.MaxY := ysize-1;
+			GetScherm(schermID).Gleisplan.MaxX := xsize-1;
+			GetScherm(schermID).Gleisplan.MaxY := ysize-1;
 			GetScherm(schermID).Gleisplan.LoadPlan(f);
 		end;
 	until schermID = 0;
@@ -473,8 +473,8 @@ begin
 	UpdateChg.Menus := false;
 	UpdateControls;
 
-   SGOpenen.Enabled := true;
-   ScenOpen.Enabled := true;
+	SGOpenen.Enabled := true;
+	ScenOpen.Enabled := true;
 
 	SetPanelsPos;
 	SimOpenPanel.Visible := false;
@@ -490,24 +490,24 @@ begin
 	if not pauze then
 		PauzeActionExecute(Self);
 	if closewarn then
-		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beëindigen?',
+		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beï¿½indigen?',
 				'Simulatie openen', MB_ICONWARNING+MB_YESNO) <> mrYes then begin
 			if not oudepauze then
 				PauzeActionExecute(Self);
-   		exit;
-      end;
-   if OpenDialog.Execute then begin
+			exit;
+		end;
+	if OpenDialog.Execute then begin
 		DestroyTabs;
-	   DestroySimObjects;
-   	if closewarn then begin
-      	// Als de simulatie al bezig was, dan moeten we een paar dingen meer
-         // resetten dan als we nog op het startscherm waren.
-         stwscProcesplanForm.ProcesplannenReset;
-         InitSimState;
-         DisableControls;
-      end;
+		DestroySimObjects;
+		if closewarn then begin
+			// Als de simulatie al bezig was, dan moeten we een paar dingen meer
+			// resetten dan als we nog op het startscherm waren.
+			stwscProcesplanForm.ProcesplannenReset;
+			InitSimState;
+			DisableControls;
+		end;
 		LoadFile(OpenDialog.Filename);
-   end else
+	end else
 		if not oudepauze then
 			PauzeActionExecute(Self);
 end;
@@ -751,7 +751,7 @@ begin
 	UpdateChg.Vannaar := true;
 	UpdateControls;
 
-   InitSimState;
+	InitSimState;
 
 	FormShown := false;
 end;
@@ -818,7 +818,7 @@ end;
 
 procedure TstwsimMainForm.TreinInfo;
 begin
-   stwscProcesplanForm.TreinInfo(TreinInfoData);
+	stwscProcesplanForm.TreinInfo(TreinInfoData);
 end;
 
 procedure TstwsimMainForm.smsg;
@@ -1046,7 +1046,7 @@ begin
 		1, 5: begin
 			if assigned(selTNVPunt) then
 				if selTNVPunt^.treinnummer <> '' then
-               TreinStatus.Execute;
+					TreinStatus.Execute;
 		end;
 		2: begin
 			if (PvHokjeLetter(selHokje.grdata)^.Spoornummer <> '') and not pauze then begin
@@ -1242,7 +1242,7 @@ procedure TstwsimMainForm.FormMouseWheel(Sender: TObject;
 begin
 	handled := true;
 	if WheelDelta < 0 then
-   	VolgendePaginaAction.Execute;
+		VolgendePaginaAction.Execute;
 	if WheelDelta > 0 then
 		VorigePaginaAction.Execute;
 end;
@@ -1278,7 +1278,7 @@ procedure TstwsimMainForm.FormDestroy(Sender: TObject);
 begin
 	DestroyTabs;
 
-   DestroySimObjects;
+	DestroySimObjects;
 
 	vReadMsg.Free;
 	vSendMsg.Free;
@@ -1293,7 +1293,7 @@ end;
 
 procedure TstwsimMainForm.GetScoreExecute(Sender: TObject);
 begin
-   vSendMsg.SendGetScore;
+	vSendMsg.SendGetScore;
 end;
 
 procedure TstwsimMainForm.fullscreenActionExecute(Sender: TObject);
@@ -1338,7 +1338,7 @@ begin
 		stringread(f, s);
 		if s <> DienstIOMagic then begin
 			Application.Messagebox('Ongeldig bestandstype.', 'Fout', MB_ICONERROR);
-	      closefile(f);
+			closefile(f);
 			exit;
 		end;
 		tmpCursor := Cursor;
@@ -1347,16 +1347,16 @@ begin
 		stringread(f, s);
 		if s <> pCore.simnaam then begin
 			Application.Messagebox(pchar('Deze dienstregeling is niet voor deze simulatie, maar voor de simulatie '+s+'.'), 'Fout', MB_ICONERROR);
-	      closefile(f);
+			closefile(f);
 			exit;
 		end;
 		stringread(f, s);
 		if s <> pCore.simversie then
-      	if Application.Messagebox('Deze dienstregeling is voor een andere versie van deze simulatie.'+#13#10+
-         	'Toch proberen deze in te laden?', 'Waarschuwing', MB_ICONWARNING+MB_YESNO) <> IdYes then begin
-			      closefile(f);
+			if Application.Messagebox('Deze dienstregeling is voor een andere versie van deze simulatie.'+#13#10+
+				'Toch proberen deze in te laden?', 'Waarschuwing', MB_ICONWARNING+MB_YESNO) <> IdYes then begin
+					closefile(f);
 					exit;
-            end;
+				end;
 		// Dan de dienstregeling laden
 		try
 			pCore.LaadMatDienstVerschijn(f, swBasis);
@@ -1381,8 +1381,8 @@ var
 	i,n: integer;
 	Tijd: integer;
 	ok: boolean;
-   SgVersion: integer;
-   code: integer;
+	SgVersion: integer;
+	code: integer;
 begin
 	result := false;
 	if GameOpenDialog.Execute then begin
@@ -1398,31 +1398,31 @@ begin
 		// Lees de MAGIC
 		stringread(f, s);
 		ok := false;
-      SgVersion := 0; // Dit vindt de compiler nodig.
-      if copy(s, 1, length(SaveIOMagic)) = SaveIOMagic then begin
-      	val(copy(s, length(SaveIOMagic)+1, length(s)-length(SaveIOMagic)), SgVersion, code);
-         if (code = 0) and (SgVersion >= 12) and (SgVersion <= CurrentSgVersion) then
-         	ok := true
-      end;
+		SgVersion := 0; // Dit vindt de compiler nodig.
+		if copy(s, 1, length(SaveIOMagic)) = SaveIOMagic then begin
+			val(copy(s, length(SaveIOMagic)+1, length(s)-length(SaveIOMagic)), SgVersion, code);
+			if (code = 0) and (SgVersion >= 12) and (SgVersion <= CurrentSgVersion) then
+				ok := true
+		end;
 		if not ok then begin
 			Application.Messagebox('Ongeldig bestandstype.', 'Fout', MB_ICONERROR);
-	      closefile(f);
+			closefile(f);
 			exit;
 		end;
 		// Lees simnaam en simversie
 		stringread(f, s);
 		if s <> pCore.simnaam then begin
 			Application.Messagebox(pchar('Deze savegame is niet voor deze simulatie, maar voor de simulatie '+s+'.'), 'Fout', MB_ICONERROR);
-	      closefile(f);
+			closefile(f);
 			exit;
 		end;
 		stringread(f, s);
 		if s <> pCore.simversie then begin
 			Application.Messagebox('Deze savegame is voor een andere versie van deze simulatie.', 'Fout', MB_ICONERROR);
-	      closefile(f);
+			closefile(f);
 			exit;
 		end;
-      // Alles OK, we gaan nu echt beginnen.
+		// Alles OK, we gaan nu echt beginnen.
 	  	ClearSimState;
 		// Dan de dienstregeling laden
 		try
@@ -1441,8 +1441,8 @@ begin
 		pCore.pAlleTreinen := LoadTreinen(f, SgVersion, pCore.pMaterieel, pCore.pAlleRails);
 		// Overige infrastatus laden
 		pCore.LoadInfraStatus(f);
-      // Als de monteur bezig is, moeten we dat ook even opmerken
-      MonteurPhysics.InitAfterOpenGame(pCore.pMonteur);
+		// Als de monteur bezig is, moeten we dat ook even opmerken
+		MonteurPhysics.InitAfterOpenGame(pCore.pMonteur);
 		// Actieve rijwegen laden
 		RijwegLogica.LoadActieveRijwegen(f);
 		LoadWisselMeetpuntStatus(f, SgVersion, vCore);
@@ -1610,8 +1610,8 @@ begin
 					begin Scenario_leesfout := 'Te veel parameters'; exit end;
 				end;
 			end else if (soort <> 'k') and (soort <> 'vsv') and (soort <> 'pct')
-         	and (soort <> 'wdk') and (soort <> 'wde') and (soort <> 'mdk') and
-            (soort <> 'sdk') and (soort <> 'tdk') then
+				and (soort <> 'wdk') and (soort <> 'wde') and (soort <> 'mdk') and
+				(soort <> 'sdk') and (soort <> 'tdk') then
 				begin Scenario_leesfout := 'Dit commando bestaat niet.'; exit end;	// Verkeerde 'soort' opgegeven.
 			inc(index);
 		end;
@@ -1654,8 +1654,8 @@ begin
 
 		// UI updaten.
 		DienstOpen.Enabled := false;
-      ScenOpen.Enabled := false;
-      AbortGame.Enabled := true;
+		ScenOpen.Enabled := false;
+		AbortGame.Enabled := true;
 
 		Tab := RijwegLogica.Tabs;
 		while assigned(Tab) do begin
@@ -1663,7 +1663,7 @@ begin
 			Tab := Tab^.Volgende;
 		end;
 
-      closewarn := true;
+		closewarn := true;
 
 		gestart := true;
 	end;
@@ -1770,15 +1770,15 @@ begin
 	if closewarn then begin
 		if not pauze then
 			PauzeActionExecute(Self);
-		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beëindigen?',
+		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beï¿½indigen?',
 				'Opgeslagen stand openen', MB_ICONWARNING+MB_YESNO) <> mrYes then begin
 			if not oudepauze then
 				PauzeActionExecute(Self);
 	  		exit;
-	   end;
-   end;
+		end;
+	end;
 	if OpenGame then begin
-      closewarn := true;
+		closewarn := true;
 
 		SimStartPanel.Visible := false;
 		EnableControls;
@@ -1823,9 +1823,9 @@ end;
 procedure TstwsimMainForm.ScenOpenExecute(Sender: TObject);
 begin
 	if stwscScenarioForm.ShowModal = mrOk then begin
-   	Scenario.Free;
-      Scenario := stwscScenarioForm.GetScenarioLines;
-   end;
+		Scenario.Free;
+		Scenario := stwscScenarioForm.GetScenarioLines;
+	end;
 end;
 
 procedure TstwsimMainForm.VorigePaginaActionExecute(Sender: TObject);
@@ -1834,16 +1834,16 @@ var
 begin
 	with VisibleTab^ do begin
 		if ScrollBox.HorzScrollBar.IsScrollBarVisible and
-      	(ScrollBox.HorzScrollBar.ScrollPos > 0) then begin
+			(ScrollBox.HorzScrollBar.ScrollPos > 0) then begin
 			ScrollStep := ScrollBox.ClientWidth * 8 div 10;
-      	if ScrollBox.HorzScrollBar.ScrollPos > ScrollStep then
-         	ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.ScrollPos - ScrollStep
-         else
-         	ScrollBox.HorzScrollBar.Position := 0;
-      end else
+			if ScrollBox.HorzScrollBar.ScrollPos > ScrollStep then
+				ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.ScrollPos - ScrollStep
+			else
+				ScrollBox.HorzScrollBar.Position := 0;
+		end else
 			if SchermenTab.TabIndex > 0 then
 				SchermenTab.TabIndex := SchermenTab.TabIndex - 1;
-   end;
+	end;
 	SchermenTabChange(Sender);
 end;
 
@@ -1853,29 +1853,29 @@ var
 begin
 	with VisibleTab^ do begin
 		if ScrollBox.HorzScrollBar.IsScrollBarVisible and
-      	(ScrollBox.HorzScrollBar.ScrollPos < ScrollBox.HorzScrollBar.Range - ScrollBox.ClientWidth) then begin
+			(ScrollBox.HorzScrollBar.ScrollPos < ScrollBox.HorzScrollBar.Range - ScrollBox.ClientWidth) then begin
 			ScrollStep := ScrollBox.ClientWidth * 8 div 10;
-      	if ScrollBox.HorzScrollBar.ScrollPos < ScrollBox.HorzScrollBar.Range - ScrollBox.ClientWidth - ScrollStep then
-         	ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.ScrollPos + ScrollStep
-         else
-         	ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range - ScrollBox.ClientWidth;
-      end else
+			if ScrollBox.HorzScrollBar.ScrollPos < ScrollBox.HorzScrollBar.Range - ScrollBox.ClientWidth - ScrollStep then
+				ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.ScrollPos + ScrollStep
+			else
+				ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range - ScrollBox.ClientWidth;
+		end else
 			if SchermenTab.TabIndex < SchermenTab.Tabs.Count-1 then
 				SchermenTab.TabIndex := SchermenTab.TabIndex + 1;
-   end;
+	end;
 	SchermenTabChange(Sender);
 end;
 
 procedure TstwsimMainForm.FormActivate(Sender: TObject);
 begin
 	VolgendePaginaAction.Enabled := true;
-   VorigePaginaAction.Enabled := true;
+	VorigePaginaAction.Enabled := true;
 end;
 
 procedure TstwsimMainForm.FormDeactivate(Sender: TObject);
 begin
 	VolgendePaginaAction.Enabled := false;
-   VorigePaginaAction.Enabled := false;
+	VorigePaginaAction.Enabled := false;
 end;
 
 procedure TstwsimMainForm.CreateSimObjects;
@@ -1897,7 +1897,7 @@ begin
 	stwscProcesPlanForm.Core := vCore;
 	stwscTelefoonForm.Core := vCore;
 	stwssDienstregForm.Core := pCore^;
-   stwscScenarioForm.Core := pCore^;
+	stwscScenarioForm.Core := pCore^;
 end;
 
 procedure TstwsimMainForm.DestroyTabs;
@@ -1922,10 +1922,10 @@ begin
 	MonteurPhysics.Free;
 	CommPhysics.Free;
 	DestroyVCore(vCore);
-   if assigned(pCore) then begin
+	if assigned(pCore) then begin
 		pCore.Free;
 		dispose(pCore);
-   end;
+	end;
 end;
 
 procedure TstwsimMainForm.InitSimState;
@@ -1936,11 +1936,11 @@ begin
 	pauze := true;
 	bezig := false;
 	app_exit := false;
-   pCore := nil;
-   vCore := nil;
+	pCore := nil;
+	vCore := nil;
 
 	TijdLabel.Caption := '00:00';
-   SGOpenen.Enabled := false;
+	SGOpenen.Enabled := false;
 end;
 
 procedure TstwsimMainForm.AbortGameExecute(Sender: TObject);
@@ -1950,41 +1950,41 @@ begin
 	oudepauze := pauze;
 	if not pauze then
 		PauzeActionExecute(Self);
-	if Application.MessageBox('Weet u zeker dat u de simulatie wilt beëindigen?',
+	if Application.MessageBox('Weet u zeker dat u de simulatie wilt beï¿½indigen?',
 			'Simulatie afbreken', MB_ICONWARNING+MB_YESNO) <> mrYes then begin
 		if not oudepauze then
 			PauzeActionExecute(Self);
   		exit;
-   end;
-   // Zorg ervoor dat het pauzevenstertje niet te zien is
+	end;
+	// Zorg ervoor dat het pauzevenstertje niet te zien is
 	PauzeActionExecute(Self);
 
-   ClearSimState;
+	ClearSimState;
 
-   ScenOpen.Enabled := true;
+	ScenOpen.Enabled := true;
 
-   DisableControls;
+	DisableControls;
 
 	SetPanelsPos;
 	SimOpenPanel.Visible := false;
 	SimStartPanel.Visible := true;
 	SimStartPanel.BringToFront;
-   VisibleTab.Gleisplan.Repaint;
+	VisibleTab.Gleisplan.Repaint;
 end;
 
 procedure TstwsimMainForm.ClearSimState;
 var
 	Tab: PTablist;
 begin
-   pauze := true;
+	pauze := true;
 
 	pCore^.DestroyState;
 
-   ClearWisselMeetpuntStatus(vCore);
-   DestroyActieveRijwegen(vCore);
-   ClearBinnenkomendeGesprekken(vCore);
+	ClearWisselMeetpuntStatus(vCore);
+	DestroyActieveRijwegen(vCore);
+	ClearBinnenkomendeGesprekken(vCore);
 	Rinkelen := false;
-   
+	
 	Tab := RijwegLogica.Tabs;
 	while assigned(Tab) do begin
 		Tab^.Gleisplan.ClearInactieveEnKruisingHokjes;
@@ -1996,9 +1996,9 @@ begin
 	stwscProcesPlanForm.ProcesplannenReset;
 
 	TimeSet := false;
-   gestart := false;
-   closewarn := false;
-   ScenarioToegepast := false;
+	gestart := false;
+	closewarn := false;
+	ScenarioToegepast := false;
 	TijdLabel.Caption := '00:00';
 end;
 

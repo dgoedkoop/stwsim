@@ -316,7 +316,7 @@ end;
 
 // strikt = false: zoekt de beste match
 // strikt = true: retourneert 'false' als zelfs de beste match niet goed genoeg
-//                is, zodat de editor een nieuwe subroute kan creëren.
+//					 is, zodat de editor een nieuwe subroute kan creï¿½ren.
 function TRijwegLogica.ZoekSubroute;
 var
 	Tab:					PTablist;
@@ -576,7 +576,7 @@ begin
 		bytewrite  (f, ActieveRijweg^.Pending);
 		boolwrite  (f, ActieveRijweg^.Herroep.herroep);
 		boolwrite  (f, ActieveRijweg^.Herroep.seinwacht);
-		intwrite   (f, ActieveRijweg^.Herroep.t);
+		intwrite	(f, ActieveRijweg^.Herroep.t);
 		// Dan slaan we op welke wissels en meetpunten al/nog door deze rijweg
 		// geclaimd zijn.
 		WisselCount := 0;
@@ -674,7 +674,7 @@ begin
 		byteread  (f, ActieveRijweg^.Pending);
 		boolread  (f, ActieveRijweg^.Herroep.herroep);
 		boolread  (f, ActieveRijweg^.Herroep.seinwacht);
-		intread   (f, ActieveRijweg^.Herroep.t);
+		intread	(f, ActieveRijweg^.Herroep.t);
 		ActieveRijweg^.Rijweg^.Sein^.herroepen := ActieveRijweg^.Herroep.herroep;
 		// Dan lezen we welke wissels en meetpunten al/nog door deze rijweg
 		// geclaimd zijn.
@@ -733,7 +733,7 @@ begin
 	result := false;
 	// Eerst de simpele strategie: is er een trein op de overweg, dan is dat
 	// duidelijk genoeg.
-   // Tegelijk kunnen we ook alvast kijken wat voor soort overweg het is.
+	// Tegelijk kunnen we ook alvast kijken wat voor soort overweg het is.
 	MeetpuntL := Overweg^.Meetpunten;
 	while assigned(MeetpuntL) do begin
 		if MeetpuntL^.Meetpunt^.Bezet then begin
@@ -747,7 +747,7 @@ begin
 	while assigned(AankMeetpuntL) do begin
 		if AankMeetpuntL^.Meetpunt^.bezet then
 			// Een trein staat binnen de aankondiging, maar staat niet op een
-         // rijweg.
+			// rijweg.
 			if not assigned(AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then begin
 				result := true;
 				exit;
@@ -816,39 +816,39 @@ begin
 		if AankMeetpuntL^.Meetpunt^.bezet then
 			if assigned(AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then
 				// We hebben een trein gevonden die een rijweg heeft. Nu gaan we
-            // kijken of dat de gezochte rijweg is en of deze rijweg wel over
-            // de overweg gaat. Is dat allemaal zo, dan is dat duidelijk genoeg.
+				// kijken of dat de gezochte rijweg is en of deze rijweg wel over
+				// de overweg gaat. Is dat allemaal zo, dan is dat duidelijk genoeg.
 				if	(ActieveRijweg = AankMeetpuntL^.Meetpunt^.RijwegOnderdeel) then begin
 					result := true;
 					exit;
 				end else begin
 					// De rijweg van de trein is niet de gezochte rijweg. Maar nu
-               // kan de rijweg van de trein nog net voor de overweg ophouden.
-               // Daarom moeten we kijken of de gezochte rijweg misschien de
-               // vervolgrijweg van de gevonden trein is.
+					// kan de rijweg van de trein nog net voor de overweg ophouden.
+					// Daarom moeten we kijken of de gezochte rijweg misschien de
+					// vervolgrijweg van de gevonden trein is.
 					TreinActRijweg := AankMeetpuntL^.Meetpunt^.RijwegOnderdeel;
 					if (TreinActRijweg^.Rijweg^.Naar = ActieveRijweg^.Rijweg^.Sein^.Van) then begin
 						result := true;
 						exit;
 					end;
 				end
-         else begin
-         	// De trein heeft geen rijweg. Dan moeten we kijken of hij zich in
-            // de approach-locking-secties van de betreffende rijweg bevindt.
-            // Dan is het namelijk (in principe) een trein die van de vrije
-            // baan komt.
-            // (Eigenlijk doet deze code normaal nooit wat, want overwegen
-            // sluiten sowieso als een trein van de vrije baan komt, zelfs al
-            // staat het sein nog op rood.)
-            MeetpuntL := ActieveRijweg^.Rijweg^.Sein^.HerroepMeetpunten;
-            while assigned(MeetpuntL) do begin
-            	if MeetpuntL^.Meetpunt = AankMeetpuntL^.Meetpunt then begin
-               	result := true;
-                  exit;
-               end;
-            	MeetpuntL := MeetpuntL^.Volgende;
-            end;
-         end;
+			else begin
+				// De trein heeft geen rijweg. Dan moeten we kijken of hij zich in
+				// de approach-locking-secties van de betreffende rijweg bevindt.
+				// Dan is het namelijk (in principe) een trein die van de vrije
+				// baan komt.
+				// (Eigenlijk doet deze code normaal nooit wat, want overwegen
+				// sluiten sowieso als een trein van de vrije baan komt, zelfs al
+				// staat het sein nog op rood.)
+				MeetpuntL := ActieveRijweg^.Rijweg^.Sein^.HerroepMeetpunten;
+				while assigned(MeetpuntL) do begin
+					if MeetpuntL^.Meetpunt = AankMeetpuntL^.Meetpunt then begin
+						result := true;
+						exit;
+					end;
+					MeetpuntL := MeetpuntL^.Volgende;
+				end;
+			end;
 		AankMeetpuntL := AankMeetpuntL^.Volgende;
 	end;
 end;
@@ -886,7 +886,7 @@ var
 	Subroute:		PvSubroute;
 begin
 	if not assigned(Meetpunt^.RijwegOnderdeel) then
-   	exit;
+		exit;
 	Subroute := ZoekSubroute(Meetpunt, strikt);
 	if assigned(Subroute) then begin
 		Subroute^.Ingebruik := true;
@@ -1078,8 +1078,8 @@ begin
 	Tab := Tabs;
 	while assigned(Tab) do begin
 		Tab^.Gleisplan.MeetpuntResetInactief(Meetpunt);
-      Tab := Tab^.Volgende
-   end;
+		Tab := Tab^.Volgende
+	end;
 
 	// Kijken of dit meetpunt misschien alsnog geclaimd moet worden voor een
 	// voorliggende rijweg naar bezet spoor
@@ -1244,7 +1244,7 @@ begin
 		if ReleaseRichtingMag and RijveiligheidLock then begin
 			SendMsg.SendRichting(ActieveRijweg^.Rijweg^.Erlaubnis,
 			ActieveRijweg^.Rijweg^.Erlaubnisstand, rwRelease);
-         RijveiligheidUnlock;
+			RijveiligheidUnlock;
 		end;
 	end;
 	// Claims opheffen
@@ -1256,7 +1256,7 @@ begin
 			Tab := Tabs;
 			while assigned(Tab) do begin
 				Tab^.Gleisplan.MeetpuntResetKruis(MeetpuntLijst^.Meetpunt);
-           	Tab^.Gleisplan.MeetpuntResetInactief(MeetpuntLijst^.Meetpunt);
+			  	Tab^.Gleisplan.MeetpuntResetInactief(MeetpuntLijst^.Meetpunt);
 				Tab^.Gleisplan.PaintMeetpunt(MeetpuntLijst^.Meetpunt);
 				Tab := Tab^.Volgende;
 			end;
@@ -1293,7 +1293,7 @@ end;
 // - De kruising-hokjes worden ingesteld
 // - Seinen worden op groen gezet, indien mogelijk.
 // Deze functie gebruikt RijveiligheidLock omdat het veiligheidskritisch is dat
-// een sein pas op groen gaat als ook écht alles goed ligt.
+// een sein pas op groen gaat als ook ï¿½cht alles goed ligt.
 procedure TRijwegLogica.DoeActieveRijwegen;
 var
 	ActieveRijweg:		PvActieveRijwegLijst;
@@ -1541,10 +1541,10 @@ begin
 	// Eens kijken of we al een betreffende rijweg hebben 'verbeterd' kan
 	// worden. Dat is:
 	// 1. Approach-Locking -> Rijweg / ROZ-rijweg / Autorijweg
-	// 2. Rijweg           -> Autorijweg
+	// 2. Rijweg			  -> Autorijweg
 	// De volgende optie is echter niet mogelijk, omdat dat een verslechtering
 	// van het seinbeeld kan opleveren:
-	// 3. ROZ-rijweg       -> Rijweg / Autorijweg
+	// 3. ROZ-rijweg		 -> Rijweg / Autorijweg
 	ActieveRijweg := Core^.vActieveRijwegen;
 	while assigned(ActieveRijweg) do begin
 		if (ActieveRijweg^.Rijweg = Rijweg) then begin
@@ -1569,7 +1569,7 @@ begin
 
 				break;
 			end;
-			// 2. Rijweg           -> Autorijweg
+			// 2. Rijweg			  -> Autorijweg
 			if (ActieveRijweg^.ROZ = false) and (ActieveRijweg^.Autorijweg = false)
 				and (ActieveRijweg^.Pending < 3) and Auto then begin
 				ActieveRijweg^.Autorijweg := Auto;

@@ -3,26 +3,26 @@ unit stwsimclientScore;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, stwvScore;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, ComCtrls, stwvScore;
 
 type
-  TstwscScoreForm = class(TForm)
-    OpTijdProgress: TProgressBar;
-    Label1: TLabel;
-	 OpTijdLabel: TLabel;
-    DrieLabel: TLabel;
-    DrieProgress: TProgressBar;
-    Label3: TLabel;
-    Label2: TLabel;
-    Label4: TLabel;
-    Label6: TLabel;
-	 CorrectPerronLabel: TLabel;
-    CorrectPerronProgress: TProgressBar;
-    VertragingVerminderLabel: TLabel;
-    VertragingVeroorzaakLabel: TLabel;
-    OKBut: TButton;
-  private
+	TstwscScoreForm = class(TForm)
+		OpTijdProgress: TProgressBar;
+		Label1: TLabel;
+		OpTijdLabel: TLabel;
+		DrieLabel: TLabel;
+		DrieProgress: TProgressBar;
+		Label3: TLabel;
+		Label2: TLabel;
+		Label4: TLabel;
+		Label6: TLabel;
+		CorrectPerronLabel: TLabel;
+		CorrectPerronProgress: TProgressBar;
+		VertragingVerminderLabel: TLabel;
+		VertragingVeroorzaakLabel: TLabel;
+		OKBut: TButton;
+	private
 	 { Private declarations }
 	public
 		{ Public declarations }
@@ -31,7 +31,7 @@ type
 	end;
 
 var
-  stwscScoreForm: TstwscScoreForm;
+	stwscScoreForm: TstwscScoreForm;
 
 implementation
 

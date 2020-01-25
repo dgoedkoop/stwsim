@@ -18,127 +18,127 @@ implementation
 function VerwijderHokjeRijwegdata;
 var
 	Rijweg: PvRijweg;
-   Subroute: PvSubroute;
+	Subroute: PvSubroute;
 	KruisingHokje, vKruisingHokje: PvKruisingHokje;
 	InactiefHokje, vInactiefHokje: PvInactiefHokje;
 begin
 	result := false;
 	Rijweg := RijwegLogica.Core.vAlleRijwegen;
-   while assigned(rijweg) do begin
+	while assigned(rijweg) do begin
 		KruisingHokje := Rijweg.KruisingHokjes;
-      vKruisingHokje := nil;
+		vKruisingHokje := nil;
 		while assigned(KruisingHokje) do begin
 			if (KruisingHokje^.schermID = Tab^.ID) and
 				(KruisingHokje^.x = x) and
 				(KruisingHokje^.y = y) then begin
-            if assigned(vKruisingHokje) then begin
-            	vKruisingHokje^.volgende := KruisingHokje^.Volgende;
-               dispose(KruisingHokje);
-               KruisingHokje := vKruisingHokje^.volgende;
-            end else begin
-            	Rijweg.KruisingHokjes := KruisingHokje^.volgende;
-               dispose(KruisingHokje);
-               KruisingHokje := Rijweg.KruisingHokjes;
-            end;
-           	result := true;
-         end else begin
-         	vKruisingHokje := KruisingHokje;
-            KruisingHokje := KruisingHokje^.volgende;
-         end;
+				if assigned(vKruisingHokje) then begin
+					vKruisingHokje^.volgende := KruisingHokje^.Volgende;
+					dispose(KruisingHokje);
+					KruisingHokje := vKruisingHokje^.volgende;
+				end else begin
+					Rijweg.KruisingHokjes := KruisingHokje^.volgende;
+					dispose(KruisingHokje);
+					KruisingHokje := Rijweg.KruisingHokjes;
+				end;
+			  	result := true;
+			end else begin
+				vKruisingHokje := KruisingHokje;
+				KruisingHokje := KruisingHokje^.volgende;
+			end;
 		end;
-   	Rijweg := Rijweg^.Volgende;
-   end;
-   Subroute := RijwegLogica.Core.vAlleSubroutes;
-   while assigned(Subroute) do begin
+		Rijweg := Rijweg^.Volgende;
+	end;
+	Subroute := RijwegLogica.Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
 		InactiefHokje := Subroute.EersteHokje;
-      vInactiefHokje := nil;
+		vInactiefHokje := nil;
 		while assigned(InactiefHokje) do begin
 			if (InactiefHokje^.schermID = Tab^.ID) and
 				(InactiefHokje^.x = x) and
 				(InactiefHokje^.y = y) then begin
-            if assigned(vInactiefHokje) then begin
-            	vInactiefHokje^.volgende := InactiefHokje^.Volgende;
-               dispose(InactiefHokje);
-               InactiefHokje := vInactiefHokje^.volgende;
-            end else begin
-            	Subroute.EersteHokje := InactiefHokje^.volgende;
-               dispose(InactiefHokje);
-               InactiefHokje := Subroute.EersteHokje;
-            end;
-            result := true;
+				if assigned(vInactiefHokje) then begin
+					vInactiefHokje^.volgende := InactiefHokje^.Volgende;
+					dispose(InactiefHokje);
+					InactiefHokje := vInactiefHokje^.volgende;
+				end else begin
+					Subroute.EersteHokje := InactiefHokje^.volgende;
+					dispose(InactiefHokje);
+					InactiefHokje := Subroute.EersteHokje;
+				end;
+				result := true;
 			end else begin
-         	vInactiefHokje := InactiefHokje;
+				vInactiefHokje := InactiefHokje;
 				InactiefHokje := InactiefHokje^.Volgende;
-         end;
+			end;
 		end;
 		KruisingHokje := Subroute.KruisingHokjes;
-      vKruisingHokje := nil;
+		vKruisingHokje := nil;
 		while assigned(KruisingHokje) do begin
 			if (KruisingHokje^.schermID = Tab^.ID) and
 				(KruisingHokje^.x = x) and
 				(KruisingHokje^.y = y) then begin
-            if assigned(vKruisingHokje) then begin
-            	vKruisingHokje^.volgende := KruisingHokje^.Volgende;
-               dispose(KruisingHokje);
-               KruisingHokje := vKruisingHokje^.volgende;
-            end else begin
-            	Subroute.KruisingHokjes := KruisingHokje^.volgende;
-               dispose(KruisingHokje);
-               KruisingHokje := Subroute.KruisingHokjes;
-            end;
-           	result := true;
-         end else begin
-         	vKruisingHokje := KruisingHokje;
-            KruisingHokje := KruisingHokje^.volgende;
-         end;
+				if assigned(vKruisingHokje) then begin
+					vKruisingHokje^.volgende := KruisingHokje^.Volgende;
+					dispose(KruisingHokje);
+					KruisingHokje := vKruisingHokje^.volgende;
+				end else begin
+					Subroute.KruisingHokjes := KruisingHokje^.volgende;
+					dispose(KruisingHokje);
+					KruisingHokje := Subroute.KruisingHokjes;
+				end;
+			  	result := true;
+			end else begin
+				vKruisingHokje := KruisingHokje;
+				KruisingHokje := KruisingHokje^.volgende;
+			end;
 		end;
-   	Subroute := Subroute^.Volgende;
-   end;
+		Subroute := Subroute^.Volgende;
+	end;
 end;
 
 function KopieerHokjeRijwegdata;
 var
 	Rijweg: PvRijweg;
-   Subroute: PvSubroute;
+	Subroute: PvSubroute;
 	KruisingHokje, nKruisingHokje: PvKruisingHokje;
 	InactiefHokje, nInactiefHokje: PvInactiefHokje;
 begin
 	result := false;
 	Rijweg := RijwegLogica.Core.vAlleRijwegen;
-   while assigned(rijweg) do begin
+	while assigned(rijweg) do begin
 		KruisingHokje := Rijweg.KruisingHokjes;
 		while assigned(KruisingHokje) do begin
 			if (KruisingHokje^.schermID = SrcTab^.ID) and
 				(KruisingHokje^.x = srcx) and
 				(KruisingHokje^.y = srcy) then begin
 				new(nKruisingHokje);
-            nKruisingHokje^ := KruisingHokje^;
-            nKruisingHokje^.schermID := DestTab^.ID;
-            nKruisingHokje^.x := destx;
-            nKruisingHokje^.y := desty;
-            KruisingHokje^.Volgende := nKruisingHokje;
-            KruisingHokje := nKruisingHokje;
-           	result := true;
+				nKruisingHokje^ := KruisingHokje^;
+				nKruisingHokje^.schermID := DestTab^.ID;
+				nKruisingHokje^.x := destx;
+				nKruisingHokje^.y := desty;
+				KruisingHokje^.Volgende := nKruisingHokje;
+				KruisingHokje := nKruisingHokje;
+			  	result := true;
 			end;
 			KruisingHokje := KruisingHokje^.Volgende;
 		end;
-   	Rijweg := Rijweg^.Volgende;
-   end;
-   Subroute := RijwegLogica.Core.vAlleSubroutes;
-   while assigned(Subroute) do begin
+		Rijweg := Rijweg^.Volgende;
+	end;
+	Subroute := RijwegLogica.Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
 		InactiefHokje := Subroute.EersteHokje;
 		while assigned(InactiefHokje) do begin
 			if (InactiefHokje^.schermID = SrcTab^.ID) and
 				(InactiefHokje^.x = srcx) and
 				(InactiefHokje^.y = srcy) then begin
 				new(nInactiefHokje);
-            nInactiefHokje^ := InactiefHokje^;
-            nInactiefHokje^.schermID := DestTab^.ID;
-            nInactiefHokje^.x := destx;
-            nInactiefHokje^.y := desty;
-            InactiefHokje^.Volgende := nInactiefHokje;
-            InactiefHokje := nInactiefHokje;
-           	result := true;
+				nInactiefHokje^ := InactiefHokje^;
+				nInactiefHokje^.schermID := DestTab^.ID;
+				nInactiefHokje^.x := destx;
+				nInactiefHokje^.y := desty;
+				InactiefHokje^.Volgende := nInactiefHokje;
+				InactiefHokje := nInactiefHokje;
+			  	result := true;
 			end;
 			InactiefHokje := InactiefHokje^.Volgende;
 		end;
@@ -148,55 +148,55 @@ begin
 				(KruisingHokje^.x = srcx) and
 				(KruisingHokje^.y = srcy) then begin
 				new(nKruisingHokje);
-            nKruisingHokje^ := KruisingHokje^;
-            nKruisingHokje^.schermID := DestTab^.ID;
-            nKruisingHokje^.x := destx;
-            nKruisingHokje^.y := desty;
-            KruisingHokje^.Volgende := nKruisingHokje;
-            KruisingHokje := nKruisingHokje;
-           	result := true;
+				nKruisingHokje^ := KruisingHokje^;
+				nKruisingHokje^.schermID := DestTab^.ID;
+				nKruisingHokje^.x := destx;
+				nKruisingHokje^.y := desty;
+				KruisingHokje^.Volgende := nKruisingHokje;
+				KruisingHokje := nKruisingHokje;
+			  	result := true;
 			end;
 			KruisingHokje := KruisingHokje^.Volgende;
 		end;
-   	Subroute := Subroute^.Volgende;
-   end;
+		Subroute := Subroute^.Volgende;
+	end;
 end;
 
 function VerplaatsHokjeRijwegdata;
 var
 	Rijweg: PvRijweg;
-   Subroute: PvSubroute;
+	Subroute: PvSubroute;
 	KruisingHokje: PvKruisingHokje;
 	InactiefHokje: PvInactiefHokje;
 begin
 	result := false;
 	Rijweg := RijwegLogica.Core.vAlleRijwegen;
-   while assigned(rijweg) do begin
+	while assigned(rijweg) do begin
 		KruisingHokje := Rijweg.KruisingHokjes;
 		while assigned(KruisingHokje) do begin
 			if (KruisingHokje^.schermID = SrcTab^.ID) and
 				(KruisingHokje^.x = srcx) and
 				(KruisingHokje^.y = srcy) then begin
-            KruisingHokje^.schermID := DestTab^.ID;
-            KruisingHokje^.x := destx;
-            KruisingHokje^.y := desty;
-           	result := true;
+				KruisingHokje^.schermID := DestTab^.ID;
+				KruisingHokje^.x := destx;
+				KruisingHokje^.y := desty;
+			  	result := true;
 			end;
 			KruisingHokje := KruisingHokje^.Volgende;
 		end;
-   	Rijweg := Rijweg^.Volgende;
-   end;
-   Subroute := RijwegLogica.Core.vAlleSubroutes;
-   while assigned(Subroute) do begin
+		Rijweg := Rijweg^.Volgende;
+	end;
+	Subroute := RijwegLogica.Core.vAlleSubroutes;
+	while assigned(Subroute) do begin
 		InactiefHokje := Subroute.EersteHokje;
 		while assigned(InactiefHokje) do begin
 			if (InactiefHokje^.schermID = SrcTab^.ID) and
 				(InactiefHokje^.x = srcx) and
 				(InactiefHokje^.y = srcy) then begin
-            InactiefHokje^.schermID := DestTab^.ID;
-            InactiefHokje^.x := destx;
-            InactiefHokje^.y := desty;
-           	result := true;
+				InactiefHokje^.schermID := DestTab^.ID;
+				InactiefHokje^.x := destx;
+				InactiefHokje^.y := desty;
+			  	result := true;
 			end;
 			InactiefHokje := InactiefHokje^.Volgende;
 		end;
@@ -205,15 +205,15 @@ begin
 			if (KruisingHokje^.schermID = SrcTab^.ID) and
 				(KruisingHokje^.x = srcx) and
 				(KruisingHokje^.y = srcy) then begin
-            KruisingHokje^.schermID := DestTab^.ID;
-            KruisingHokje^.x := destx;
-            KruisingHokje^.y := desty;
-           	result := true;
+				KruisingHokje^.schermID := DestTab^.ID;
+				KruisingHokje^.x := destx;
+				KruisingHokje^.y := desty;
+			  	result := true;
 			end;
 			KruisingHokje := KruisingHokje^.Volgende;
 		end;
-   	Subroute := Subroute^.Volgende;
-   end;
+		Subroute := Subroute^.Volgende;
+	end;
 end;
 
 procedure WisRijwegenVanPlan;

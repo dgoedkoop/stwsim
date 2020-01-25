@@ -3,18 +3,18 @@ unit stwsimclientBericht;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, clientSendMsg, stwvCore, stwvTreinComm, stwpTijd;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, clientSendMsg, stwvCore, stwvTreinComm, stwpTijd;
 
 type
-  TstwscBerichtForm = class(TForm)
-	 berichtenList: TListBox;
-	 berichtMemo: TMemo;
-	 replyBut: TButton;
-	 treinCaption: TLabel;
-	 cancelBut: TButton;
-	 procedure FormShow(Sender: TObject);
-	 procedure berichtenListClick(Sender: TObject);
+	TstwscBerichtForm = class(TForm)
+		berichtenList: TListBox;
+		berichtMemo: TMemo;
+		replyBut: TButton;
+		treinCaption: TLabel;
+		cancelBut: TButton;
+		procedure FormShow(Sender: TObject);
+		procedure berichtenListClick(Sender: TObject);
 	private
 		procedure Reshow;
 	public
@@ -23,7 +23,7 @@ type
 	end;
 
 var
-  stwscBerichtForm: TstwscBerichtForm;
+	stwscBerichtForm: TstwscBerichtForm;
 
 implementation
 

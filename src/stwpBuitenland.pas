@@ -34,8 +34,8 @@ type
 									// 1 = Buurseinhuis-connectie
 		Spoor:		PpRail;	// Met welk spoor is deze connectie verbonden?
 		data:			pointer;
-      volgende:	PpRailExtConn;
-   end;
+		volgende:	PpRailExtConn;
+	end;
 
 implementation
 

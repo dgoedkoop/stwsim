@@ -3,16 +3,16 @@ unit stwsimserverAddMat;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, stwpCore;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, stwpCore;
 
 type
-  TstwssAddMatForm = class(TForm)
-	 Matcombo: TComboBox;
-	 Label1: TLabel;
-	 OKBut: TButton;
-	 CancelBut: TButton;
-	 procedure FormShow(Sender: TObject);
+	TstwssAddMatForm = class(TForm)
+		Matcombo: TComboBox;
+		Label1: TLabel;
+		OKBut: TButton;
+		CancelBut: TButton;
+		procedure FormShow(Sender: TObject);
   private
 	 { Private declarations }
 	public
@@ -20,7 +20,7 @@ type
 	end;
 
 var
-  stwssAddMatForm: TstwssAddMatForm;
+	stwssAddMatForm: TstwssAddMatForm;
 
 implementation
 

@@ -69,46 +69,46 @@ end;
 
 procedure ResizeFormForDPI;
 var
-	i: integer;
+   i: integer;
    component: TComponent;
    control: TControl;
    vscale, hscale: double;
 begin
-	vscale := GetVDPI / 96;
+   vscale := GetVDPI / 96;
    hscale := GetHDPI / 96;
-	for i := 0 to Form.ComponentCount - 1 do begin
-		component := Form.Components[i];
+   for i := 0 to Form.ComponentCount - 1 do begin
+      component := Form.Components[i];
       if component.ClassType.InheritsFrom(TControl) then begin
-      	 control := TControl(component);
-          control.Width := round(control.Width * hscale);
-          control.Height := round(control.Height * vscale);
-          control.Left := round(control.Left * hscale);
-          control.Top := round(control.Top * vscale);
-          if control.ClassType.InheritsFrom(TButton) then
-          	TButton(control).Font.Size := round(TButton(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TSpeedButton) then
-          	TSpeedButton(control).Font.Size := round(TSpeedButton(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TEdit) then
-          	TEdit(control).Font.Size := round(TEdit(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TMemo) then
-          	TMemo(control).Font.Size := round(TMemo(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TLabel) then
-          	TLabel(control).Font.Size := round(TLabel(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TListBox) then
-          	TListBox(control).Font.Size := round(TListBox(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TTabControl) then
-          	TTabControl(control).Font.Size := round(TTabControl(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TCheckBox) then
-          	TCheckBox(control).Font.Size := round(TCheckBox(control).Font.Size * (hscale + vscale) / 2);
-          if control.ClassType.InheritsFrom(TComboBox) then
-          	TComboBox(control).Font.Size := round(TComboBox(control).Font.Size * (hscale + vscale) / 2);
+         control := TControl(component);
+         control.Width := round(control.Width * hscale);
+         control.Height := round(control.Height * vscale);
+         control.Left := round(control.Left * hscale);
+         control.Top := round(control.Top * vscale);
+         if control.ClassType.InheritsFrom(TButton) then
+            TButton(control).Font.Size := round(TButton(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TSpeedButton) then
+            TSpeedButton(control).Font.Size := round(TSpeedButton(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TEdit) then
+            TEdit(control).Font.Size := round(TEdit(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TMemo) then
+            TMemo(control).Font.Size := round(TMemo(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TLabel) then
+            TLabel(control).Font.Size := round(TLabel(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TListBox) then
+            TListBox(control).Font.Size := round(TListBox(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TTabControl) then
+            TTabControl(control).Font.Size := round(TTabControl(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TCheckBox) then
+            TCheckBox(control).Font.Size := round(TCheckBox(control).Font.Size * (hscale + vscale) / 2);
+         if control.ClassType.InheritsFrom(TComboBox) then
+            TComboBox(control).Font.Size := round(TComboBox(control).Font.Size * (hscale + vscale) / 2);
       end;
    end;
-	if Form.ClassType.InheritsFrom(TForm) then begin
-   	if ((TForm(Form).BorderStyle = bsDialog) or (TForm(Form).BorderStyle = bsSingle))
-      	and (TForm(Form).BorderIcons <= [biSystemMenu]) then begin
-      	TForm(Form).Width := round(TForm(Form).Width * hscale);
-      	TForm(Form).Height := round(TForm(Form).Height * hscale);
+   if Form.ClassType.InheritsFrom(TForm) then begin
+      if ((TForm(Form).BorderStyle = bsDialog) or (TForm(Form).BorderStyle = bsSingle))
+         and (TForm(Form).BorderIcons <= [biSystemMenu]) then begin
+         TForm(Form).Width := round(TForm(Form).Width * hscale);
+         TForm(Form).Height := round(TForm(Form).Height * hscale);
       end;
    end;
 end;

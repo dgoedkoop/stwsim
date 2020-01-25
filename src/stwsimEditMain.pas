@@ -5,10 +5,10 @@ interface
 {$DEFINE EDITOR}
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ComCtrls, stwvGleisplan, StdCtrls, Buttons, ExtCtrls, Spin,
-  stwvCore, stwvMeetpunt, stwvSeinen, stwvSporen, Menus, stwvHokjes, Mask,
-  ActnList, stwvRijwegen, stwsimEditHelpers, stwvMisc, stwvRijwegLogica;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	ComCtrls, stwvGleisplan, StdCtrls, Buttons, ExtCtrls, Spin,
+	stwvCore, stwvMeetpunt, stwvSeinen, stwvSporen, Menus, stwvHokjes, Mask,
+	ActnList, stwvRijwegen, stwsimEditHelpers, stwvMisc, stwvRijwegLogica;
 
 type
 	firstlast = (flFirst, flLast);
@@ -31,393 +31,393 @@ type
 	end;
 
 	TstwseMain = class(TForm)
-	 SchermenTab: TTabControl;
-	 Splitter1: TSplitter;
-	 MainMenu1: TMainMenu;
-	 Bestand1: TMenuItem;
-	 Help1: TMenuItem;
-	 Info1: TMenuItem;
-	 Beeld1: TMenuItem;
-    Treinnummersweergeven1: TMenuItem;
-	 ActionList: TActionList;
-    TreinnrWeergeven: TAction;
-    bottomPanel: TPanel;
-    editPC: TPageControl;
-	 algTab: TTabSheet;
-    mtab: TTabSheet;
-    ovTab: TTabSheet;
-	 wTab: TTabSheet;
-	 gplTab: TTabSheet;
-	 tsBut: TButton;
-	 nsEdit: TEdit;
-    dsBut: TButton;
-	 nsBut: TButton;
-    reTab: TTabSheet;
-    knoppenPanel: TPanel;
-	 SpeedButton11: TSpeedButton;
-	 Label2: TLabel;
-    Label5: TLabel;
-	 Label6: TLabel;
-    Label11: TLabel;
-	 Label12: TLabel;
-	 infoBox: TGroupBox;
-    infoMemo: TMemo;
-    OpslaanAls: TAction;
-    Openen: TAction;
-	 Openen1: TMenuItem;
-    OpslaanAls1: TMenuItem;
-	 exitAct: TAction;
-    Afsluiten1: TMenuItem;
-	 OpenDialog: TOpenDialog;
-    SaveDialog: TSaveDialog;
-    rijwegTab: TTabSheet;
-	 rijwegbox: TGroupBox;
-	 rList: TListBox;
-	 rtBut: TButton;
-	 rdBut: TButton;
-    drawNiks: TSpeedButton;
-    Label22: TLabel;
-    Label23: TLabel;
-	 Label24: TLabel;
-    Label25: TLabel;
-    Panel1: TPanel;
-    textBox: TGroupBox;
-    txNormal: TRadioButton;
-    txSpoornummer: TRadioButton;
-    txSeinWisselNr: TRadioButton;
-    txKleur: TComboBox;
-	 Label7: TLabel;
-	 tsLast: TCheckBox;
-    rijwegeditbox: TGroupBox;
-	 Label18: TLabel;
-	 Label19: TLabel;
-    Label20: TLabel;
-	 rijwegVanWijzig: TSpeedButton;
-    rijwegNaarWijzig: TSpeedButton;
-    SpeedButton23: TSpeedButton;
-    SpeedButton24: TSpeedButton;
-    SpeedButton25: TSpeedButton;
-    rijwegNiks: TSpeedButton;
-    seinWijzigKlik: TSpeedButton;
-	 Label21: TLabel;
-    SpeedButton37: TSpeedButton;
-    richtingWijzigBut: TSpeedButton;
-    Label27: TLabel;
-    richtingWisBut: TSpeedButton;
-    rijwegVanEdit: TEdit;
-    rijwegNaarEdit: TEdit;
-    seinEdit: TEdit;
-    rijwegBestaatUit: TListBox;
-    richtingEdit: TEdit;
-    PrlRijwegTab: TTabSheet;
-	 prlRBox: TGroupBox;
-	 prlRlist: TListBox;
-    prlrtBut: TButton;
-    prlrdBut: TButton;
-    prlreditbox: TGroupBox;
-	 Label29: TLabel;
-    prlSpoorLijst: TListBox;
-	 AddPrlSpoorBut: TSpeedButton;
-	 RmPrlSpoorBut: TSpeedButton;
-    Label31: TLabel;
-	 DwangEdit: TEdit;
-    prlRijwegNiks: TSpeedButton;
-    prlrtStatus: TLabel;
-    rtpCopyBut: TButton;
-    mgroup: TGroupBox;
-    mdBut: TButton;
-    mtBut: TButton;
-    mEdit: TEdit;
-    mList: TListBox;
-    Rijrichtingsvelden: TGroupBox;
-	 edBut: TButton;
-    etBut: TButton;
-    eEdit: TEdit;
-    eList: TListBox;
-    sGroup: TGroupBox;
-    sEdit: TEdit;
-	 stBut: TButton;
-    sdBut: TButton;
-    sList: TListBox;
-    ovmgroep: TGroupBox;
-	 movdbut: TButton;
-    movtbut: TButton;
-    ovmList: TListBox;
-    mOvBox: TComboBox;
-    ovGroup: TGroupBox;
-	 ovList: TListBox;
-    ovdbut: TButton;
-    ovtbut: TButton;
-    ovEdit: TEdit;
-	 ovmaDBut: TButton;
-    ovmaTBut: TButton;
-    ovmaList: TListBox;
-    Label33: TLabel;
-    Label34: TLabel;
-    GroupBox1: TGroupBox;
-    detailsOff: TRadioButton;
-    detailsOn: TRadioButton;
-    Label32: TLabel;
-    rijwegtnvvanedit: TEdit;
-    tnvvanwijzig: TSpeedButton;
-	 tnvvanwis: TSpeedButton;
-    Label35: TLabel;
-    rijwegtnvnaaredit: TEdit;
-	 tnvnaarwijzig: TSpeedButton;
-    tnvnaarwis: TSpeedButton;
-    naarSeinWijzigBut: TSpeedButton;
-	 naarSeinEdit: TEdit;
-    Label36: TLabel;
-    naarseinWisBut: TSpeedButton;
-    triggerDelBut: TSpeedButton;
-    triggerChgBut: TSpeedButton;
-	 triggerEdit: TEdit;
-    Label30: TLabel;
-    onbevCheck: TCheckBox;
-    InfraOpenDialog: TOpenDialog;
-    InfraOpenBut: TButton;
-    infraStatus: TLabel;
-    Opslaan: TAction;
-	 Opslaan1: TMenuItem;
-    Label8: TLabel;
-    RijwegSubroutes: TListBox;
-    SubrouteUp: TBitBtn;
-    SubrouteDown: TBitBtn;
-    BlinkTimer: TTimer;
-    wGroup: TGroupBox;
-    wdBut: TButton;
-    wtBut: TButton;
-    basisRechtdoor: TCheckBox;
-    wmBox: TComboBox;
-    wgBox: TComboBox;
-    wnEdit: TEdit;
-    Label3: TLabel;
-    Label28: TLabel;
-    Label4: TLabel;
-    wList: TListBox;
-    evwGroup: TGroupBox;
-    onafhCombo: TComboBox;
-    afhCombo: TComboBox;
-    evwdBut: TButton;
-	 evwtBut: TButton;
-    evwList: TListBox;
-    Label9: TLabel;
-    Label10: TLabel;
-    Label37: TLabel;
-    Panel2: TPanel;
-    onafhRechtBox: TRadioButton;
-    onafhAftBox: TRadioButton;
-    Panel3: TPanel;
-    afhRechtBox: TRadioButton;
-    afhAftBox: TRadioButton;
-    Panel4: TPanel;
-    eisBox: TRadioButton;
-    verzoekBox: TRadioButton;
-    DetailsWeergeven: TAction;
-    Detailsweergeven1: TMenuItem;
-    Label38: TLabel;
-    xedit: TEdit;
-    yedit: TEdit;
-    Label39: TLabel;
-    rsBut: TButton;
-    SpeedButton33: TSpeedButton;
-    SpeedButton32: TSpeedButton;
-    SpeedButton30: TSpeedButton;
-    SpeedButton14: TSpeedButton;
-    SpeedButton34: TSpeedButton;
-    SpeedButton31: TSpeedButton;
-    SpeedButton12: TSpeedButton;
-    SpeedButton40: TSpeedButton;
-    SpeedButton41: TSpeedButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton13: TSpeedButton;
-    SpeedButton1: TSpeedButton;
-    SpeedButton36: TSpeedButton;
-    SpeedButton22: TSpeedButton;
-    SpeedButton21: TSpeedButton;
-    SpeedButton20: TSpeedButton;
-    SpeedButton19: TSpeedButton;
-    SpeedButton26: TSpeedButton;
-    SpeedButton27: TSpeedButton;
-    SpeedButton28: TSpeedButton;
-    SpeedButton29: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    SpeedButton9: TSpeedButton;
-    SpeedButton8: TSpeedButton;
-    SpeedButton7: TSpeedButton;
-    SpeedButton38: TSpeedButton;
-    SpeedButton39: TSpeedButton;
-    SpeedButton15: TSpeedButton;
-    SpeedButton16: TSpeedButton;
-    SpeedButton43: TSpeedButton;
-    SpeedButton42: TSpeedButton;
-    SpeedButton17: TSpeedButton;
-    SpeedButton18: TSpeedButton;
-    Panel5: TPanel;
-    Label1: TLabel;
-    mElBox: TComboBox;
-    elCheck: TCheckBox;
-    Label15: TLabel;
-    wElBox: TComboBox;
-    eElBox: TComboBox;
-    Label26: TLabel;
-    Label16: TLabel;
-    sElBox: TComboBox;
-    Label17: TLabel;
-    txTxt: TEdit;
-    Label14: TLabel;
-    mTnBox: TComboBox;
-    Label13: TLabel;
-    lenEdit: TSpinEdit;
-    eUpBut: TRadioButton;
-    eDownBut: TRadioButton;
-    rechtschuincheck: TCheckBox;
-    triggerRichtingWisBut: TSpeedButton;
-    triggerRichtingEditBut: TSpeedButton;
-    triggerRichtingEdit: TEdit;
-    Label40: TLabel;
-	 procedure mtButClick(Sender: TObject);
-	 procedure mdButClick(Sender: TObject);
-	 procedure FormCreate(Sender: TObject);
-	 procedure Info1Click(Sender: TObject);
-	 procedure stButClick(Sender: TObject);
-	 procedure sdButClick(Sender: TObject);
-	 procedure wtButClick(Sender: TObject);
-	 procedure wdButClick(Sender: TObject);
-	 procedure tsButClick(Sender: TObject);
-	 procedure SchermenTabChange(Sender: TObject);
-	 procedure nsButClick(Sender: TObject);
-	 procedure GleisplanMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-	 procedure GleisplanMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure GleisplanMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-	 procedure GleisplanClick(Sender: TObject);
-	 procedure SpeedButton11Click(Sender: TObject);
-	 procedure SpeedButton12Click(Sender: TObject);
-	 procedure mElBoxChange(Sender: TObject);
-    procedure wElBoxChange(Sender: TObject);
-    procedure sElBoxChange(Sender: TObject);
-	 procedure SpeedButton1Click(Sender: TObject);
-	 procedure SpeedButton2Click(Sender: TObject);
-	 procedure SpeedButton3Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
-	 procedure SpeedButton5Click(Sender: TObject);
-    procedure SpeedButton6Click(Sender: TObject);
-    procedure SpeedButton7Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
-	 procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton10Click(Sender: TObject);
-	 procedure SpeedButton16Click(Sender: TObject);
-	 procedure SpeedButton15Click(Sender: TObject);
-    procedure SpeedButton17Click(Sender: TObject);
-	 procedure mTnBoxChange(Sender: TObject);
-	 procedure SpeedButton18Click(Sender: TObject);
-	 procedure TreinnrWeergevenExecute(Sender: TObject);
-	 procedure SpeedButton22Click(Sender: TObject);
-    procedure SpeedButton21Click(Sender: TObject);
-	 procedure SpeedButton20Click(Sender: TObject);
-    procedure SpeedButton19Click(Sender: TObject);
-	 procedure OpslaanAlsExecute(Sender: TObject);
-	 procedure OpenenExecute(Sender: TObject);
-    procedure exitActExecute(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-	 procedure rtButClick(Sender: TObject);
-	 procedure rdButClick(Sender: TObject);
-	 procedure editPCChange(Sender: TObject);
-	 procedure drawNiksClick(Sender: TObject);
-	 procedure rListClick(Sender: TObject);
-	 procedure rijwegVanWijzigClick(Sender: TObject);
-	 procedure rijwegNaarWijzigClick(Sender: TObject);
-	 procedure seinWijzigKlikClick(Sender: TObject);
-	 procedure SpeedButton23Click(Sender: TObject);
-	 procedure SpeedButton24Click(Sender: TObject);
-    procedure SpeedButton25Click(Sender: TObject);
-	 procedure SpeedButton26Click(Sender: TObject);
-    procedure SpeedButton27Click(Sender: TObject);
-    procedure SpeedButton28Click(Sender: TObject);
-	 procedure SpeedButton29Click(Sender: TObject);
-    procedure SpeedButton31Click(Sender: TObject);
-	 procedure SpeedButton34Click(Sender: TObject);
-    procedure SpeedButton36Click(Sender: TObject);
-	 procedure SpeedButton37Click(Sender: TObject);
-    procedure etButClick(Sender: TObject);
-    procedure edButClick(Sender: TObject);
-    procedure eElBoxChange(Sender: TObject);
-    procedure SpeedButton38Click(Sender: TObject);
-    procedure SpeedButton39Click(Sender: TObject);
-	 procedure richtingWijzigButClick(Sender: TObject);
-    procedure richtingWisButClick(Sender: TObject);
-    procedure wnEditChange(Sender: TObject);
-    procedure SpeedButton40Click(Sender: TObject);
-    procedure SpeedButton41Click(Sender: TObject);
-    procedure SpeedButton13Click(Sender: TObject);
-    procedure SpeedButton14Click(Sender: TObject);
-    procedure prlrtButClick(Sender: TObject);
-    procedure prlRlistClick(Sender: TObject);
-    procedure prlrdButClick(Sender: TObject);
-    procedure DwangEditChange(Sender: TObject);
-	 procedure RmPrlSpoorButClick(Sender: TObject);
-	 procedure AddPrlSpoorButClick(Sender: TObject);
-    procedure triggerDelButClick(Sender: TObject);
-    procedure triggerChgButClick(Sender: TObject);
-	 procedure prlRijwegNiksClick(Sender: TObject);
-	 procedure rtpCopyButClick(Sender: TObject);
-    procedure ovtbutClick(Sender: TObject);
-    procedure ovdbutClick(Sender: TObject);
-    procedure ovListClick(Sender: TObject);
-    procedure movtbutClick(Sender: TObject);
-    procedure movdbutClick(Sender: TObject);
-    procedure ovmaTButClick(Sender: TObject);
-    procedure ovmaDButClick(Sender: TObject);
-	 procedure SpeedButton43Click(Sender: TObject);
-	 procedure SpeedButton42Click(Sender: TObject);
-    procedure detailsOnClick(Sender: TObject);
-    procedure detailsOffClick(Sender: TObject);
-	 procedure tnvvanwisClick(Sender: TObject);
-    procedure tnvnaarwisClick(Sender: TObject);
-	 procedure tnvvanwijzigClick(Sender: TObject);
-    procedure tnvnaarwijzigClick(Sender: TObject);
-    procedure naarSeinWijzigButClick(Sender: TObject);
-    procedure naarseinWisButClick(Sender: TObject);
-    procedure onbevCheckClick(Sender: TObject);
-    procedure InfraOpenButClick(Sender: TObject);
-    procedure OpslaanExecute(Sender: TObject);
-	 procedure RijwegSubroutesClick(Sender: TObject);
-	 procedure SubrouteUpClick(Sender: TObject);
-	 procedure SubrouteDownClick(Sender: TObject);
-	 procedure BlinkTimerTimer(Sender: TObject);
-    procedure evwtButClick(Sender: TObject);
-    procedure onafhComboChange(Sender: TObject);
-    procedure afhComboChange(Sender: TObject);
-    procedure evwdButClick(Sender: TObject);
-    procedure DetailsWeergevenExecute(Sender: TObject);
-    procedure SpeedButton30Click(Sender: TObject);
-    procedure SpeedButton32Click(Sender: TObject);
-    procedure rsButClick(Sender: TObject);
-    procedure SpeedButton33Click(Sender: TObject);
-    procedure dsButClick(Sender: TObject);
-    procedure triggerRichtingEditButClick(Sender: TObject);
-    procedure triggerRichtingWisButClick(Sender: TObject);
+		SchermenTab: TTabControl;
+		Splitter1: TSplitter;
+		MainMenu1: TMainMenu;
+		Bestand1: TMenuItem;
+		Help1: TMenuItem;
+		Info1: TMenuItem;
+		Beeld1: TMenuItem;
+		Treinnummersweergeven1: TMenuItem;
+		ActionList: TActionList;
+		TreinnrWeergeven: TAction;
+		bottomPanel: TPanel;
+		editPC: TPageControl;
+		algTab: TTabSheet;
+		mtab: TTabSheet;
+		ovTab: TTabSheet;
+		wTab: TTabSheet;
+		gplTab: TTabSheet;
+		tsBut: TButton;
+		nsEdit: TEdit;
+		dsBut: TButton;
+		nsBut: TButton;
+		reTab: TTabSheet;
+		knoppenPanel: TPanel;
+		SpeedButton11: TSpeedButton;
+		Label2: TLabel;
+		Label5: TLabel;
+		Label6: TLabel;
+		Label11: TLabel;
+		Label12: TLabel;
+		infoBox: TGroupBox;
+		infoMemo: TMemo;
+		OpslaanAls: TAction;
+		Openen: TAction;
+		Openen1: TMenuItem;
+		OpslaanAls1: TMenuItem;
+		exitAct: TAction;
+		Afsluiten1: TMenuItem;
+		OpenDialog: TOpenDialog;
+		SaveDialog: TSaveDialog;
+		rijwegTab: TTabSheet;
+		rijwegbox: TGroupBox;
+		rList: TListBox;
+		rtBut: TButton;
+		rdBut: TButton;
+		drawNiks: TSpeedButton;
+		Label22: TLabel;
+		Label23: TLabel;
+		Label24: TLabel;
+		Label25: TLabel;
+		Panel1: TPanel;
+		textBox: TGroupBox;
+		txNormal: TRadioButton;
+		txSpoornummer: TRadioButton;
+		txSeinWisselNr: TRadioButton;
+		txKleur: TComboBox;
+		Label7: TLabel;
+		tsLast: TCheckBox;
+		rijwegeditbox: TGroupBox;
+		Label18: TLabel;
+		Label19: TLabel;
+		Label20: TLabel;
+		rijwegVanWijzig: TSpeedButton;
+		rijwegNaarWijzig: TSpeedButton;
+		SpeedButton23: TSpeedButton;
+		SpeedButton24: TSpeedButton;
+		SpeedButton25: TSpeedButton;
+		rijwegNiks: TSpeedButton;
+		seinWijzigKlik: TSpeedButton;
+		Label21: TLabel;
+		SpeedButton37: TSpeedButton;
+		richtingWijzigBut: TSpeedButton;
+		Label27: TLabel;
+		richtingWisBut: TSpeedButton;
+		rijwegVanEdit: TEdit;
+		rijwegNaarEdit: TEdit;
+		seinEdit: TEdit;
+		rijwegBestaatUit: TListBox;
+		richtingEdit: TEdit;
+		PrlRijwegTab: TTabSheet;
+		prlRBox: TGroupBox;
+		prlRlist: TListBox;
+		prlrtBut: TButton;
+		prlrdBut: TButton;
+		prlreditbox: TGroupBox;
+		Label29: TLabel;
+		prlSpoorLijst: TListBox;
+		AddPrlSpoorBut: TSpeedButton;
+		RmPrlSpoorBut: TSpeedButton;
+		Label31: TLabel;
+		DwangEdit: TEdit;
+		prlRijwegNiks: TSpeedButton;
+		prlrtStatus: TLabel;
+		rtpCopyBut: TButton;
+		mgroup: TGroupBox;
+		mdBut: TButton;
+		mtBut: TButton;
+		mEdit: TEdit;
+		mList: TListBox;
+		Rijrichtingsvelden: TGroupBox;
+		edBut: TButton;
+		etBut: TButton;
+		eEdit: TEdit;
+		eList: TListBox;
+		sGroup: TGroupBox;
+		sEdit: TEdit;
+		stBut: TButton;
+		sdBut: TButton;
+		sList: TListBox;
+		ovmgroep: TGroupBox;
+		movdbut: TButton;
+		movtbut: TButton;
+		ovmList: TListBox;
+		mOvBox: TComboBox;
+		ovGroup: TGroupBox;
+		ovList: TListBox;
+		ovdbut: TButton;
+		ovtbut: TButton;
+		ovEdit: TEdit;
+		ovmaDBut: TButton;
+		ovmaTBut: TButton;
+		ovmaList: TListBox;
+		Label33: TLabel;
+		Label34: TLabel;
+		GroupBox1: TGroupBox;
+		detailsOff: TRadioButton;
+		detailsOn: TRadioButton;
+		Label32: TLabel;
+		rijwegtnvvanedit: TEdit;
+		tnvvanwijzig: TSpeedButton;
+		tnvvanwis: TSpeedButton;
+		Label35: TLabel;
+		rijwegtnvnaaredit: TEdit;
+		tnvnaarwijzig: TSpeedButton;
+		tnvnaarwis: TSpeedButton;
+		naarSeinWijzigBut: TSpeedButton;
+		naarSeinEdit: TEdit;
+		Label36: TLabel;
+		naarseinWisBut: TSpeedButton;
+		triggerDelBut: TSpeedButton;
+		triggerChgBut: TSpeedButton;
+		triggerEdit: TEdit;
+		Label30: TLabel;
+		onbevCheck: TCheckBox;
+		InfraOpenDialog: TOpenDialog;
+		InfraOpenBut: TButton;
+		infraStatus: TLabel;
+		Opslaan: TAction;
+		Opslaan1: TMenuItem;
+		Label8: TLabel;
+		RijwegSubroutes: TListBox;
+		SubrouteUp: TBitBtn;
+		SubrouteDown: TBitBtn;
+		BlinkTimer: TTimer;
+		wGroup: TGroupBox;
+		wdBut: TButton;
+		wtBut: TButton;
+		basisRechtdoor: TCheckBox;
+		wmBox: TComboBox;
+		wgBox: TComboBox;
+		wnEdit: TEdit;
+		Label3: TLabel;
+		Label28: TLabel;
+		Label4: TLabel;
+		wList: TListBox;
+		evwGroup: TGroupBox;
+		onafhCombo: TComboBox;
+		afhCombo: TComboBox;
+		evwdBut: TButton;
+		evwtBut: TButton;
+		evwList: TListBox;
+		Label9: TLabel;
+		Label10: TLabel;
+		Label37: TLabel;
+		Panel2: TPanel;
+		onafhRechtBox: TRadioButton;
+		onafhAftBox: TRadioButton;
+		Panel3: TPanel;
+		afhRechtBox: TRadioButton;
+		afhAftBox: TRadioButton;
+		Panel4: TPanel;
+		eisBox: TRadioButton;
+		verzoekBox: TRadioButton;
+		DetailsWeergeven: TAction;
+		Detailsweergeven1: TMenuItem;
+		Label38: TLabel;
+		xedit: TEdit;
+		yedit: TEdit;
+		Label39: TLabel;
+		rsBut: TButton;
+		SpeedButton33: TSpeedButton;
+		SpeedButton32: TSpeedButton;
+		SpeedButton30: TSpeedButton;
+		SpeedButton14: TSpeedButton;
+		SpeedButton34: TSpeedButton;
+		SpeedButton31: TSpeedButton;
+		SpeedButton12: TSpeedButton;
+		SpeedButton40: TSpeedButton;
+		SpeedButton41: TSpeedButton;
+		SpeedButton6: TSpeedButton;
+		SpeedButton5: TSpeedButton;
+		SpeedButton4: TSpeedButton;
+		SpeedButton3: TSpeedButton;
+		SpeedButton2: TSpeedButton;
+		SpeedButton13: TSpeedButton;
+		SpeedButton1: TSpeedButton;
+		SpeedButton36: TSpeedButton;
+		SpeedButton22: TSpeedButton;
+		SpeedButton21: TSpeedButton;
+		SpeedButton20: TSpeedButton;
+		SpeedButton19: TSpeedButton;
+		SpeedButton26: TSpeedButton;
+		SpeedButton27: TSpeedButton;
+		SpeedButton28: TSpeedButton;
+		SpeedButton29: TSpeedButton;
+		SpeedButton10: TSpeedButton;
+		SpeedButton9: TSpeedButton;
+		SpeedButton8: TSpeedButton;
+		SpeedButton7: TSpeedButton;
+		SpeedButton38: TSpeedButton;
+		SpeedButton39: TSpeedButton;
+		SpeedButton15: TSpeedButton;
+		SpeedButton16: TSpeedButton;
+		SpeedButton43: TSpeedButton;
+		SpeedButton42: TSpeedButton;
+		SpeedButton17: TSpeedButton;
+		SpeedButton18: TSpeedButton;
+		Panel5: TPanel;
+		Label1: TLabel;
+		mElBox: TComboBox;
+		elCheck: TCheckBox;
+		Label15: TLabel;
+		wElBox: TComboBox;
+		eElBox: TComboBox;
+		Label26: TLabel;
+		Label16: TLabel;
+		sElBox: TComboBox;
+		Label17: TLabel;
+		txTxt: TEdit;
+		Label14: TLabel;
+		mTnBox: TComboBox;
+		Label13: TLabel;
+		lenEdit: TSpinEdit;
+		eUpBut: TRadioButton;
+		eDownBut: TRadioButton;
+		rechtschuincheck: TCheckBox;
+		triggerRichtingWisBut: TSpeedButton;
+		triggerRichtingEditBut: TSpeedButton;
+		triggerRichtingEdit: TEdit;
+		Label40: TLabel;
+		procedure mtButClick(Sender: TObject);
+		procedure mdButClick(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
+		procedure Info1Click(Sender: TObject);
+		procedure stButClick(Sender: TObject);
+		procedure sdButClick(Sender: TObject);
+		procedure wtButClick(Sender: TObject);
+		procedure wdButClick(Sender: TObject);
+		procedure tsButClick(Sender: TObject);
+		procedure SchermenTabChange(Sender: TObject);
+		procedure nsButClick(Sender: TObject);
+		procedure GleisplanMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+		procedure GleisplanMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+		procedure GleisplanMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+		procedure GleisplanClick(Sender: TObject);
+		procedure SpeedButton11Click(Sender: TObject);
+		procedure SpeedButton12Click(Sender: TObject);
+		procedure mElBoxChange(Sender: TObject);
+		procedure wElBoxChange(Sender: TObject);
+		procedure sElBoxChange(Sender: TObject);
+		procedure SpeedButton1Click(Sender: TObject);
+		procedure SpeedButton2Click(Sender: TObject);
+		procedure SpeedButton3Click(Sender: TObject);
+		procedure SpeedButton4Click(Sender: TObject);
+		procedure SpeedButton5Click(Sender: TObject);
+		procedure SpeedButton6Click(Sender: TObject);
+		procedure SpeedButton7Click(Sender: TObject);
+		procedure SpeedButton8Click(Sender: TObject);
+		procedure SpeedButton9Click(Sender: TObject);
+		procedure SpeedButton10Click(Sender: TObject);
+		procedure SpeedButton16Click(Sender: TObject);
+		procedure SpeedButton15Click(Sender: TObject);
+		procedure SpeedButton17Click(Sender: TObject);
+		procedure mTnBoxChange(Sender: TObject);
+		procedure SpeedButton18Click(Sender: TObject);
+		procedure TreinnrWeergevenExecute(Sender: TObject);
+		procedure SpeedButton22Click(Sender: TObject);
+		procedure SpeedButton21Click(Sender: TObject);
+		procedure SpeedButton20Click(Sender: TObject);
+		procedure SpeedButton19Click(Sender: TObject);
+		procedure OpslaanAlsExecute(Sender: TObject);
+		procedure OpenenExecute(Sender: TObject);
+		procedure exitActExecute(Sender: TObject);
+		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+		procedure rtButClick(Sender: TObject);
+		procedure rdButClick(Sender: TObject);
+		procedure editPCChange(Sender: TObject);
+		procedure drawNiksClick(Sender: TObject);
+		procedure rListClick(Sender: TObject);
+		procedure rijwegVanWijzigClick(Sender: TObject);
+		procedure rijwegNaarWijzigClick(Sender: TObject);
+		procedure seinWijzigKlikClick(Sender: TObject);
+		procedure SpeedButton23Click(Sender: TObject);
+		procedure SpeedButton24Click(Sender: TObject);
+		procedure SpeedButton25Click(Sender: TObject);
+		procedure SpeedButton26Click(Sender: TObject);
+		procedure SpeedButton27Click(Sender: TObject);
+		procedure SpeedButton28Click(Sender: TObject);
+		procedure SpeedButton29Click(Sender: TObject);
+		procedure SpeedButton31Click(Sender: TObject);
+		procedure SpeedButton34Click(Sender: TObject);
+		procedure SpeedButton36Click(Sender: TObject);
+		procedure SpeedButton37Click(Sender: TObject);
+		procedure etButClick(Sender: TObject);
+		procedure edButClick(Sender: TObject);
+		procedure eElBoxChange(Sender: TObject);
+		procedure SpeedButton38Click(Sender: TObject);
+		procedure SpeedButton39Click(Sender: TObject);
+		procedure richtingWijzigButClick(Sender: TObject);
+		procedure richtingWisButClick(Sender: TObject);
+		procedure wnEditChange(Sender: TObject);
+		procedure SpeedButton40Click(Sender: TObject);
+		procedure SpeedButton41Click(Sender: TObject);
+		procedure SpeedButton13Click(Sender: TObject);
+		procedure SpeedButton14Click(Sender: TObject);
+		procedure prlrtButClick(Sender: TObject);
+		procedure prlRlistClick(Sender: TObject);
+		procedure prlrdButClick(Sender: TObject);
+		procedure DwangEditChange(Sender: TObject);
+		procedure RmPrlSpoorButClick(Sender: TObject);
+		procedure AddPrlSpoorButClick(Sender: TObject);
+		procedure triggerDelButClick(Sender: TObject);
+		procedure triggerChgButClick(Sender: TObject);
+		procedure prlRijwegNiksClick(Sender: TObject);
+		procedure rtpCopyButClick(Sender: TObject);
+		procedure ovtbutClick(Sender: TObject);
+		procedure ovdbutClick(Sender: TObject);
+		procedure ovListClick(Sender: TObject);
+		procedure movtbutClick(Sender: TObject);
+		procedure movdbutClick(Sender: TObject);
+		procedure ovmaTButClick(Sender: TObject);
+		procedure ovmaDButClick(Sender: TObject);
+		procedure SpeedButton43Click(Sender: TObject);
+		procedure SpeedButton42Click(Sender: TObject);
+		procedure detailsOnClick(Sender: TObject);
+		procedure detailsOffClick(Sender: TObject);
+		procedure tnvvanwisClick(Sender: TObject);
+		procedure tnvnaarwisClick(Sender: TObject);
+		procedure tnvvanwijzigClick(Sender: TObject);
+		procedure tnvnaarwijzigClick(Sender: TObject);
+		procedure naarSeinWijzigButClick(Sender: TObject);
+		procedure naarseinWisButClick(Sender: TObject);
+		procedure onbevCheckClick(Sender: TObject);
+		procedure InfraOpenButClick(Sender: TObject);
+		procedure OpslaanExecute(Sender: TObject);
+		procedure RijwegSubroutesClick(Sender: TObject);
+		procedure SubrouteUpClick(Sender: TObject);
+		procedure SubrouteDownClick(Sender: TObject);
+		procedure BlinkTimerTimer(Sender: TObject);
+		procedure evwtButClick(Sender: TObject);
+		procedure onafhComboChange(Sender: TObject);
+		procedure afhComboChange(Sender: TObject);
+		procedure evwdButClick(Sender: TObject);
+		procedure DetailsWeergevenExecute(Sender: TObject);
+		procedure SpeedButton30Click(Sender: TObject);
+		procedure SpeedButton32Click(Sender: TObject);
+		procedure rsButClick(Sender: TObject);
+		procedure SpeedButton33Click(Sender: TObject);
+		procedure dsButClick(Sender: TObject);
+		procedure triggerRichtingEditButClick(Sender: TObject);
+		procedure triggerRichtingWisButClick(Sender: TObject);
 	private
 		FirstTab:		PTablist;
-		VisibleTab: 	PTabList;
+		VisibleTab:		PTabList;
 		Core:				TvCore;
 		RijwegLogica: 	TRijwegLogica;
 		UpdateChg:		TUpdateChg;
-		Modified: 		boolean;
+		Modified:		boolean;
 		FTreinnrWeergeven: boolean;
 		FDetailsWeergeven: boolean;
 		p_mode:			integer;
 		p_gix,
 		p_giy:			integer;
 		gselx,
-		gsely: 			integer;
-      sel_Mode:		integer;
-      sel_mvstx: 		integer;
-      sel_mvsty:		integer;
+		gsely:			integer;
+		sel_Mode:		integer;
+		sel_mvstx:		integer;
+		sel_mvsty:		integer;
 		selMeetpunt:	PvMeetpunt;
 		selTnMeetpunt:	PvMeetpunt;
 		selErlaubnis:	PvErlaubnis;
@@ -447,7 +447,7 @@ type
 	end;
 
 var
-  stwseMain: TstwseMain;
+	stwseMain: TstwseMain;
 
 implementation
 
@@ -579,7 +579,7 @@ var
 	sel: 			string;
 	wsk, wsl:	string;
 	evwDesc:		string;
-   s: 			string;
+	s: 			string;
 	i,j: 			integer;
 	Hokje:			TvHokje;
 	InactiefHokje:	PvInactiefHokje;
@@ -802,14 +802,14 @@ begin
 
 		detailsOn.Checked := visibleTab^.Details;
 		detailsOff.Checked := not visibleTab^.Details;
-      nsEdit.Text := visibleTab^.Titel;
-      str(visibleTab^.Gleisplan.MaxX + 1, s);
-      xedit.Text := s;
-      str(visibleTab^.Gleisplan.MaxY + 1, s);
-      yedit.Text := s;
+		nsEdit.Text := visibleTab^.Titel;
+		str(visibleTab^.Gleisplan.MaxX + 1, s);
+		xedit.Text := s;
+		str(visibleTab^.Gleisplan.MaxY + 1, s);
+		yedit.Text := s;
 
-      nsBut.Enabled := assigned(VisibleTab);
-      dsBut.Enabled := assigned(VisibleTab);
+		nsBut.Enabled := assigned(VisibleTab);
+		dsBut.Enabled := assigned(VisibleTab);
 
 		UpdateChg.Schermaantal := false;
 	end;
@@ -938,7 +938,7 @@ begin
 			else
 				rijwegVanEdit.Text := KlikpuntTekst('', true);
 			rijwegNaarEdit.Text := KlikpuntTekst(Rijweg.Naar, true);
-         onbevCheck.Checked := Rijweg^.NaarOnbeveiligd;
+			onbevCheck.Checked := Rijweg^.NaarOnbeveiligd;
 			if assigned(Rijweg^.Sein) and assigned(Rijweg^.Sein^.TriggerMeetpunt) then
 				triggerEdit.Text := Rijweg^.Sein^.TriggerMeetpunt^.meetpuntID
 			else
@@ -1038,7 +1038,7 @@ begin
 	RijwegSubroutes.Items[eersteIdx] := Eerste^.Meetpunt^.meetpuntID;
 	RijwegSubroutes.Items[tweedeIdx] := Tweede^.Meetpunt^.meetpuntID;
 	// En dit nog doen.
-   Modified := true;
+	Modified := true;
 end;
 
 procedure TstwseMain.AddScherm(ID: integer; titel: string; waar: integer; details: boolean; xsize, ysize: integer);
@@ -1335,12 +1335,12 @@ var
 	xsize, ysize, xcode, ycode: integer;
 begin
 	if nsEdit.Text <> '' then begin
-   	val(xedit.text, xsize, xcode);
-   	val(yedit.text, ysize, ycode);
-      if (xcode <> 0) or (ycode <> 0) or (xsize <= 0) or (ysize <= 0) then begin
+		val(xedit.text, xsize, xcode);
+		val(yedit.text, ysize, ycode);
+		if (xcode <> 0) or (ycode <> 0) or (xsize <= 0) or (ysize <= 0) then begin
 			Application.MessageBox('Ongeldig formaat ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
 			exit
-      end;
+		end;
 		if tsLast.checked then
 			AddScherm(SchermNieuwID, nsEdit.Text, -1, detailsOn.Checked, xsize, ysize)
 		else
@@ -1366,32 +1366,32 @@ end;
 procedure TstwseMain.nsButClick(Sender: TObject);
 var
 	xsize, ysize, xcode, ycode: integer;
-   x, y: integer;
+	x, y: integer;
 begin
 	if nsEdit.Text = '' then begin
 		Application.MessageBox('Er is geen titel ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
 		exit;
 	end;
-   val(xedit.text, xsize, xcode);
-   val(yedit.text, ysize, ycode);
-   if (xcode <> 0) or (ycode <> 0) or (xsize <= 0) or (ysize <= 0) then begin
+	val(xedit.text, xsize, xcode);
+	val(yedit.text, ysize, ycode);
+	if (xcode <> 0) or (ycode <> 0) or (xsize <= 0) or (ysize <= 0) then begin
 		Application.MessageBox('Ongeldig formaat ingevuld.','Foutmelding',MB_ICONEXCLAMATION);
 		exit
-   end;
-   // Eerst moeten we rijweg-gegevens verwijderen als dat nodig is.
+	end;
+	// Eerst moeten we rijweg-gegevens verwijderen als dat nodig is.
 	if xsize-1 < VisibleTab^.Gleisplan.MaxX then
-   	for x := xsize to VisibleTab^.Gleisplan.MaxX do
-      	for y := 0 to VisibleTab^.Gleisplan.MaxY do
-	         VerwijderHokjeRijwegdata(RijwegLogica, VisibleTab, x, y);
-   if ysize-1 < VisibleTab^.Gleisplan.MaxY then
-   	for x := 0 to VisibleTab^.Gleisplan.MaxX do
-      	for y := ysize to VisibleTab^.Gleisplan.MaxY do
-	         VerwijderHokjeRijwegdata(RijwegLogica, VisibleTab, x, y);
+		for x := xsize to VisibleTab^.Gleisplan.MaxX do
+			for y := 0 to VisibleTab^.Gleisplan.MaxY do
+				VerwijderHokjeRijwegdata(RijwegLogica, VisibleTab, x, y);
+	if ysize-1 < VisibleTab^.Gleisplan.MaxY then
+		for x := 0 to VisibleTab^.Gleisplan.MaxX do
+			for y := ysize to VisibleTab^.Gleisplan.MaxY do
+				VerwijderHokjeRijwegdata(RijwegLogica, VisibleTab, x, y);
 	// Grootte aanpassen.
 	VisibleTab^.Titel := nsEdit.Text;
-   VisibleTab^.Gleisplan.MaxX := xsize - 1;
-   VisibleTab^.Gleisplan.MaxY := ysize - 1;
-   VisibleTab^.Details := detailsOn.Checked;
+	VisibleTab^.Gleisplan.MaxX := xsize - 1;
+	VisibleTab^.Gleisplan.MaxY := ysize - 1;
+	VisibleTab^.Details := detailsOn.Checked;
 
 	UpdateChg.Schermaantal := true;
 	UpdateControls;
@@ -1405,25 +1405,25 @@ begin
 	Gleisplan := @Sender;
 	Gleisplan^.WatHier(x,y, gselx, gsely, hokje);
 
-   // Selecteer-dingen
-   if p_mode = 80 then begin
-      if Gleisplan^.SelectionMode = 1 then begin
+	// Selecteer-dingen
+	if p_mode = 80 then begin
+		if Gleisplan^.SelectionMode = 1 then begin
 			if Gleisplan^.InSelRect(gselx, gsely) then begin
-            sel_Mode := 3;
-            sel_mvstx := gselx;
-            sel_mvsty := gsely;
-         end else begin
-   	      Gleisplan^.SelectionMode := 0;
-            sel_Mode := 1;
-         end;
-      end;
-   	if Gleisplan^.SelectionMode = 0 then begin
-      	// Starten met selecteren
-         Gleisplan^.SetSelCoord(gselx, gsely);
-         Gleisplan^.SelectionMode := 1;
-         sel_Mode := 1;
-      end;
-   end;
+				sel_Mode := 3;
+				sel_mvstx := gselx;
+				sel_mvsty := gsely;
+			end else begin
+				Gleisplan^.SelectionMode := 0;
+				sel_Mode := 1;
+			end;
+		end;
+		if Gleisplan^.SelectionMode = 0 then begin
+			// Starten met selecteren
+			Gleisplan^.SetSelCoord(gselx, gsely);
+			Gleisplan^.SelectionMode := 1;
+			sel_Mode := 1;
+		end;
+	end;
 end;
 
 procedure TstwseMain.GleisplanMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -1433,7 +1433,7 @@ var
 	selx,sely: integer;
 begin
 	Gleisplan := @Sender;
-   if not Gleisplan^.ValidMouseCoords(x, y) then exit;
+	if not Gleisplan^.ValidMouseCoords(x, y) then exit;
 	Gleisplan^.WatHier(x,y, selx, sely, hokje);
 	infoMemo.Lines.Clear;
 	infoMemo.Lines.Add('Hokje ['+inttostr(selx)+','+inttostr(sely)+']');
@@ -1486,17 +1486,17 @@ begin
 		infoMemo.Lines.Add('meetpunt '+Hokje.DynData.Meetpunt^.meetpuntID);
 	end;
 
-   // Selecteer-dingen
-   if p_mode = 80 then begin
-   	if sel_mode = 1 then
-      	sel_mode := 2;
-   	if sel_Mode = 2 then
-      	Gleisplan^.SetSelCoord(selx, sely);
-      if sel_mode = 3 then
-      	sel_mode := 4;
-      if sel_mode = 4 then
-      	Gleisplan^.SetDestCoordRel(selx-sel_mvstx, sely-sel_mvsty);
-   end;
+	// Selecteer-dingen
+	if p_mode = 80 then begin
+		if sel_mode = 1 then
+			sel_mode := 2;
+		if sel_Mode = 2 then
+			Gleisplan^.SetSelCoord(selx, sely);
+		if sel_mode = 3 then
+			sel_mode := 4;
+		if sel_mode = 4 then
+			Gleisplan^.SetDestCoordRel(selx-sel_mvstx, sely-sel_mvsty);
+	end;
 end;
 
 procedure TstwseMain.GleisplanMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -1504,89 +1504,89 @@ var
 	Gleisplan: ^TvGleisplan;
 (*	Hokje: TvHokje;
 	selx,sely: integer; *)
-   ix, iy: integer;
-   x1, y1, x2, y2: integer;
-   fx, tx, fy, ty, sx, sy: integer;
-   offsx, offsy: integer;
+	ix, iy: integer;
+	x1, y1, x2, y2: integer;
+	fx, tx, fy, ty, sx, sy: integer;
+	offsx, offsy: integer;
 begin
 	Gleisplan := @Sender;
-   (*
+	(*
 	Gleisplan^.WatHier(x,y, selx, sely, hokje);
-   offsx := selx-sel_mvstx;
-   offsy := sely-sel_mvsty;
-   *)
+	offsx := selx-sel_mvstx;
+	offsy := sely-sel_mvsty;
+	*)
 
-   // Selecteer-dingen
-   if p_mode = 80 then begin
-   	// Als er in feite alleen geklikt is, zonder de muis te bewegen, dan
-      // wordt de selectie opgeheven. Maakt niet uit of er in de selectie
-      // geklikt is (mode=3) of erbuiten (mode=1).
-   	if (sel_Mode = 1) or (sel_Mode = 3) then begin
-      	Gleisplan^.SelectionMode := 0;
-         sel_Mode := 0;
-      end;
-      // Als er iets geselecteerd is, dan stoppen we met het verder selecteren
-      // zodat de selectie blijft staan.
-   	if sel_Mode = 2 then
-      	sel_Mode := 0;
-      // Als de selectie verplaatst wordt, dan moet de verplaatsing uitgevoerd
-      // worden.
-      if (sel_Mode = 4) and Gleisplan^.GetLastDestCoordRel(offsx, offsy) then begin
-         if ((offsx <> 0) or (offsy <> 0)) and
-         	Gleisplan^.GetSelectionCoordinates(x1, y1, x2, y2) then begin
+	// Selecteer-dingen
+	if p_mode = 80 then begin
+		// Als er in feite alleen geklikt is, zonder de muis te bewegen, dan
+		// wordt de selectie opgeheven. Maakt niet uit of er in de selectie
+		// geklikt is (mode=3) of erbuiten (mode=1).
+		if (sel_Mode = 1) or (sel_Mode = 3) then begin
+			Gleisplan^.SelectionMode := 0;
+			sel_Mode := 0;
+		end;
+		// Als er iets geselecteerd is, dan stoppen we met het verder selecteren
+		// zodat de selectie blijft staan.
+		if sel_Mode = 2 then
+			sel_Mode := 0;
+		// Als de selectie verplaatst wordt, dan moet de verplaatsing uitgevoerd
+		// worden.
+		if (sel_Mode = 4) and Gleisplan^.GetLastDestCoordRel(offsx, offsy) then begin
+			if ((offsx <> 0) or (offsy <> 0)) and
+				Gleisplan^.GetSelectionCoordinates(x1, y1, x2, y2) then begin
 				if offsy <= 0 then begin
-            	// We verschuiven naar boven, dus verplaatsen we van boven naar onder
-               fy := y1;
-               ty := y2;
-               sy := 1;
-            end else begin
-            	// En anders andersom.
-            	fy := y2;
-               ty := y1;
-               sy := -1;
-            end;
+					// We verschuiven naar boven, dus verplaatsen we van boven naar onder
+					fy := y1;
+					ty := y2;
+					sy := 1;
+				end else begin
+					// En anders andersom.
+					fy := y2;
+					ty := y1;
+					sy := -1;
+				end;
 				if offsx <= 0 then begin
-            	// We verschuiven naar links, dus verplaatsen we van links naar rechts
-               fx := x1;
-               tx := x2;
-               sx := 1;
-            end else begin
-            	// En anders andersom.
-            	fx := x2;
-               tx := x1;
-               sx := -1;
-            end;
-            ix := fx;
-            while ix <> tx+sx do begin
-            	iy := fy;
-               while iy <> ty+sy do begin
-               	// PutHokje roept Empty() op, dus dat hoeft hier niet. Maar
-                  // we moeten de bijbehorende rijwegdata nog wel zelf wissen.
-                  if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, ix+offsx, iy+offsy) then
+					// We verschuiven naar links, dus verplaatsen we van links naar rechts
+					fx := x1;
+					tx := x2;
+					sx := 1;
+				end else begin
+					// En anders andersom.
+					fx := x2;
+					tx := x1;
+					sx := -1;
+				end;
+				ix := fx;
+				while ix <> tx+sx do begin
+					iy := fy;
+					while iy <> ty+sy do begin
+						// PutHokje roept Empty() op, dus dat hoeft hier niet. Maar
+						// we moeten de bijbehorende rijwegdata nog wel zelf wissen.
+						if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, ix+offsx, iy+offsy) then
 							UpdateChg.Rijweg := true;
-                  // Hokje verplaatsen
-                  Gleisplan^.PutHokje(ix+offsx, iy+offsy,
-                  	Gleisplan^.GetHokjeDuplicate(ix, iy));
-                  // Oude hokje leegmaken
+						// Hokje verplaatsen
+						Gleisplan^.PutHokje(ix+offsx, iy+offsy,
+							Gleisplan^.GetHokjeDuplicate(ix, iy));
+						// Oude hokje leegmaken
 						Gleisplan^.Empty(ix, iy);
-                  // Rijwegdata verplaatsen
-                  if KopieerHokjeRijwegdata(RijwegLogica, visibleTab, ix, iy,
-                  	visibleTab, ix+offsx, iy+offsy) then
+						// Rijwegdata verplaatsen
+						if KopieerHokjeRijwegdata(RijwegLogica, visibleTab, ix, iy,
+							visibleTab, ix+offsx, iy+offsy) then
 							UpdateChg.Rijweg := true;
-                  if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, ix, iy) then
+						if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, ix, iy) then
 							UpdateChg.Rijweg := true;
 
-               	iy := iy + sy;
-               end;
-            	ix := ix + sx;
-            end;
-	      	Gleisplan^.SelMoveDest;
-         end;
-      	sel_Mode := 0;
-         Gleisplan^.Repaint;
+						iy := iy + sy;
+					end;
+					ix := ix + sx;
+				end;
+				Gleisplan^.SelMoveDest;
+			end;
+			sel_Mode := 0;
+			Gleisplan^.Repaint;
 			UpdateControls;
-      end;
-   end;
+		end;
+	end;
 end;
 
 procedure TstwseMain.GleisplanClick(Sender: TObject);
@@ -1696,10 +1696,10 @@ begin
 			end;
 		end;
 		// Nog eventjes eventuele troep weghalen.
-      if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, gselx, gsely) then begin
+		if VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, gselx, gsely) then begin
 			UpdateChg.Rijweg := true;
 			UpdateControls;
-      end;
+		end;
 	end;
 	if (p_mode >= 50) and (p_mode <= 69) then begin
 		if not assigned(selRijweg) then exit;
@@ -1826,9 +1826,9 @@ begin
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 1 then begin
 					if assigned(PvHokjeSpoor(Hokje.grdata)^.Meetpunt^.RijwegOnderdeel) then
-               	if (PvHokjeSpoor(Hokje.grdata)^.grx >= 6) and
-						   (PvHokjeSpoor(Hokje.grdata)^.grx <= 14) and
-						   (PvHokjeSpoor(Hokje.grdata)^.gry <= 1) then begin
+						if (PvHokjeSpoor(Hokje.grdata)^.grx >= 6) and
+							(PvHokjeSpoor(Hokje.grdata)^.grx <= 14) and
+							(PvHokjeSpoor(Hokje.grdata)^.gry <= 1) then begin
 							case PvHokjeSpoor(Hokje.grdata)^.RechtsonderKruisRijweg of
 							0:
 								RijwegVoegKruisingHokjeToe(selRijweg, visibleTab^.ID, gselx, gsely, PvHokjeSpoor(Hokje.grdata)^.Meetpunt, true);
@@ -1948,8 +1948,8 @@ begin
 				Hokje := Gleisplan^.GetHokje(gselx, gsely);
 				if Hokje.Soort = 6 then
 					if assigned(PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis) then begin
-               	if assigned(selRijweg^.Sein) then begin
-                  	selRijweg^.Sein^.Aank_Erlaubnis := PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis;
+						if assigned(selRijweg^.Sein) then begin
+							selRijweg^.Sein^.Aank_Erlaubnis := PvHokjeErlaubnis(Hokje.grdata)^.Erlaubnis;
 							selRijweg^.Sein^.Aank_Erlaubnisstand := PvHokjeErlaubnis(Hokje.grdata)^.ActiefStand;
 							UpdateChg.Rijweg := true;
 							UpdateControls;
@@ -2001,9 +2001,9 @@ begin
 			end;
 		end;
 	end;
-   (*
-   if (p_mode = 80) then   << selecteren, afgehandeld in de onmouse-events >>
-   *)
+	(*
+	if (p_mode = 80) then	<< selecteren, afgehandeld in de onmouse-events >>
+	*)
 end;
 
 procedure TstwseMain.mElBoxChange(Sender: TObject);
@@ -2266,7 +2266,7 @@ var
 	schermID: integer;
 	details: boolean;
 	modus: integer;
-   xsize, ysize: integer;
+	xsize, ysize: integer;
 begin
 	if OpenDialog.Execute then begin
 		filename := OpenDialog.Filename;
@@ -2291,13 +2291,13 @@ begin
 			if schermID > 0 then begin
 				stringread(f, schermnaam);
 				boolread(f, details);
-            if modus >= 2 then begin
-            	intread(f, xsize);
-               intread(f, ysize);
-            end else begin
-            	xsize := 126;
-               ysize := 37;
-            end;
+				if modus >= 2 then begin
+					intread(f, xsize);
+					intread(f, ysize);
+				end else begin
+					xsize := 126;
+					ysize := 37;
+				end;
 				AddScherm(schermID, Schermnaam, -1, details, xsize, ysize);
 				GetScherm(schermID).Gleisplan.LoadPlan(f);
 			end;
@@ -2329,7 +2329,7 @@ end;
 procedure TstwseMain.exitActExecute(Sender: TObject);
 begin
 	if modified then begin
-		if Application.MessageBox('Misschien niet opgeslagen. Toch beëindigen?', 'Afsluiten', MB_ICONWARNING+MB_YESNO) = IDYES then
+		if Application.MessageBox('Misschien niet opgeslagen. Toch beï¿½indigen?', 'Afsluiten', MB_ICONWARNING+MB_YESNO) = IDYES then
 			halt
 	end else
 		halt;
@@ -3062,8 +3062,8 @@ begin
 		intwrite(f, schermID);
 		stringwrite(f, schermnaam);
 		boolwrite(f, details);
-      intwrite(f, Tab^.Gleisplan.MaxX + 1);
-      intwrite(f, Tab^.Gleisplan.MaxY + 1);
+		intwrite(f, Tab^.Gleisplan.MaxX + 1);
+		intwrite(f, Tab^.Gleisplan.MaxY + 1);
 		Tab^.Gleisplan.SavePlan(f);
 		Tab := Tab.Volgende;
 	end;
@@ -3252,49 +3252,49 @@ end;
 procedure TstwseMain.rsButClick(Sender: TObject);
 begin
 	nsEdit.Text := '';
-   xedit.Text := '126';
-   yedit.Text := '37';
-   detailsOn.Checked := true;
+	xedit.Text := '126';
+	yedit.Text := '37';
+	detailsOn.Checked := true;
 end;
 
 procedure TstwseMain.SpeedButton33Click(Sender: TObject);
 begin
 	p_mode := 80;
-   Sel_Mode := 0;
+	Sel_Mode := 0;
 end;
 
 procedure TstwseMain.dsButClick(Sender: TObject);
 var
 	x, y: integer;
-   Tab: PTabList;
+	Tab: PTabList;
 begin
 	if assigned(VisibleTab) then begin
-   	// Scherm leegmaken
-   	for x := 0 to VisibleTab^.Gleisplan.MaxX do
-      	for y := 0 to VisibleTab^.Gleisplan.MaxY do begin
-         	VisibleTab^.Gleisplan.Empty(x, y);
-            VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, x, y)
-         end;
+		// Scherm leegmaken
+		for x := 0 to VisibleTab^.Gleisplan.MaxX do
+			for y := 0 to VisibleTab^.Gleisplan.MaxY do begin
+				VisibleTab^.Gleisplan.Empty(x, y);
+				VerwijderHokjeRijwegdata(RijwegLogica, visibleTab, x, y)
+			end;
 		// En scherm uit de lijst halen
-      if VisibleTab = FirstTab then begin
-      	FirstTab := VisibleTab^.Volgende;
-         RijwegLogica.Tabs := FirstTab;
-      end else begin
-         Tab := FirstTab;
-         while Tab.Volgende <> VisibleTab do
-         	Tab := Tab^.Volgende;
-         Tab^.Volgende := VisibleTab^.Volgende;
-      end;
-      VisibleTab^.Gleisplan.Destroy;
-      VisibleTab^.Scrollbox.Destroy;
+		if VisibleTab = FirstTab then begin
+			FirstTab := VisibleTab^.Volgende;
+			RijwegLogica.Tabs := FirstTab;
+		end else begin
+			Tab := FirstTab;
+			while Tab.Volgende <> VisibleTab do
+				Tab := Tab^.Volgende;
+			Tab^.Volgende := VisibleTab^.Volgende;
+		end;
+		VisibleTab^.Gleisplan.Destroy;
+		VisibleTab^.Scrollbox.Destroy;
 		dispose(VisibleTab);
-      VisibleTab := nil;
-      if SchermenTab.TabIndex >= SchermenTab.Tabs.Count - 1 then
-      	SchermenTab.TabIndex := SchermenTab.Tabs.Count - 2;
+		VisibleTab := nil;
+		if SchermenTab.TabIndex >= SchermenTab.Tabs.Count - 1 then
+			SchermenTab.TabIndex := SchermenTab.Tabs.Count - 2;
 		UpdateChg.Schermaantal := true;
 		UpdateChg.Schermen := true;
 		UpdateControls;
-   end;
+	end;
 end;
 
 procedure TstwseMain.triggerRichtingEditButClick(Sender: TObject);

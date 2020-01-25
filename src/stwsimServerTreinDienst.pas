@@ -3,22 +3,22 @@ unit stwsimServerTreinDienst;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, stwpCore, stwpRijplan, stwvMisc, stwpTijd;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, stwpCore, stwpRijplan, stwvMisc, stwpTijd;
 
 type
-  TstwssTreinDienstForm = class(TForm)
-	 puntenList: TListBox;
-	 puntAddBut: TButton;
-	 puntEditbut: TButton;
-	 puntDelBut: TButton;
-	 okBut: TButton;
-    TreinnrLabel: TLabel;
-    procedure FormShow(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure puntAddButClick(Sender: TObject);
-	 procedure puntEditbutClick(Sender: TObject);
-	 procedure puntDelButClick(Sender: TObject);
+	TstwssTreinDienstForm = class(TForm)
+		puntenList: TListBox;
+		puntAddBut: TButton;
+		puntEditbut: TButton;
+		puntDelBut: TButton;
+		okBut: TButton;
+		TreinnrLabel: TLabel;
+		procedure FormShow(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
+		procedure puntAddButClick(Sender: TObject);
+		procedure puntEditbutClick(Sender: TObject);
+		procedure puntDelButClick(Sender: TObject);
 	private
 		{ Private declarations }
 		function Sort_Merge(links, rechts: PpRijplanpunt): PpRijplanpunt;

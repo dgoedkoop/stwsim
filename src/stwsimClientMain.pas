@@ -3,13 +3,13 @@ unit stwsimClientMain;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons, 
-  stwvMeetpunt, clientReadMsg, clientSendMsg, stwvCore,
-  stwvGleisplan, stwvHokjes, stwvSporen, stwpTijd, stwvRijwegen, stwvSeinen,
-  stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
-  stwvProcesPlan, stwsimComm, stwpCore, serverSendMsg, serverReadMsg,
-  stwpTreinen;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, ExtCtrls, Menus, ComCtrls, ActnList, Buttons, 
+	stwvMeetpunt, clientReadMsg, clientSendMsg, stwvCore,
+	stwvGleisplan, stwvHokjes, stwvSporen, stwpTijd, stwvRijwegen, stwvSeinen,
+	stwvMisc, stwvRijveiligheid, stwvRijwegLogica, stwvLog,
+	stwvProcesPlan, stwsimComm, stwpCore, serverSendMsg, serverReadMsg,
+	stwpTreinen;
 
 type
 	TUpdateChg = record
@@ -21,120 +21,120 @@ type
 		Menus: boolean;
 	end;
 
-  TstwsimMainForm = class(TForm)
-    MainMenu: TMainMenu;
-    BedienPanel: TPanel;
-	 TijdTimer: TTimer;
-    BlinkTimer: TTimer;
-	 SpoorPopup: TPopupMenu;
-	 Actions: TActionList;
-	 Openen: TAction;
-	 Afsluiten: TAction;
-    TreinInterpose: TAction;
-	 TreinBericht: TAction;
-	 WisselSwitch: TAction;
-    WisselBedienVerh: TAction;
-	 WisselRijwegVerh: TAction;
-    Berichtnaartreinsturen1: TMenuItem;
-    Treinnummerwijzigen1: TMenuItem;
-    N1: TMenuItem;
-	 Wisselomzetten1: TMenuItem;
-    Verhinderbedieningwissel1: TMenuItem;
-	 Verhinderrijwegoverwissel1: TMenuItem;
-	 Bestand1: TMenuItem;
-	 Help1: TMenuItem;
-    Openen1: TMenuItem;
-    Afsluiten1: TMenuItem;
-	 SchermenTab: TTabControl;
-	 OpenDialog: TOpenDialog;
-	 Info1: TMenuItem;
-	 msgMemo: TMemo;
-	 TreinStatus: TAction;
-	 Treinstatus1: TMenuItem;
-	 statPanel: TPanel;
-	 RijwegHo: TAction;
-    RijwegNormaal: TAction;
-	 RijwegROZ: TAction;
-    RijwegAuto: TAction;
-	 RijwegCancel: TAction;
-	 NNormalerijweg1: TMenuItem;
-    Rijweg1: TMenuItem;
-    ROZRijwegnaarbezetspoor1: TMenuItem;
-    ARijwegmetautomatischeseinen1: TMenuItem;
-    HRijwegherroepen1: TMenuItem;
-	 NieuwBericht: TAction;
-    Broadcast: TAction;
-    Hulpmiddelen1: TMenuItem;
-    vannaarPanel: TPanel;
-    vanVeld: TLabel;
-    naarVeld: TLabel;
-    Splitter1: TSplitter;
-    tijdLabel: TLabel;
-	 Button1: TButton;
-    Button2: TButton;
-    LaatProcesplanZien: TAction;
-    N2: TMenuItem;
-    LaatProcesplanZien1: TMenuItem;
-    GetScore: TAction;
-	 Prestaties1: TMenuItem;
-    fullscreenAction: TAction;
-    DienstOpen: TAction;
-    Dienstregelingopenen1: TMenuItem;
-    DienstSave: TAction;
-    DienstSaveDialog: TSaveDialog;
-    DienstOpenDialog: TOpenDialog;
-    Dienstregelingopslaan1: TMenuItem;
-    StartAction: TAction;
-    Starten1: TMenuItem;
-    DoorspoelAction: TAction;
-    Bestand2: TMenuItem;
-    ToonToolsAction: TAction;
-    ToolsPanel: TPanel;
-    telBtn: TSpeedButton;
-    SpeedButton1: TSpeedButton;
-    Label1: TLabel;
-    SpeedTrack: TTrackBar;
-    Label2: TLabel;
-    Label3: TLabel;
-    Hulpmiddelentonen1: TMenuItem;
-    DienstEdit: TAction;
-    Dienstregelingbewerken1: TMenuItem;
-    DoorspoelBut: TButton;
-	 procedure FormCreate(Sender: TObject);
-	 procedure TijdTimerTimer(Sender: TObject);
-	 procedure OpenenExecute(Sender: TObject);
-	 procedure Info1Click(Sender: TObject);
-	 procedure BlinkTimerTimer(Sender: TObject);
-	 procedure WisselSwitchExecute(Sender: TObject);
-    procedure WisselBedienVerhExecute(Sender: TObject);
-    procedure WisselRijwegVerhExecute(Sender: TObject);
-    procedure TreinInterposeExecute(Sender: TObject);
-    procedure AfsluitenExecute(Sender: TObject);
-	 procedure TreinStatusExecute(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure RijwegHoExecute(Sender: TObject);
-    procedure RijwegNormaalExecute(Sender: TObject);
-	 procedure RijwegROZExecute(Sender: TObject);
-	 procedure RijwegAutoExecute(Sender: TObject);
-    procedure RijwegCancelExecute(Sender: TObject);
-	 procedure TreinBerichtExecute(Sender: TObject);
-	 procedure NieuwBerichtExecute(Sender: TObject);
-	 procedure SchermenTabChange(Sender: TObject);
-    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
-      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-	 procedure BroadcastExecute(Sender: TObject);
-	 procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-	 procedure LaatProcesplanZienExecute(Sender: TObject);
-	 procedure FormDestroy(Sender: TObject);
-	 procedure HerkenProcesplanClose;
-    procedure GetScoreExecute(Sender: TObject);
-    procedure fullscreenActionExecute(Sender: TObject);
-    procedure DienstOpenExecute(Sender: TObject);
-    procedure DienstSaveExecute(Sender: TObject);
-    procedure StartActionExecute(Sender: TObject);
-    procedure DoorspoelActionExecute(Sender: TObject);
-    procedure ToonToolsActionExecute(Sender: TObject);
-    procedure DienstEditExecute(Sender: TObject);
+	TstwsimMainForm = class(TForm)
+		MainMenu: TMainMenu;
+		BedienPanel: TPanel;
+		TijdTimer: TTimer;
+		BlinkTimer: TTimer;
+		SpoorPopup: TPopupMenu;
+		Actions: TActionList;
+		Openen: TAction;
+		Afsluiten: TAction;
+		TreinInterpose: TAction;
+		TreinBericht: TAction;
+		WisselSwitch: TAction;
+		WisselBedienVerh: TAction;
+		WisselRijwegVerh: TAction;
+		Berichtnaartreinsturen1: TMenuItem;
+		Treinnummerwijzigen1: TMenuItem;
+		N1: TMenuItem;
+		Wisselomzetten1: TMenuItem;
+		Verhinderbedieningwissel1: TMenuItem;
+		Verhinderrijwegoverwissel1: TMenuItem;
+		Bestand1: TMenuItem;
+		Help1: TMenuItem;
+		Openen1: TMenuItem;
+		Afsluiten1: TMenuItem;
+		SchermenTab: TTabControl;
+		OpenDialog: TOpenDialog;
+		Info1: TMenuItem;
+		msgMemo: TMemo;
+		TreinStatus: TAction;
+		Treinstatus1: TMenuItem;
+		statPanel: TPanel;
+		RijwegHo: TAction;
+		RijwegNormaal: TAction;
+		RijwegROZ: TAction;
+		RijwegAuto: TAction;
+		RijwegCancel: TAction;
+		NNormalerijweg1: TMenuItem;
+		Rijweg1: TMenuItem;
+		ROZRijwegnaarbezetspoor1: TMenuItem;
+		ARijwegmetautomatischeseinen1: TMenuItem;
+		HRijwegherroepen1: TMenuItem;
+		NieuwBericht: TAction;
+		Broadcast: TAction;
+		Hulpmiddelen1: TMenuItem;
+		vannaarPanel: TPanel;
+		vanVeld: TLabel;
+		naarVeld: TLabel;
+		Splitter1: TSplitter;
+		tijdLabel: TLabel;
+		Button1: TButton;
+		Button2: TButton;
+		LaatProcesplanZien: TAction;
+		N2: TMenuItem;
+		LaatProcesplanZien1: TMenuItem;
+		GetScore: TAction;
+		Prestaties1: TMenuItem;
+		fullscreenAction: TAction;
+		DienstOpen: TAction;
+		Dienstregelingopenen1: TMenuItem;
+		DienstSave: TAction;
+		DienstSaveDialog: TSaveDialog;
+		DienstOpenDialog: TOpenDialog;
+		Dienstregelingopslaan1: TMenuItem;
+		StartAction: TAction;
+		Starten1: TMenuItem;
+		DoorspoelAction: TAction;
+		Bestand2: TMenuItem;
+		ToonToolsAction: TAction;
+		ToolsPanel: TPanel;
+		telBtn: TSpeedButton;
+		SpeedButton1: TSpeedButton;
+		Label1: TLabel;
+		SpeedTrack: TTrackBar;
+		Label2: TLabel;
+		Label3: TLabel;
+		Hulpmiddelentonen1: TMenuItem;
+		DienstEdit: TAction;
+		Dienstregelingbewerken1: TMenuItem;
+		DoorspoelBut: TButton;
+		procedure FormCreate(Sender: TObject);
+		procedure TijdTimerTimer(Sender: TObject);
+		procedure OpenenExecute(Sender: TObject);
+		procedure Info1Click(Sender: TObject);
+		procedure BlinkTimerTimer(Sender: TObject);
+		procedure WisselSwitchExecute(Sender: TObject);
+		procedure WisselBedienVerhExecute(Sender: TObject);
+		procedure WisselRijwegVerhExecute(Sender: TObject);
+		procedure TreinInterposeExecute(Sender: TObject);
+		procedure AfsluitenExecute(Sender: TObject);
+		procedure TreinStatusExecute(Sender: TObject);
+		procedure FormShow(Sender: TObject);
+		procedure RijwegHoExecute(Sender: TObject);
+		procedure RijwegNormaalExecute(Sender: TObject);
+		procedure RijwegROZExecute(Sender: TObject);
+		procedure RijwegAutoExecute(Sender: TObject);
+		procedure RijwegCancelExecute(Sender: TObject);
+		procedure TreinBerichtExecute(Sender: TObject);
+		procedure NieuwBerichtExecute(Sender: TObject);
+		procedure SchermenTabChange(Sender: TObject);
+		procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+		WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+		procedure BroadcastExecute(Sender: TObject);
+		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+		procedure LaatProcesplanZienExecute(Sender: TObject);
+		procedure FormDestroy(Sender: TObject);
+		procedure HerkenProcesplanClose;
+		procedure GetScoreExecute(Sender: TObject);
+		procedure fullscreenActionExecute(Sender: TObject);
+		procedure DienstOpenExecute(Sender: TObject);
+		procedure DienstSaveExecute(Sender: TObject);
+		procedure StartActionExecute(Sender: TObject);
+		procedure DoorspoelActionExecute(Sender: TObject);
+		procedure ToonToolsActionExecute(Sender: TObject);
+		procedure DienstEditExecute(Sender: TObject);
 	private
 		// Belangrijkste
 		pCore:		PpCore;
@@ -192,13 +192,13 @@ type
 	end;
 
 var
-  stwsimMainForm: TstwsimMainForm;
+	stwsimMainForm: TstwsimMainForm;
 
 implementation
 
 uses stwsimClientInfo, stwsimClientConnect, stwsimClientInterpose,
-  stwsimclientTreinMsg, stwsimclientBericht, clientProcesplanForm,
-  stwsimclientScore, stwsimclientTreinStatus, stwsimServerDienstreg;
+	stwsimclientTreinMsg, stwsimclientBericht, clientProcesplanForm,
+	stwsimclientScore, stwsimclientTreinStatus, stwsimServerDienstreg;
 
 {$R *.DFM}
 
@@ -698,7 +698,7 @@ begin
 		1: begin
 			if assigned(selMeetpunt) then
 				if selMeetpunt^.treinnummer <> '' then
-               TreinStatus.Execute;
+					TreinStatus.Execute;
 		end;
 		2: begin
 			if PvHokjeLetter(selHokje.grdata)^.Spoornummer <> '' then begin
@@ -847,19 +847,19 @@ begin
 end;
 
 procedure TstwsimMainForm.FormMouseWheel(Sender: TObject;
-  Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
-  var Handled: Boolean);
+	Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+	var Handled: Boolean);
 begin
 	handled := true;
 	if WheelDelta < 0 then begin
-		 if SchermenTab.TabIndex < SchermenTab.Tabs.Count-1 then
+		if SchermenTab.TabIndex < SchermenTab.Tabs.Count-1 then
 			SchermenTab.TabIndex := SchermenTab.TabIndex + 1;
 //		 else
 //			SchermenTab.TabIndex := 0;
 		 SchermenTabChange(Sender);
 	end;
 	if WheelDelta > 0 then begin
-		 if SchermenTab.TabIndex > 0 then
+		if SchermenTab.TabIndex > 0 then
 			SchermenTab.TabIndex := SchermenTab.TabIndex - 1;
 //		 else
 //			SchermenTab.TabIndex := SchermenTab.Tabs.Count-1;
@@ -873,7 +873,7 @@ begin
 end;
 
 procedure TstwsimMainForm.FormCloseQuery(Sender: TObject;
-  var CanClose: Boolean);
+	var CanClose: Boolean);
 begin
 	CanClose := Application.MessageBox('Weet u zeker dat u StwSim Client wilt afsluiten?',
 		'Afsluiten', MB_ICONQUESTION+MB_YESNO) = mrYes;
@@ -915,7 +915,7 @@ end;
 
 procedure TstwsimMainForm.GetScoreExecute(Sender: TObject);
 begin
-   vSendMsg.SendGetScore;
+	vSendMsg.SendGetScore;
 end;
 
 procedure TstwsimMainForm.fullscreenActionExecute(Sender: TObject);

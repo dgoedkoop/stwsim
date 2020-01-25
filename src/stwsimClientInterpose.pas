@@ -3,24 +3,24 @@ unit stwsimClientInterpose;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls;
 
 type
-  TstwscInterposeForm = class(TForm)
-    Label1: TLabel;
-    treinnrEdit: TEdit;
-    okBut: TButton;
-    cancelBut: TButton;
-    procedure FormShow(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
+	TstwscInterposeForm = class(TForm)
+		Label1: TLabel;
+		treinnrEdit: TEdit;
+		okBut: TButton;
+		cancelBut: TButton;
+		procedure FormShow(Sender: TObject);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+	end;
 
 var
-  stwscInterposeForm: TstwscInterposeForm;
+	stwscInterposeForm: TstwscInterposeForm;
 
 implementation
 

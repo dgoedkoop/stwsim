@@ -18,7 +18,7 @@ function WisselstandenLijstBereken(Wissel: PvWissel; Stand: TWisselStand;
 // 3. <doe iets dat SendMsg veroorzaakt>
 // 4. RijveiligheidUnlock();
 // Zo wordt namelijk verhinderd dat bij een interruptie van SendMsg iets wordt
-// gedaan dat het resultaat van de gedane checks beïnvloedt.
+// gedaan dat het resultaat van de gedane checks beï¿½nvloedt.
 
 // Deze functie kijkt of een wissel in de gewenste stand kan worden
 // gezet en een rijweg erover mag worden ingesteld.
@@ -36,7 +36,7 @@ function WisselsLiggenGoed(Wissel: PvWissel; Stand: TWisselstand;
 
 // Deze functie kijkt of een rijweg ingesteld kan worden.
 // De rijweg hoeft niet vrij te zijn, maar de wissels moeten wel goed
-// kunnen worden gezet en tenminste één meetpunt van de rijweg moet geheel
+// kunnen worden gezet en tenminste ï¿½ï¿½n meetpunt van de rijweg moet geheel
 // vrij zijn. Dit laatste om te voorkomen dat we een rijweg direct twee keer
 // na elkaar kunnen instellen.
 function RijwegKan(Rijweg: PvRijweg; ROZ: boolean;
@@ -112,7 +112,7 @@ end;
 // Deze functie retourneert nul als het wissel niet kan worden omgezet, of anders
 // een lijst met om te zetten wissels te beginnen met het gekozen wissel maar
 // exclusief de wissels uit TotNuToe.
-// Deze functie maakt de lijst per recursieve oproep hooguit één wissel langer.
+// Deze functie maakt de lijst per recursieve oproep hooguit ï¿½ï¿½n wissel langer.
 function WisselstandenLijstBereken;
 var
 	EisenLijst: PWisselstandLijst;
@@ -207,7 +207,7 @@ begin
 	tmpLijst^.Volgende := nil;
 	tmpLijstEind := tmpLijst;
 
-	// En we plakken alles samen tot één lange totnutoe-lijst. Dat herstellen we
+	// En we plakken alles samen tot ï¿½ï¿½n lange totnutoe-lijst. Dat herstellen we
 	// later weer.
 	if assigned(TotNuToe) then begin
 		tmpTotNuToe := TotNuToe;
@@ -227,7 +227,7 @@ begin
 			if tmpZoekLijst^.Wissel = tmpCheck^.Wissel then begin
 				// Bij een gevonden match zijn er verschillende opties.
 				// 1. De standen zijn incompatible en we hebben te maken met een
-				//    eis. In dat geval kan deze oplossing niet -> afbreken.
+				//	 eis. In dat geval kan deze oplossing niet -> afbreken.
 				// 3. De standen zijn compatible -> geen actie nodig.
 				gevonden := true;
 				if tmpZoekLijst^.Stand <> tmpCheck^.Stand then begin
@@ -247,9 +247,9 @@ begin
 			// worden.
 			// Mogelijke opties:
 			// 1. Het wissel kan in de goede stand gezet worden. Dan gaan we dat
-			//    ook doen -> dit retourneren.
+			//	 ook doen -> dit retourneren.
 			// 2. Het wissel kan niet in de goede stand gezet worden en er is
-			//    sprake van een eis -> oplossing onmogelijk -> afbreken.
+			//	 sprake van een eis -> oplossing onmogelijk -> afbreken.
 
 			// Recursie doen
 			tmpZoekLijst := WisselstandenLijstBereken(tmpCheck^.Wissel, tmpCheck^.Stand, Flankbeveiliging, tmpTotNuToe, false);
@@ -316,7 +316,7 @@ begin
 				if tmpZoekLijst^.Wissel = tmpCheck^.Wissel then begin
 					// Bij een gevonden match zijn er verschillende opties.
 					// 2. De standen zijn incompatible en we hebben te maken met een
-					//    verzoek. In dat geval -> verzoek niet inwilligen -> niks doen.
+					//	 verzoek. In dat geval -> verzoek niet inwilligen -> niks doen.
 					// 3. De standen zijn compatible -> geen actie nodig.
 					gevonden := true;
 					break;
@@ -330,9 +330,9 @@ begin
 				// worden.
 				// Mogelijke opties:
 				// 1. Het wissel kan in de goede stand gezet worden. Dan gaan we dat
-				//    ook doen -> dit retourneren.
+				//	 ook doen -> dit retourneren.
 				// 3. Het wissel kan niet in de goede stand gezet worden en er is
-				//    sprake van een verzoek -> niet inwilligen -> niks doen.
+				//	 sprake van een verzoek -> niet inwilligen -> niks doen.
 
 				// Recursie doen
 				tmpZoekLijst := WisselstandenLijstBereken(tmpCheck^.Wissel, tmpCheck^.Stand, Flankbeveiliging, tmpTotNuToe, false);

@@ -16,9 +16,9 @@ type
 		Erlaubnis:	PpErlaubnis;	// Bijbehorende Erlaubnis.
 		// Dynamische informatie
 		Bezet: boolean;				// Bezet?
-		Elektrif: boolean;			// Geëlektrificieerd?
+		Elektrif: boolean;			// Geï¿½lektrificieerd?
 		Treinnaam:	string;			// Toch maar wel hier bijhouden.
-		ZichtbaarLijst:	PpRaillijst;	// Wordt éénmalig bijgewerkt.
+		ZichtbaarLijst:	PpRaillijst;	// Wordt ï¿½ï¿½nmalig bijgewerkt.
 		rijrichting:	byte;			// 0=geen, 1=up, 2=down (voor vrije banen)
 		// Defecten
 		magdefect:  boolean;			// Verschijnpunt mag niet defect.
@@ -79,7 +79,7 @@ begin
 	ZichtbaarLijst := nil;
 	bezet := false;
 	kortsluitlans := false;
-   kortsluitlansiswegensscenario := false;
+	kortsluitlansiswegensscenario := false;
 end;
 
 destructor TpMeetpunt.Destroy;

@@ -3,56 +3,56 @@ unit stwsimserverBewerkPlanpunt;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls;
 
 type
-  TstwssPlanpuntBewerkForm = class(TForm)
-    stationEdit: TEdit;
-    Label1: TLabel;
-    perronEdit: TEdit;
-    Label2: TLabel;
-    aanUurEdit: TEdit;
-    Label4: TLabel;
-    aanMinEdit: TEdit;
-    vertrMinEdit: TEdit;
-    Label5: TLabel;
-    vertrUurEdit: TEdit;
-    wachtSecEdit: TEdit;
-    Label7: TLabel;
-    wachtMinEdit: TEdit;
-    Label8: TLabel;
-    Label9: TLabel;
-    Label10: TLabel;
-    Label11: TLabel;
-    StopCheck: TCheckBox;
-    kerenCheck: TCheckBox;
-    Label12: TLabel;
-    nieuwnrEdit: TEdit;
-    loskAantalEdit: TEdit;
-    Label13: TLabel;
-    Label14: TLabel;
-    Label15: TLabel;
-    loskTreinnrEdit: TEdit;
-    loskKerenCheck: TCheckBox;
-    koppelCheck: TCheckBox;
-    okBut: TButton;
-    cancelBut: TButton;
-    aankCheck: TCheckBox;
-    vertrCheck: TCheckBox;
-    procedure aankCheckClick(Sender: TObject);
-    procedure vertrCheckClick(Sender: TObject);
-    procedure StopCheckClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-  private
-    { Private declarations }
-  public
-	 { Public declarations }
+	TstwssPlanpuntBewerkForm = class(TForm)
+		stationEdit: TEdit;
+		Label1: TLabel;
+		perronEdit: TEdit;
+		Label2: TLabel;
+		aanUurEdit: TEdit;
+		Label4: TLabel;
+		aanMinEdit: TEdit;
+		vertrMinEdit: TEdit;
+		Label5: TLabel;
+		vertrUurEdit: TEdit;
+		wachtSecEdit: TEdit;
+		Label7: TLabel;
+		wachtMinEdit: TEdit;
+		Label8: TLabel;
+		Label9: TLabel;
+		Label10: TLabel;
+		Label11: TLabel;
+		StopCheck: TCheckBox;
+		kerenCheck: TCheckBox;
+		Label12: TLabel;
+		nieuwnrEdit: TEdit;
+		loskAantalEdit: TEdit;
+		Label13: TLabel;
+		Label14: TLabel;
+		Label15: TLabel;
+		loskTreinnrEdit: TEdit;
+		loskKerenCheck: TCheckBox;
+		koppelCheck: TCheckBox;
+		okBut: TButton;
+		cancelBut: TButton;
+		aankCheck: TCheckBox;
+		vertrCheck: TCheckBox;
+		procedure aankCheckClick(Sender: TObject);
+		procedure vertrCheckClick(Sender: TObject);
+		procedure StopCheckClick(Sender: TObject);
+		procedure FormShow(Sender: TObject);
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
 		procedure UpdEnable;
-  end;
+	end;
 
 var
-  stwssPlanpuntBewerkForm: TstwssPlanpuntBewerkForm;
+	stwssPlanpuntBewerkForm: TstwssPlanpuntBewerkForm;
 
 implementation
 

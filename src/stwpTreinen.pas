@@ -25,15 +25,15 @@ type
 		cw:			double;	// Luchtweerstandscoefficient
 		elektrisch:	boolean;	// Elektrolok?
 		bedienbaar:	boolean;	// Lok of stuurstandrijtuig
-      twbedienbaar:	boolean;	// Cabine voor en achter, bij false alleen voor.
+		twbedienbaar:	boolean;	// Cabine voor en achter, bij false alleen voor.
 		naam:			string;	// Type-herkenning
-      volgende:	PpWagon;
-   end;
+		volgende:	PpWagon;
+	end;
 
 	PpWagonConn = ^TpWagonConn;
 	TpWagonConn = record
 		vorige:		PpWagonConn;
-      wagon:		PpWagon;
+		wagon:		PpWagon;
 		omgekeerd:	boolean;
 		volgende:	PpWagonConn;
 	end;
@@ -56,7 +56,7 @@ type
 															// waar we bij stilstaan.
 
 		kannietwegvoor:	integer;
-      klaarmeldingvereist: boolean;
+		klaarmeldingvereist: boolean;
 
 		defect				: boolean;
 		defecttot			: integer;
@@ -266,7 +266,7 @@ begin
 		SaveRijpunt(f, swStatus, Trein^.StationModusPlanpunt);
 
 	intwrite (f, Trein^.kannietwegvoor);
-   boolwrite(f, Trein^.klaarmeldingvereist);
+	boolwrite(f, Trein^.klaarmeldingvereist);
 	boolwrite(f, Trein^.defect);
 	intwrite (f, Trein^.defecttot);
 	boolwrite(f, Trein^.doorroodgereden);
@@ -309,8 +309,8 @@ begin
 		Trein^.StationModusPlanpunt := nil;
 
 	intread (f, Trein^.kannietwegvoor);
-   if SgVersion >= 15 then
-   	boolread(f, Trein^.klaarmeldingvereist);
+	if SgVersion >= 15 then
+		boolread(f, Trein^.klaarmeldingvereist);
 	boolread(f, Trein^.defect);
 	intread (f, Trein^.defecttot);
 	boolread(f, Trein^.doorroodgereden);
@@ -400,7 +400,7 @@ begin
 	S_Adviessnelheid := -1;
 	ROZ := false;
 	kannietwegvoor := -1;
-   klaarmeldingvereist := false;
+	klaarmeldingvereist := false;
 	berichtwachttijd := -1;
 	doorroodgereden := false;
 	doorroodopdracht := false;
@@ -618,7 +618,7 @@ begin
 				tmppos := tmppos + tmplengte;
 				if tmppos > tmpRail.Lengte then begin
 					// We zijn voorbij het einde van de rails!
-               tmplengte := tmppos - tmpRail.Lengte;	// Overschot onthouden.
+					tmplengte := tmppos - tmpRail.Lengte;	// Overschot onthouden.
 					tmpConn := tmpRail.Volgende;
 					VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
 					if tmpAchteruit then
@@ -680,7 +680,7 @@ begin
 				tmppos := tmppos + tmplengte;
 				if tmppos > tmpRail.Lengte then begin
 					// We zijn voorbij het einde van de rails!
-               tmplengte := tmppos - tmpRail.Lengte;	// Overschot onthouden.
+					tmplengte := tmppos - tmpRail.Lengte;	// Overschot onthouden.
 					tmpConn := tmpRail.Volgende;
 					VolgendeRail(tmpConn, tmpRail, tmpAchteruit);
 					if tmpAchteruit then

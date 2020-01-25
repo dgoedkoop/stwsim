@@ -3,53 +3,53 @@ unit stwsimServerDienstreg;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, stwpCore, stwpTijd, stwpTreinen, stwpVerschijnLijst, stwpRijplan;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, stwpCore, stwpTijd, stwpTreinen, stwpVerschijnLijst, stwpRijplan;
 
 type
-  TstwssDienstregForm = class(TForm)
-	 GroupBox1: TGroupBox;
-	 Label1: TLabel;
-	 Label2: TLabel;
-	 startUurEdit: TEdit;
-	 startMinEdit: TEdit;
-	 GroupBox2: TGroupBox;
-    matLoadBut: TButton;
-    matDelBut: TButton;
-    GroupBox3: TGroupBox;
-    newTreinBut: TButton;
-	 editTreinBut: TButton;
-    delTreinBut: TButton;
-    treinList: TListBox;
-    GroupBox4: TGroupBox;
-    nieuwVerschijnBut: TButton;
-    editVerschijnBut: TButton;
-	 delVerschijnBut: TButton;
-    verschijnList: TListBox;
-    copyTreinBut: TButton;
-	 okBut: TButton;
-    copyVerschijnBut: TButton;
-	 stopMinEdit: TEdit;
-	 Label3: TLabel;
-	 stopUurEdit: TEdit;
-	 Label5: TLabel;
-	 matList: TListBox;
-    treinNrBut: TButton;
-	 procedure FormShow(Sender: TObject);
-	 procedure startUurEditChange(Sender: TObject);
-	 procedure stopUurEditChange(Sender: TObject);
-	 procedure matLoadButClick(Sender: TObject);
-	 procedure matDelButClick(Sender: TObject);
-    procedure newTreinButClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure nieuwVerschijnButClick(Sender: TObject);
-    procedure editVerschijnButClick(Sender: TObject);
-    procedure delVerschijnButClick(Sender: TObject);
-    procedure copyVerschijnButClick(Sender: TObject);
-    procedure treinNrButClick(Sender: TObject);
-    procedure editTreinButClick(Sender: TObject);
-    procedure delTreinButClick(Sender: TObject);
-    procedure copyTreinButClick(Sender: TObject);
+	TstwssDienstregForm = class(TForm)
+		GroupBox1: TGroupBox;
+		Label1: TLabel;
+		Label2: TLabel;
+		startUurEdit: TEdit;
+		startMinEdit: TEdit;
+		GroupBox2: TGroupBox;
+		matLoadBut: TButton;
+		matDelBut: TButton;
+		GroupBox3: TGroupBox;
+		newTreinBut: TButton;
+		editTreinBut: TButton;
+		delTreinBut: TButton;
+		treinList: TListBox;
+		GroupBox4: TGroupBox;
+		nieuwVerschijnBut: TButton;
+		editVerschijnBut: TButton;
+		delVerschijnBut: TButton;
+		verschijnList: TListBox;
+		copyTreinBut: TButton;
+		okBut: TButton;
+		copyVerschijnBut: TButton;
+		stopMinEdit: TEdit;
+		Label3: TLabel;
+		stopUurEdit: TEdit;
+		Label5: TLabel;
+		matList: TListBox;
+		treinNrBut: TButton;
+		procedure FormShow(Sender: TObject);
+		procedure startUurEditChange(Sender: TObject);
+		procedure stopUurEditChange(Sender: TObject);
+		procedure matLoadButClick(Sender: TObject);
+		procedure matDelButClick(Sender: TObject);
+		procedure newTreinButClick(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
+		procedure nieuwVerschijnButClick(Sender: TObject);
+		procedure editVerschijnButClick(Sender: TObject);
+		procedure delVerschijnButClick(Sender: TObject);
+		procedure copyVerschijnButClick(Sender: TObject);
+		procedure treinNrButClick(Sender: TObject);
+		procedure editTreinButClick(Sender: TObject);
+		procedure delTreinButClick(Sender: TObject);
+		procedure copyTreinButClick(Sender: TObject);
 	private
 		function Trn_Sort_Merge(links, rechts: PpTreindienst): PpTreindienst;
 		function Trn_Sort_List(Dienst: PpTreindienst): PpTreindienst;
@@ -336,7 +336,7 @@ begin
 		dispose(Matfile);
 	end;
 	// En weergeven
-   UpdateDingen;
+	UpdateDingen;
 end;
 
 procedure TstwssDienstregForm.newTreinButClick(Sender: TObject);
