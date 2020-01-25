@@ -2382,7 +2382,7 @@ end;
 procedure TstwseMain.exitActExecute(Sender: TObject);
 begin
 	if modified then begin
-		if Application.MessageBox('Misschien niet opgeslagen. Toch beï¿½indigen?', 'Afsluiten', MB_ICONWARNING+MB_YESNO) = IDYES then
+		if Application.MessageBox('Misschien niet opgeslagen. Toch beëindigen?', 'Afsluiten', MB_ICONWARNING+MB_YESNO) = IDYES then
 			halt
 	end else
 		halt;

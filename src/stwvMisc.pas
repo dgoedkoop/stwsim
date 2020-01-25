@@ -45,7 +45,7 @@ begin
 			result := result + ' ';
 		case upcase(s[i]) of
 		'0': result := result + 'nul';
-		'1': result := result + 'ï¿½ï¿½n';
+		'1': result := result + 'één';
 		'2': result := result + 'twee';
 		'3': result := result + 'drie';
 		'4': result := result + 'vier';

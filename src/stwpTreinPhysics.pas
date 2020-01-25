@@ -539,7 +539,7 @@ begin
 		laatsteWagon := tmpWagon;
 		tmpWagon := tmpWagon^.Volgende;
 	end;
-	// Als de voorste trein ï¿½berhaupt wagons heeft. Anders hoeven
+	// Als de voorste trein uberhaupt wagons heeft. Anders hoeven
 	// we niks te doen.
 	if assigned(laatsteWagon) then begin
 		laatsteWagon^.Volgende := Trein^.EersteWagon;
@@ -561,7 +561,7 @@ begin
 		// trein komt.
 		// Het StationModusPlanpunt van de huidige trein houden we echter,
 		// omdat daar nog dingen als OMDRAAIEN in kunnen staan!
-		// Maar de vertrektijd nemen we wï¿½l van de andere trein over!
+		// Maar de vertrektijd nemen we wel van de andere trein over!
 		if assigned(GevKoppelTrein^.StationmodusPlanpunt) then
 			Trein^.StationModusPlanpunt^.Vertrek :=
 			GevKoppelTrein^.StationmodusPlanpunt^.Vertrek;
@@ -591,7 +591,7 @@ begin
 		for i := 1 to wagonshouden do begin
 			tmpWagon := tmpWagon^.Volgende;
 		end;
-		// De knip komt nu vï¿½ï¿½r tmpWagon.
+		// De knip komt nu vóór tmpWagon.
 		tmpWagon^.Vorige^.Volgende := nil;
 		tmpWagon^.Vorige := nil;
 		// TmpWagon is nu dus de eerste wagon van de nieuwe trein.
@@ -619,7 +619,7 @@ begin
 		tmpTrein^.StationModusPlanpunt^.spc_gedaan := false;
 		// Af te wachten tijd instellen
 		tmpTrein^.kannietwegvoor := Trein^.kannietwegvoor;
-		// Dynamische gegevens overkopiï¿½ren
+		// Dynamische gegevens overkopiëren
 		tmpTrein^.Update;
 		tmpTrein^.baanvaksnelheid := Trein^.baanvaksnelheid;
 		tmpTrein^.huidigemaxsnelheid := Trein^.huidigemaxsnelheid;
@@ -748,7 +748,7 @@ begin
 			Waaromstilstaan := stTrein
 		end;
 		if Vertreksein then begin
-			// In principe komen we op deze plek maar ï¿½ï¿½n keer en wordt de modus
+			// In principe komen we op deze plek maar één keer en wordt de modus
 			// hier op tmRijden gezet. Tenzij er uiteraard iets mis gaat. Hoe
 			// dan ook, eerst maar eens een evt. telefoongesprek wissen over dat
 			// we nog geen vertreksein hebben.
@@ -896,7 +896,7 @@ var
 	GevSeinAfstand:	double;
 begin
 	// Nu moeten we nog de mogelijke modusovergangen afhandelen. Daarvan is er
-	// maar ï¿½ï¿½n mogelijk, en dat is wanneer we stilstaan langs een perron.
+	// maar één mogelijk, en dat is wanneer we stilstaan langs een perron.
 	// Hoe weten we of dat het geval is? Snelheid=0 en verder is het volgende
 	// sein een stationsbordje dat voor ons geschikt is.
 	if (Trein^.snelheid = 0) and assigned(Trein^.Planpunten) then begin

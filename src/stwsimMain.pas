@@ -490,7 +490,7 @@ begin
 	if not pauze then
 		PauzeActionExecute(Self);
 	if closewarn then
-		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beï¿½indigen?',
+		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beëindigen?',
 				'Simulatie openen', MB_ICONWARNING+MB_YESNO) <> mrYes then begin
 			if not oudepauze then
 				PauzeActionExecute(Self);
@@ -1770,7 +1770,7 @@ begin
 	if closewarn then begin
 		if not pauze then
 			PauzeActionExecute(Self);
-		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beï¿½indigen?',
+		if Application.MessageBox('Weet u zeker dat u de simulatie wilt beëindigen?',
 				'Opgeslagen stand openen', MB_ICONWARNING+MB_YESNO) <> mrYes then begin
 			if not oudepauze then
 				PauzeActionExecute(Self);
@@ -1950,7 +1950,7 @@ begin
 	oudepauze := pauze;
 	if not pauze then
 		PauzeActionExecute(Self);
-	if Application.MessageBox('Weet u zeker dat u de simulatie wilt beï¿½indigen?',
+	if Application.MessageBox('Weet u zeker dat u de simulatie wilt beëindigen?',
 			'Simulatie afbreken', MB_ICONWARNING+MB_YESNO) <> mrYes then begin
 		if not oudepauze then
 			PauzeActionExecute(Self);

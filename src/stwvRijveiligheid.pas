@@ -18,7 +18,7 @@ function WisselstandenLijstBereken(Wissel: PvWissel; Stand: TWisselStand;
 // 3. <doe iets dat SendMsg veroorzaakt>
 // 4. RijveiligheidUnlock();
 // Zo wordt namelijk verhinderd dat bij een interruptie van SendMsg iets wordt
-// gedaan dat het resultaat van de gedane checks beï¿½nvloedt.
+// gedaan dat het resultaat van de gedane checks beïnvloedt.
 
 // Deze functie kijkt of een wissel in de gewenste stand kan worden
 // gezet en een rijweg erover mag worden ingesteld.
@@ -36,7 +36,7 @@ function WisselsLiggenGoed(Wissel: PvWissel; Stand: TWisselstand;
 
 // Deze functie kijkt of een rijweg ingesteld kan worden.
 // De rijweg hoeft niet vrij te zijn, maar de wissels moeten wel goed
-// kunnen worden gezet en tenminste ï¿½ï¿½n meetpunt van de rijweg moet geheel
+// kunnen worden gezet en tenminste één meetpunt van de rijweg moet geheel
 // vrij zijn. Dit laatste om te voorkomen dat we een rijweg direct twee keer
 // na elkaar kunnen instellen.
 function RijwegKan(Rijweg: PvRijweg; ROZ: boolean;
@@ -112,7 +112,7 @@ end;
 // Deze functie retourneert nul als het wissel niet kan worden omgezet, of anders
 // een lijst met om te zetten wissels te beginnen met het gekozen wissel maar
 // exclusief de wissels uit TotNuToe.
-// Deze functie maakt de lijst per recursieve oproep hooguit ï¿½ï¿½n wissel langer.
+// Deze functie maakt de lijst per recursieve oproep hooguit één wissel langer.
 function WisselstandenLijstBereken;
 var
 	EisenLijst: PWisselstandLijst;
@@ -207,7 +207,7 @@ begin
 	tmpLijst^.Volgende := nil;
 	tmpLijstEind := tmpLijst;
 
-	// En we plakken alles samen tot ï¿½ï¿½n lange totnutoe-lijst. Dat herstellen we
+	// En we plakken alles samen tot één lange totnutoe-lijst. Dat herstellen we
 	// later weer.
 	if assigned(TotNuToe) then begin
 		tmpTotNuToe := TotNuToe;

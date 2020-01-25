@@ -32,7 +32,7 @@ type
 		Autosein:			boolean;	// Automatisch P-sein?
 		A_Erlaubnis:		pointer;	// Welke Erlaubnis is nodig?
 		A_Erlaubnisstand:	byte;		// En op welke stand moet deze staan?
-		B_Meetpunt:			pointer;	// Het meetpunt vï¿½ï¿½r het sein. Automatisch
+		B_Meetpunt:			pointer;	// Het meetpunt vóór het sein. Automatisch
 											// ingesteld door het meetpunt zelf.
 		H_MovementAuthority: THMovementAuthority;
 		// Dingen voor voorseinen

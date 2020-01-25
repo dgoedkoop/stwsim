@@ -170,7 +170,7 @@ begin
 				Empty(x, y);
 	// Nieuw geheugen claimen
 	GetMem(NewHokjes, sizeof(TvHokje)*(nmaxx+1)*(imaxy+1));
-	// Gegevens overkopiï¿½ren & nieuwe lege hokjes initialiseren
+	// Gegevens overkopiëren & nieuwe lege hokjes initialiseren
 	for y := 0 to imaxy do
 		if nmaxx > imaxx then begin
 			move(hokjes^[y*(imaxx+1)], NewHokjes^[y*(nmaxx+1)], (imaxx+1)*sizeof(TvHokje));
@@ -210,7 +210,7 @@ begin
 				Empty(x, y);
 	// Nieuw geheugen claimen
 	GetMem(NewHokjes, sizeof(TvHokje)*(imaxx+1)*(nmaxy+1));
-	// Gegevens overkopiï¿½ren & nieuwe lege hokjes initialiseren
+	// Gegevens overkopiëren & nieuwe lege hokjes initialiseren
 	if nmaxy < imaxy then
 		move(hokjes^[0], newHokjes^[0], (imaxx+1)*(nmaxy+1)*sizeof(TvHokje))
 	else begin

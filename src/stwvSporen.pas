@@ -15,7 +15,7 @@ type
 		WisselID			: string;
 		Groep				: PvWisselGroep;
 		BasisstandRecht: boolean;		// Is de basisstand rechtdoor?
-												// (Een wissel moet precies in ï¿½ï¿½n groep zitten)
+												// (Een wissel moet precies in één groep zitten)
 		Stand				: TWisselStand;
 		WensStand		: TWisselStand;
 		Meetpunt			: PvMeetpunt;	// Welk meetpunt mag niet bezet zijn?

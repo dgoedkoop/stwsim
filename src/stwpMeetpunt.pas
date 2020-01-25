@@ -16,9 +16,9 @@ type
 		Erlaubnis:	PpErlaubnis;	// Bijbehorende Erlaubnis.
 		// Dynamische informatie
 		Bezet: boolean;				// Bezet?
-		Elektrif: boolean;			// Geï¿½lektrificieerd?
+		Elektrif: boolean;			// Geëlektrificieerd?
 		Treinnaam:	string;			// Toch maar wel hier bijhouden.
-		ZichtbaarLijst:	PpRaillijst;	// Wordt ï¿½ï¿½nmalig bijgewerkt.
+		ZichtbaarLijst:	PpRaillijst;	// Wordt eenmalig bijgewerkt.
 		rijrichting:	byte;			// 0=geen, 1=up, 2=down (voor vrije banen)
 		// Defecten
 		magdefect:  boolean;			// Verschijnpunt mag niet defect.

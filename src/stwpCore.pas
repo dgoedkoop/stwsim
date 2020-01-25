@@ -926,7 +926,7 @@ var
 	gesprek: PpTelefoongesprek;
 	gesprekgevonden: boolean;
 begin
-	// Telefoongesprekken van deze trein beï¿½indigen
+	// Telefoongesprekken van deze trein beëindigen
 	gesprekgevonden := false;
 	gesprek := pAlleGesprekken;
 	while assigned(gesprek) do begin
@@ -937,7 +937,7 @@ begin
 		gesprek := gesprek^.Volgende;
 	end;
 
-	// Zolang gesprek nog niet beï¿½indigd, moeten we wachten.
+	// Zolang gesprek nog niet beëindigd, moeten we wachten.
 	if gesprekgevonden then exit;
 
 	tmpTrein := pAlleTreinen;
@@ -986,7 +986,7 @@ begin
 	end else begin
 		// Enkelspoor of dubbelenkelspoor: zachte erlaubnis
 		// Dat we hier zijn betekent dat hetzij alle meetpunten vrij zijn, of
-		// hetzij dat alle treinen op de vrije baan ï¿½ï¿½nduidig de juiste kant op
+		// hetzij dat alle treinen op de vrije baan eenduidig de juiste kant op
 		// bewegen.
 		// Hoe dan ook, het betekent dat we alle meetpunten met onze richting
 		// mogen vastleggen. Eigenlijk zou alleen de eerste al genoeg zijn, maar
@@ -1181,7 +1181,7 @@ begin
 			end;
 		// Het sein is terug op rood gesprongen. Er is dus een trein gepasseerd.
 		// We moeten dus het nummer mee-verplaatsen. Daarvoor moeten we twee
-		// meetpunten vinden: die vï¿½ï¿½r het sein en die na het sein.
+		// meetpunten vinden: die voor het sein en die na het sein.
 		if H_terugoprood and Meetpunt^.Bezet then begin
 			// Oude meetpunt: treinnaam wissen
 			tmpNaam := Meetpunt^.Treinnaam;
@@ -3003,7 +3003,7 @@ begin
 		while assigned(Raillijst) do begin
 			// Meetpunt van elke rails instellen
 			Raillijst^.Rail^.meetpunt := Meetpunt;
-			// Meetpunt vï¿½ï¿½r het sein instellen
+			// Meetpunt vóór het sein instellen
 			if assigned(Raillijst^.Rail^.Vorige^.Sein) then
 				PpSein(Raillijst^.Rail^.Vorige^.Sein)^.B_Meetpunt := Meetpunt;
 			if assigned(Raillijst^.Rail^.Volgende^.Sein) then

@@ -18,7 +18,7 @@ type
 		Aankomst,
 		Vertrek:			integer;	// Tijden. Vertrek = -1 voor niet-van-toepassing.
 		minwachttijd:	integer;	// in seconden. -1 voor niet-van-toepassing.
-		stoppen:			boolean;	// Moeten we hier �berhaupt stoppen?
+		stoppen:			boolean;	// Moeten we hier uberhaupt stoppen?
 		keren:			boolean;
 		nieuwetrein:	boolean;	// Worden we een nieuwe trein?
 		nieuwetrein_w:	string;	// Zo ja, welke?

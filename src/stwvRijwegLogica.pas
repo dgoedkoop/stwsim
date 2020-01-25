@@ -316,7 +316,7 @@ end;
 
 // strikt = false: zoekt de beste match
 // strikt = true: retourneert 'false' als zelfs de beste match niet goed genoeg
-//					 is, zodat de editor een nieuwe subroute kan creï¿½ren.
+//					 is, zodat de editor een nieuwe subroute kan creëren.
 function TRijwegLogica.ZoekSubroute;
 var
 	Tab:					PTablist;
@@ -1293,7 +1293,7 @@ end;
 // - De kruising-hokjes worden ingesteld
 // - Seinen worden op groen gezet, indien mogelijk.
 // Deze functie gebruikt RijveiligheidLock omdat het veiligheidskritisch is dat
-// een sein pas op groen gaat als ook ï¿½cht alles goed ligt.
+// een sein pas op groen gaat als ook echt alles goed ligt.
 procedure TRijwegLogica.DoeActieveRijwegen;
 var
 	ActieveRijweg:		PvActieveRijwegLijst;
