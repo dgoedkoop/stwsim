@@ -816,3 +816,6 @@
 (1.1.2) 16 april 2018:
 - Aanpassing om een scherpe weergave op beeldschermen met een hoge
   pixeldichtheid te verzekeren
+
+(0.2.5) 25 januari 2019:
+- In de editor kun je nu wissels wijzigen
