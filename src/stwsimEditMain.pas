@@ -457,7 +457,7 @@ implementation
 uses stwsimClientEditInfo;
 
 {$R *.DFM}
-{$R xpthemes.res}
+{$R manifest.res}
 
 const
 	MagicCode_3 = 'STWSIM.3';

@@ -98,7 +98,7 @@ object stwsceInfoForm: TstwsceInfoForm
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       Lines.Strings = (
-        'StwSim © 2007-2014, Daan Goedkoop. '
+        'StwSim © 2007-2020, Daan Goedkoop. '
         ''
         'StwSim mag gratis gebruikt worden voor  '
         'privé-doeleinden. Voor gebruik voor educatieve '
