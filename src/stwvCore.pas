@@ -55,6 +55,7 @@ function AddWisselGroep(core: PvCore; naam: string): PvWisselGroep;
 function ZoekWisselGroep(core: PvCore; naam: string): PvWisselGroep;
 
 procedure AddWissel(core: PvCore; naam: string; meetpunt: string; groep: string; basisstandrecht: boolean);
+procedure UpdateWissel(core: PvCore; wissel: PvWissel; meetpunt: string; groep: string; basisstandrecht: boolean);
 function ZoekWissel(core: PvCore; naam: string): PvWissel;
 procedure DeleteWissel(core: PvCore; naam: string);
 
@@ -476,22 +477,10 @@ begin
 	end;
 end;
 
-procedure AddWissel;
+procedure AddWisselToGroep(core: PvCore; w: PvWissel; groep: string);
 var
-	w,l: PvWissel;
+	l: PvWissel;
 begin
-	if assigned(ZoekWissel(core,naam)) then exit;
-	// Wissel maken!
-	new(w);
-	w^.WisselID := naam;
-	w^.Meetpunt := zoekMeetpunt(core, meetpunt);
-	w^.BasisstandRecht := basisstandrecht;
-	w^.RijwegOnderdeel := nil;
-	w^.rijwegverh := false;
-	w^.registered := false;
-	w^.Stand := wsOnbekend;
-	w^.Wensstand := wsEgal;
-	// Wissel in de wisselgroep plaatsen
 	w^.Groep := ZoekWisselGroep(core, groep);
 	if not assigned(w^.Groep) then
 		w^.Groep := AddWisselGroep(core, groep);
@@ -506,15 +495,12 @@ begin
 	end;
 end;
 
-procedure DeleteWissel;
+procedure DeleteWisselFromGroep(core: PvCore; dw: PvWissel);
 var
-	dw, w, vw, tw: PvWissel;
+	w, vw: PvWissel;
 	dwg, wg, vwg, twg: PvWisselGroep;
 begin
-	dw := ZoekWissel(core, naam);
-	if not assigned(dw) then exit;
 	wg := dw^.Groep;
-	// Wis de wissel uit de groep.
 	vw := nil;
 	w := wg^.EersteWissel;
 	while assigned(w) do begin
@@ -523,13 +509,10 @@ begin
 				vw^.volgende := w^.volgende
 			else
 				wg^.EersteWissel := w^.volgende;
-			tw := w^.volgende;
-			dispose(w);
-			w := tw;
-		end else begin
-			vw := w;
-			w := w^.volgende;
+			break;
 		end;
+		vw := w;
+		w := w^.volgende;
 	end;
 	// Wis de wisselgroep als die niet meer nodig is.
 	if not assigned(wg^.EersteWissel) then begin
@@ -551,6 +534,45 @@ begin
 			end;
 		end;
 	end;
+end;
+
+procedure AddWissel;
+var
+	w: PvWissel;
+begin
+	if assigned(ZoekWissel(core,naam)) then exit;
+	// Wissel maken!
+	new(w);
+	w^.WisselID := naam;
+	w^.Meetpunt := zoekMeetpunt(core, meetpunt);
+	w^.BasisstandRecht := basisstandrecht;
+	w^.RijwegOnderdeel := nil;
+	w^.rijwegverh := false;
+	w^.registered := false;
+	w^.Stand := wsOnbekend;
+	w^.Wensstand := wsEgal;
+	AddWisselToGroep(core, w, groep);
+end;
+
+procedure UpdateWissel;
+begin
+	// Eigenschappen van wissel instellen
+	wissel^.Meetpunt := zoekMeetpunt(core, meetpunt);
+	wissel^.BasisstandRecht := basisstandrecht;
+	// Groep instellen
+	DeleteWisselFromGroep(core, wissel);
+	AddWisselToGroep(core, wissel, groep);
+end;
+
+procedure DeleteWissel;
+var
+	dw: PvWissel;
+begin
+	dw := ZoekWissel(core, naam);
+	if not assigned(dw) then exit;
+	// Wis de wissel uit de groep.
+	DeleteWisselFromGroep(core, dw);
+	dispose(dw);
 end;
 
 function EersteWissel;

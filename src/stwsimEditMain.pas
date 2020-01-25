@@ -280,6 +280,7 @@ type
 		triggerRichtingEditBut: TSpeedButton;
 		triggerRichtingEdit: TEdit;
 		Label40: TLabel;
+		weBut: TButton;
 		procedure mtButClick(Sender: TObject);
 		procedure mdButClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
@@ -401,6 +402,8 @@ type
 		procedure dsButClick(Sender: TObject);
 		procedure triggerRichtingEditButClick(Sender: TObject);
 		procedure triggerRichtingWisButClick(Sender: TObject);
+		procedure wListClick(Sender: TObject);
+		procedure weButClick(Sender: TObject);
 	private
 		FirstTab:		PTablist;
 		VisibleTab:		PTabList;
@@ -1284,6 +1287,30 @@ begin
 	UpdateControls;
 end;
 
+procedure TstwseMain.wListClick(Sender: TObject);
+var
+	Wissel:	PvWissel;
+	i, j:    integer;
+begin
+	for i := 0 to wList.Items.Count-1 do
+		if wList.Selected[i] then begin
+			Wissel := EersteWissel(@Core);
+			for j := 1 to i do
+				Wissel := VolgendeWissel(Wissel);
+			if assigned(Wissel) then begin
+				wnEdit.Text := Wissel^.WisselID;
+				wgBox.Text := Wissel^.Groep^.GroepID;
+				for j := 0 to wgBox.Items.Count-1 do
+					if wgBox.Items[j] = Wissel^.Groep^.GroepID then
+						wgBox.ItemIndex := j;
+				for j := 0 to wmBox.Items.Count-1 do
+					if wmBox.Items[j] = Wissel^.Meetpunt^.meetpuntID then
+						wmBox.ItemIndex := j;
+				basisRechtdoor.Checked := Wissel^.BasisstandRecht;
+			end;
+		end;
+end;
+
 procedure TstwseMain.wtButClick(Sender: TObject);
 var
 	nID,mID,gID:string;
@@ -1328,6 +1355,32 @@ begin
 
 	UpdateChg.Wissels := true;
 	UpdateControls;
+end;
+
+procedure TstwseMain.weButClick(Sender: TObject);
+var
+	Wissel:	PvWissel;
+	i, j:		integer;
+	mID, gID: string;
+begin
+	for i := wList.Items.Count-1 downto 0 do
+		if wList.Selected[i] then begin
+			Wissel := EersteWissel(@Core);
+			for j := 1 to i do
+				Wissel := VolgendeWissel(Wissel);
+			if assigned(Wissel) then begin
+				gID := wgBox.Text;
+				if gID='' then gID := Wissel^.WisselID;
+				mID := wmBox.Items[wmBox.ItemIndex];
+				UpdateWissel(@Core, Wissel, mID, gID, basisRechtdoor.Checked);
+			end;
+		end;
+
+	UpdateChg.Wissels := true;
+	UpdateControls;
+	// Door het wijzigen van de wisselgroep kan de volgorde van de wissellijst veranderen,
+	// waardoor een ander wissel wordt geselecteerd.
+	wListClick(Sender);
 end;
 
 procedure TstwseMain.tsButClick(Sender: TObject);

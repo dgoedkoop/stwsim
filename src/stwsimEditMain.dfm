@@ -48,7 +48,7 @@ object stwseMain: TstwseMain
       Top = 0
       Width = 834
       Height = 264
-      ActivePage = rijwegTab
+      ActivePage = wTab
       Align = alClient
       Constraints.MinHeight = 193
       TabOrder = 0
@@ -277,7 +277,7 @@ object stwseMain: TstwseMain
             Width = 121
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 3
           end
           object wgBox: TComboBox
@@ -306,51 +306,61 @@ object stwseMain: TstwseMain
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
             TabOrder = 6
+            OnClick = wListClick
+          end
+          object weBut: TButton
+            Left = 342
+            Top = 176
+            Width = 75
+            Height = 25
+            Caption = 'Bijwerken'
+            TabOrder = 7
+            OnClick = weButClick
           end
         end
         object evwGroup: TGroupBox
           Left = 432
           Top = 0
-          Width = 361
+          Width = 393
           Height = 233
           Caption = 'Eis- en verzoekwissels'
           TabOrder = 1
           object Label9: TLabel
-            Left = 136
+            Left = 168
             Top = 20
             Width = 57
             Height = 13
             Caption = 'Deze stand:'
           end
           object Label10: TLabel
-            Left = 136
+            Left = 168
             Top = 68
             Width = 61
             Height = 13
             Caption = 'Vereist deze:'
           end
           object onafhCombo: TComboBox
-            Left = 208
+            Left = 240
             Top = 16
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 0
             OnChange = onafhComboChange
           end
           object afhCombo: TComboBox
-            Left = 208
+            Left = 240
             Top = 64
             Width = 145
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 1
             OnChange = afhComboChange
           end
           object evwdBut: TButton
-            Left = 278
+            Left = 310
             Top = 176
             Width = 75
             Height = 25
@@ -359,7 +369,7 @@ object stwseMain: TstwseMain
             OnClick = evwdButClick
           end
           object evwtBut: TButton
-            Left = 278
+            Left = 310
             Top = 144
             Width = 75
             Height = 25
@@ -371,7 +381,7 @@ object stwseMain: TstwseMain
           object evwList: TListBox
             Left = 8
             Top = 16
-            Width = 121
+            Width = 153
             Height = 209
             Anchors = [akLeft, akTop, akBottom]
             ItemHeight = 13
@@ -2224,7 +2234,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 13
+              ItemHeight = 0
               ParentFont = False
               TabOrder = 0
               OnChange = mElBoxChange
@@ -2250,7 +2260,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 13
+              ItemHeight = 0
               ParentFont = False
               TabOrder = 2
               OnChange = wElBoxChange
@@ -2266,7 +2276,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 13
+              ItemHeight = 0
               ParentFont = False
               TabOrder = 3
               OnChange = eElBoxChange
@@ -2282,7 +2292,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 13
+              ItemHeight = 0
               ParentFont = False
               TabOrder = 4
               OnChange = sElBoxChange
@@ -2311,7 +2321,7 @@ object stwseMain: TstwseMain
               Font.Height = -11
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              ItemHeight = 13
+              ItemHeight = 0
               ParentFont = False
               TabOrder = 6
               OnChange = mTnBoxChange
